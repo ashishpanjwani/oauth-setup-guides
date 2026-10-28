@@ -20,7 +20,8 @@ async function get(url: string) {
   return fetch(url, {
     redirect: "follow",
     signal: AbortSignal.timeout(12_000),
-    headers: { "user-agent": "Mozilla/5.0 (compatible; oauth-guide-bot/1.0)", accept: "text/html,*/*" },
+    // Without a language header some providers (Google) serve a localized page.
+    headers: { "user-agent": "Mozilla/5.0 (compatible; oauth-guide-bot/1.0)", accept: "text/html,*/*", "accept-language": "en-US,en;q=0.9" },
   });
 }
 

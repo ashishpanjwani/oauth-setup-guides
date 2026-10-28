@@ -224,7 +224,12 @@ export async function generateGuide(query: string, emit: Emit, library = false):
   // (b) + (c): plain HTTP, no model involved.
   emit({ type: "phase", phase: "fetch", message: "Reading the docs and checking the developer console" });
   const [pages, consoleProbe] = await Promise.all([
-    Promise.all(sources.pages.slice(0, 8).map((p) => fetchPage(p.url, p.title))),
+    Promise.all(
+      sources.pages
+        .filter((p) => p.url.replace(/\/$/, "") !== sources.developerConsoleUrl.replace(/\/$/, "")) // the console is probed, not read
+        .slice(0, 8)
+        .map((p) => fetchPage(p.url, p.title)),
+    ),
     probeConsole(sources.developerConsoleUrl),
   ]);
   pages.forEach((p) => emit({ type: "fetch", url: p.url, ok: p.ok, error: p.error }));

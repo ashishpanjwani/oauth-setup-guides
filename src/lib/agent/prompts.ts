@@ -16,7 +16,7 @@ ${GATES}
 Use web search (up to 5 searches) and return:
 - developerConsoleUrl: the page where a developer registers the OAuth app.
 - gates: one finding per gate, each with the official URL it comes from.
-- pages: up to 8 official provider pages (not blogs) to read in full. Together they must cover: the app-registration page, the page(s) explaining each setting or option on the registration form (so the guide can say what each one does and why its default is what it is), and every gate you found applies. Skip legal terms and agreements.
+- pages: up to 8 official provider documentation pages (not blogs, not the developer console itself) to read in full. Together they must cover: the app-registration page, the page(s) explaining each setting or option on the registration form (so the guide can say what each one does and why its default is what it is), and every gate you found applies. Skip legal terms and agreements.
 - notes: anything else from search results about wait times, costs, or rejection reasons, each followed by its URL. Community sources are fine here; say they are community sources.`;
 
 export const COMPOSE_SYSTEM = `You write a short OAuth app setup guide for a developer from the provider pages you are given. They should be able to read it in two minutes and know what to do next.
@@ -43,13 +43,13 @@ ${GATES}
 - steps: 4–10 concrete actions the developer takes, in order, from registering the app until any user can connect.
   - One action or one decision per step. If a form has two settings that need a decision, make two steps.
   - Only real actions. No "launch" or "go live" step unless the provider has an explicit publish or submit action. Things other people do (an end user's admin approving the app) are not steps; they are covered by their gate.
-  - why: explain what the setting or action does, what the default is and why the provider chose it, and when to choose otherwise, so the developer understands the choice. Back it with a claim (the provider's own reason, quoted, is best). Empty if the action is obvious, like clicking a button.
+  - why: explain what the setting or action does, what the default is and why the provider chose it, and when to choose otherwise, so the developer understands the choice. When the step is a choice between options, name each option and what it means, then say which one an app for outside users needs. Back it with a claim (the provider's own reason, quoted, is best). Empty if the action is obvious, like clicking a button.
   - Each action appears once. Writing or checking integration code (PKCE, state, token refresh code) is out of scope.
   Each step has who:
-  - "agent": an AI agent can do or prepare it: choosing scopes, writing the app name, description and privacy policy text, filling in form values, checking settings against the docs.
-  - "you": only the developer can do it: signing in, clicking submit or register, accepting terms, paying, or making a decision.
+  - "agent": an AI agent can work it out or write it: picking the narrowest scopes for the features, writing the app name, description and privacy policy text, preparing form values, checking settings against the docs. Phrase the step as that work (for example "Fill in the branding fields").
+  - "you": only the developer can do it: signing in, creating projects, clicking submit, register or publish, accepting terms, paying, recording a video, and choices that commit them to something (which account owns the app, internal vs external audience).
   - "waiting": only for waiting on a review or approval the provider itself runs. Put the expected wait in detail.
-  detail: exact values or the one gotcha; empty string if none.
+  detail: exact values or the one gotcha; empty string if none. Never a bare fact: say what to do about it or what happens (not "results are valid for 7 days" but "publish within 7 days or the check has to be run again").
 - blockers: 3–5 problems developers commonly hit while setting up or launching, each with the fix. Not legal terms or rare edge cases.
 - couldNotVerify: at most 4 items, only open questions that could change what the developer does or expects. Empty is fine. Never list things you chose not to research, sources you didn't read, or how something was tested.
 
@@ -65,7 +65,7 @@ Checklist:
 1. A gate marked "yes" must be an obstacle that can block, delay or cut off some users. If it's just a normal fact (for example, any account can register), set applies to "no" and clear what, where and todo.
 2. No commentary on how long someone else takes (an end user, their admin) or on the docs not giving a timing for something the provider doesn't control. Delete such clauses and items; say who acts instead, if it isn't already said.
 3. No reasons or facts in the text that aren't in a claim statement (for example "since ownership is hard to move later" with no claim saying so). Delete them.
-4. Every step is correct about who does what. End users never handle the client ID or client secret.
+4. Every step is correct about who does what. "agent" is work an agent can figure out or write (scopes, names, descriptions, form values, policy text); "you" is signing in, creating, clicking submit/register/publish, paying, recording, and committing choices. End users never handle the client ID or client secret.
 5. No internal terms: gate, claim, dossier, probe. Say "the main thing that can hold up launch" instead of "gate".
 6. No first person (I, we, our). Write to the developer.
 7. Steps: only concrete developer actions, one action or decision each (split a step that holds two decisions). No "launch" step unless the provider has a publish action; no steps for things other people do (an end user's admin approving), and no "waiting" for anything but a review the provider runs. No duplicate steps, and nothing about writing or testing integration code. Keep each step's why if it explains the choice; shorten it if it rambles.
@@ -73,6 +73,7 @@ Checklist:
 11. Blockers are problems developers commonly hit during setup or launch. Delete ones drawn from legal terms or rare edge cases.
 9. Requirements contain nothing conditional (things that apply only to some users belong in their gate).
 10. Keep it short. Cut words that don't help the developer act.
+12. A step that is a choice names the options and what each means. A detail is never a bare fact; it says what to do or what happens.
 
 Also fix every item in <violations>, which an automated check found.
 
