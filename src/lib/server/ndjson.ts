@@ -17,11 +17,14 @@ export function ndjsonStream(run: (emit: (e: AgentEvent) => void) => Promise<voi
   const body = new ReadableStream({
     async start(controller) {
       const emit = (e: AgentEvent) => controller.enqueue(encoder.encode(JSON.stringify(e) + "\n"));
+      // Keeps proxies from closing a quiet connection during long model turns.
+      const heartbeat = setInterval(() => controller.enqueue(encoder.encode("\n")), 10_000);
       try {
         await run(emit);
       } catch (e) {
         emit({ type: "error", message: (e as Error).message });
       } finally {
+        clearInterval(heartbeat);
         controller.close();
       }
     },

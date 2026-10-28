@@ -25,7 +25,8 @@ export type AgentEvent =
 
 type Emit = (e: AgentEvent) => void;
 
-const client = new Anthropic();
+// A turn that stalls fails fast instead of hanging the request; runLoop retries it once.
+const client = new Anthropic({ timeout: 150_000 });
 
 type Tools = Anthropic.Beta.Messages.BetaToolUnion[];
 
@@ -93,6 +94,7 @@ async function runLoop(opts: {
   capUsd?: number;
 }): Promise<Anthropic.Beta.Messages.BetaMessage> {
   const { messages, emit, st } = opts;
+  let retried = false;
   for (let turn = 0; turn < (opts.maxTurns ?? 10); turn++) {
     const stream = client.beta.messages.stream({
       model: MODEL,
@@ -106,8 +108,23 @@ async function runLoop(opts: {
       messages,
     });
     stream.on("contentBlock", (b) => observeBlock(b, emit, st));
-    const msg = await stream.finalMessage();
-    addTurn(st.usage, MODEL, msg.usage);
+    let msg: Anthropic.Beta.Messages.BetaMessage;
+    const t0 = Date.now();
+    try {
+      msg = await stream.finalMessage();
+    } catch (e) {
+      // A dropped connection mid-stream isn't retried by the SDK; retry the turn once.
+      const transient = !(e instanceof Anthropic.APIError) || e instanceof Anthropic.APIConnectionError;
+      if (!transient || retried) throw e;
+      console.log(`[agent] turn ${turn} dropped (${(e as Error).message}); retrying once`);
+      retried = true;
+      turn--;
+      continue;
+    }
+    const turnUsd = addTurn(st.usage, MODEL, msg.usage);
+    console.log(
+      `[agent] turn ${turn} ${msg.stop_reason} ${((Date.now() - t0) / 1000).toFixed(0)}s in=${msg.usage.input_tokens}+${msg.usage.cache_read_input_tokens ?? 0}r+${msg.usage.cache_creation_input_tokens ?? 0}w out=${msg.usage.output_tokens} $${turnUsd.toFixed(4)}`,
+    );
     emit({ type: "cost", usd: st.usage.usd });
     messages.push({ role: "assistant", content: msg.content });
     if (st.usage.usd > (opts.capUsd ?? RUN_CAP_USD)) {
@@ -199,11 +216,12 @@ export async function research(query: string, emit: Emit): Promise<Research> {
     system: RESEARCH_SYSTEM,
     messages: [{ role: "user", content: `App to investigate: ${query}\nToday's date: ${new Date().toISOString().slice(0, 10)}` }],
     tools: [
-      { type: "web_search_20250305", name: "web_search", max_uses: 5 },
-      { type: "web_fetch_20250910", name: "web_fetch", max_uses: 6, max_content_tokens: 8000 },
+      // Sized so the growing history stays under Haiku's 100K-token price break.
+      { type: "web_search_20250305", name: "web_search", max_uses: 3 },
+      { type: "web_fetch_20250910", name: "web_fetch", max_uses: 5, max_content_tokens: 6000 },
       ...CLIENT_TOOLS,
     ],
-    effort: "medium",
+    effort: "high", // at lower effort Haiku tends to stop after a couple of pages
     emit,
     st,
   });
@@ -249,7 +267,7 @@ export async function compose(r: Research, emit: Emit, origin: Guide["origin"] =
 
   let draft: GuideDraft | null = null;
   for (let attempt = 0; attempt < 2 && !draft; attempt++) {
-    const msg = await runLoop({ system: COMPOSE_SYSTEM, messages, tools: [], effort: "medium", emit: () => {}, st });
+    const msg = await runLoop({ system: COMPOSE_SYSTEM, messages, tools: [], effort: "low", emit: (e) => e.type === "cost" && emit(e), st });
     try {
       draft = GuideDraft.parse(extractJson(finalText(msg)));
     } catch (e) {
@@ -310,7 +328,7 @@ export async function verifyGuide(guide: Guide, emit: Emit, max = 8): Promise<Gu
   const msg = await runLoop({
     system: VERIFY_SYSTEM,
     messages: [{ role: "user", content: `Check these claims about ${guide.appName}:\n\n${list}` }],
-    tools: [{ type: "web_fetch_20250910", name: "web_fetch", max_uses: 8, max_content_tokens: 8000 }],
+    tools: [{ type: "web_fetch_20250910", name: "web_fetch", max_uses: 6, max_content_tokens: 6000 }],
     effort: "low",
     format: zodOutputFormat(VerifyResult),
     emit,

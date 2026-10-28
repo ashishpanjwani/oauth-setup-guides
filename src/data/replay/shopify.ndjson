@@ -1,0 +1,26 @@
+{"type":"phase","phase":"compose","message":"Writing the guide from what the agent found"}
+{"type":"cost","usd":0.153337645}
+{"type":"phase","phase":"verify","message":"Re-checking 8 key claims against their sources"}
+{"type":"note","text":"I'll fetch all the URLs together in one batch."}
+{"type":"fetch","url":"https://shopify.dev/docs/apps/launch/app-store-review/review-process"}
+{"type":"fetch","url":"https://shopify.dev/docs/apps/launch/distribution"}
+{"type":"fetch","url":"https://shopify.dev/docs/api/usage/access-scopes"}
+{"type":"fetch","url":"https://docs.composio.dev/docs/auth-configuration/custom-auth-configs"}
+{"type":"fetch","url":"https://docs.composio.dev/toolkits/managed-auth"}
+{"type":"fetch_result","url":"https://shopify.dev/docs/apps/launch/app-store-review/review-process","ok":true}
+{"type":"fetch_result","url":"https://shopify.dev/docs/apps/launch/distribution","ok":true}
+{"type":"fetch_result","url":"https://shopify.dev/docs/api/usage/access-scopes","ok":true}
+{"type":"fetch_result","url":"https://docs.composio.dev/docs/auth-configuration/custom-auth-configs","ok":true}
+{"type":"fetch_result","url":"https://docs.composio.dev/toolkits/managed-auth","ok":true}
+{"type":"note","text":"Checking c19 against the review process workflow confirms it's supported, and c14's custom distribution rules for single/multiple Plus stores without approval or billing also hold up. I'm now verifying c33 on protected customer data against the access-scopes documentation.\n\nThe page I fetched appears truncated, so I can't confirm that claim and should mark it not_found rather than guess. For c4, the redirect URI matching requirement in the Composio OAuth docs checks out, while c32's claim about scope approval is only partially supported — the page confirms Shopify approval is needed but doesn't mention the Partner Dashboard request mechanism I expected, and the \"contact support\" language actually applies to Plus scopes rather than general approval. I'm moving on to verify c15's claims about public distribution across multiple stores.\n\nFor c16, the restriction on changing distribution method after selection checks out fine. For c1, though, the Composio toolkit directory loaded dynamically rather than rendering a static list, so I couldn't actually confirm whether Shopify shows managed=false — I'll mark this as not_found and note that the page only describes the general registration process when managed OAuth isn't available."}
+{"type":"cost","usd":0.00412653}
+{"type":"claim_check","claimId":"c1","verdict":"not_found","evidence":"The managed-auth page explains that Composio provides the OAuth app only when it lists the method in composio_managed_auth_schemes, and otherwise you must register your own. The toolkit directory did not render ('Loading toolkits...'), so the page does not show a Shopify entry or a managed=false flag for Shopify."}
+{"type":"claim_check","claimId":"c4","verdict":"supported","evidence":"The Composio custom auth configs page says: 'The redirect URI in your OAuth app must exactly match oauth_redirect_uri in your Composio auth config.' The page describes this as the OAuth app's Authorized Redirect URI, not specifically a Shopify app, but the rule applies generally."}
+{"type":"claim_check","claimId":"c14","verdict":"supported","evidence":"The distribution page's table says custom distribution is 'Installed on a single Shopify store, on multiple stores that belong to the same Plus organization, or on development stores', with 'Approval required: No', and 'Can't charge merchants through Shopify's app billing system'."}
+{"type":"claim_check","claimId":"c15","verdict":"supported","evidence":"The distribution table lists public distribution as 'Can be installed on multiple Shopify stores', with 'Approval required: Yes' and a limitation to 'Must sync certain data with Shopify'."}
+{"type":"claim_check","claimId":"c16","verdict":"supported","evidence":"The distribution page says: 'You can't change the distribution method after you select it.'"}
+{"type":"claim_check","claimId":"c19","verdict":"supported","evidence":"The review-process page lists the statuses Draft, Submitted, Reviewed and Published. It says that if an app 'doesn't meet core requirements', it moves to 'Paused' and the developer 'receive[s] an email that outlines required changes.' It also says apps needing discussion move to 'Reviewed'."}
+{"type":"claim_check","claimId":"c32","verdict":"partial","evidence":"The access-scopes page says that for scopes marked 'Shopify approval required', 'Shopify has to approve your app for the scope before you can declare it', and points to a 'Shopify approval scopes' section. The fetched text does not say most scopes are requested in the Partner Dashboard or that others require contacting Shopify Support. The only Support reference in the retrieved text is for Plus-only scopes."}
+{"type":"claim_check","claimId":"c33","verdict":"not_found","evidence":"The fetched access-scopes page was truncated before any protected customer data section. The retrieved text says only that some scopes carry a 'Shopify approval required' label. It does not discuss protected customer data review or default access to it."}
+{"type":"guide","slug":"shopify"}
+{"type":"phase","phase":"done","message":"Replay complete"}

@@ -11,7 +11,7 @@ Your job, in order:
 3. Use probe_oauth to observe the live system: the discovery document if one exists, the authorize endpoint with Composio's redirect URI, and whether the app-registration portal is public or behind login. These observations are the strongest evidence you have, so make at least two probes.
 4. Pin down: the account type needed (personal, business, partner, paid plan), the dev/test-mode limits, which scopes trigger review, the review steps and documented or reported wait times, the common rejection reasons, and anything that requires a legal entity, payment, a video demo, a privacy policy, or a verified domain.
 
-Be efficient: target about 5 searches and 6 fetches. Stop when you can answer the above. Don't pad.
+Budget: up to 3 searches and 5 page fetches. Don't search or fetch Composio's docs: the Composio facts above are given, and you can cite those URLs directly. Fetching a page is cheap and gives you the full text, while search snippets are often incomplete. So use searches to find the right official pages, then fetch them. Don't write the dossier until you have fetched at least 3 provider pages, including the provider's app-registration doc and its review/publishing/distribution doc. Stop when you can answer the questions above. Don't pad.
 
 Finish with a research dossier in plain text. For every fact, write it as a bullet with the exact source URL you read, and mark it [DOC] official doc, [PROBE] your probe observation, [COMMUNITY] forum/blog report, or [INFERENCE] your reasoning. Call out contradictions between sources and anything you could not determine.`;
 
@@ -31,7 +31,9 @@ Evidence rules (strict):
 - status "uncertain": [INFERENCE], single community report, conflicting sources, or anything time-sensitive you could not pin down (like review wait times without an official SLA). Explain in note.
 - Never use status "verified"; that is assigned later by a separate checker.
 - Time estimates are claims too. If a wait time comes from community reports, say so.
-- List what you couldn't determine in openQuestions.`;
+- List what you couldn't determine in openQuestions.
+
+Keep it tight: at most 25 claims (merge related facts into one claim), 3-6 steps per stage, at most 6 blockers. A developer should be able to read the whole guide in five minutes.`;
 
 export const VERIFY_SYSTEM = `You are a strict fact checker. For each claim, fetch the cited source URL and decide whether the page supports the claim as written.
 
