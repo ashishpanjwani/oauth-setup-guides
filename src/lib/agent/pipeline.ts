@@ -15,6 +15,7 @@ export type AgentEvent =
   | { type: "fetch"; url: string; ok: boolean; error?: string }
   | { type: "probe"; probe: Probe }
   | { type: "check"; kept: number; downgraded: number }
+  | { type: "coverage"; missing: string[]; found: string[] }
   | { type: "edit"; before: number; after: number }
   | { type: "guide"; slug: string }
   | { type: "cost"; usd: number }
@@ -55,12 +56,57 @@ async function call(
 }
 
 // (a) Research: find the official pages worth reading and the developer console URL.
+const PageKind = z.enum(["registration", "settings", "scopes", "review", "admin", "limits", "pricing", "other"]);
+type PageKind = z.infer<typeof PageKind>;
+const SourcePage = z.object({ url: z.string(), title: z.string(), kind: PageKind });
+
 const Sources = z.object({
   developerConsoleUrl: z.string().describe("Where a developer registers the OAuth app"),
-  gates: z.array(z.object({ gate: GateId, finding: z.string(), url: z.string() })).describe("One finding per launch gate"),
-  pages: z.array(z.object({ url: z.string(), title: z.string() })).describe("Up to 8 official pages: registration, the settings on the registration form, and every gate that applies"),
+  gates: z.array(z.object({ gate: GateId, applies: z.enum(["yes", "no", "unknown"]), finding: z.string(), url: z.string() })).describe("One finding per launch gate"),
+  pages: z.array(SourcePage).describe("Up to 8 official documentation pages, each labelled with what it covers"),
   notes: z.string().describe("Anything relevant from search results, each fact followed by its URL"),
 });
+
+/** Page kinds a guide can't be right without: always registration and scopes, plus one per gate that applies. */
+function requiredKinds(gates: z.infer<typeof Sources>["gates"]): PageKind[] {
+  const applies = (id: string) => gates.some((g) => g.gate === id && g.applies === "yes");
+  const kinds: PageKind[] = ["registration", "scopes"];
+  if (applies("review")) kinds.push("review");
+  if (applies("admin_approval")) kinds.push("admin");
+  if (applies("test_limits")) kinds.push("limits");
+  if (applies("paid_access")) kinds.push("pricing");
+  return kinds;
+}
+
+/** One targeted search for page kinds the first pass didn't find. */
+async function findMissing(query: string, missing: PageKind[], usage: Usage, emit: Emit): Promise<z.infer<typeof SourcePage>[]> {
+  const text = await call(
+    RESEARCH_MODEL,
+    {
+      system: RESEARCH_SYSTEM,
+      messages: [
+        {
+          role: "user",
+          content: `App: ${query}\nOnly find the official documentation page for each of these, about ${query} itself: ${missing.join(", ")}. "scopes" means the scopes or permissions reference for this specific product's API. Return them as pages, each labelled with its kind; return empty gates and notes.`,
+        },
+      ],
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 }],
+      output_config: { effort: "low", format: zodOutputFormat(Sources) },
+    },
+    usage,
+    emit,
+  );
+  return Sources.parse(JSON.parse(text)).pages;
+}
+
+/** Pick up to 8 pages: one of each required kind first, then the rest in research order. */
+function pickPages(pages: z.infer<typeof SourcePage>[], required: PageKind[], consoleUrl: string) {
+  const norm = (u: string) => u.replace(/\/$/, "");
+  const seen = new Set<string>();
+  const usable = pages.filter((p) => norm(p.url) !== norm(consoleUrl) && !seen.has(norm(p.url)) && seen.add(norm(p.url)));
+  const first = required.map((k) => usable.find((p) => p.kind === k)).filter((p): p is z.infer<typeof SourcePage> => Boolean(p));
+  return [...new Set([...first, ...usable])].slice(0, 8);
+}
 
 async function findSources(query: string, usage: Usage, emit: Emit) {
   const text = await call(
@@ -137,7 +183,10 @@ function checkClaims(claims: Claim[], pages: Page[], probes: Probe[]): { claims:
     if (c.status === "tested" && !probed.has(url)) reason = "marked tested, but that URL wasn't probed";
     if (c.status === "sourced") {
       const page = byUrl.get(url);
+      // A URL or a fragment can be "on the page" without supporting anything.
+      const words = c.quote.replace(/https?:\/\/\S+/g, "").trim().split(/\s+/).filter(Boolean).length;
       if (!page) reason = "cited page wasn't one we could fetch and read";
+      else if (words < 6) reason = "quote is too short to support the statement";
       else if (!quoteOnPage(c.quote, page.text)) reason = "quoted sentence not found on the cited page";
     }
     if (!reason) {
@@ -221,15 +270,20 @@ export async function generateGuide(query: string, emit: Emit, library = false):
   emit({ type: "phase", phase: "research", message: "Finding the official docs" });
   const sources = await findSources(query, usage, emit);
 
-  // (b) + (c): plain HTTP, no model involved.
+  // Coverage check in code: a missing page kind gets one targeted search before anything is written.
+  const required = requiredKinds(sources.gates);
+  const missing = required.filter((k) => !sources.pages.some((p) => p.kind === k));
+  if (missing.length) {
+    emit({ type: "coverage", missing, found: [] });
+    const extra = await findMissing(query, missing, usage, emit);
+    sources.pages.push(...extra);
+    emit({ type: "coverage", missing: missing.filter((k) => !extra.some((p) => p.kind === k)), found: extra.map((p) => p.kind) });
+  }
+
+  // (b) + (c): plain HTTP, no model involved. The console is probed, never read as a source.
   emit({ type: "phase", phase: "fetch", message: "Reading the docs and checking the developer console" });
   const [pages, consoleProbe] = await Promise.all([
-    Promise.all(
-      sources.pages
-        .filter((p) => p.url.replace(/\/$/, "") !== sources.developerConsoleUrl.replace(/\/$/, "")) // the console is probed, not read
-        .slice(0, 8)
-        .map((p) => fetchPage(p.url, p.title)),
-    ),
+    Promise.all(pickPages(sources.pages, required, sources.developerConsoleUrl).map((p) => fetchPage(p.url, p.title))),
     probeConsole(sources.developerConsoleUrl),
   ]);
   pages.forEach((p) => emit({ type: "fetch", url: p.url, ok: p.ok, error: p.error }));

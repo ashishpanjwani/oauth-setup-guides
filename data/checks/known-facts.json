@@ -1,0 +1,88 @@
+{
+  "_about": "Facts we know must appear in each seed guide. scripts/seed.ts fails the run if one is missing, so a regression is caught by code, not by a reader. Each fact passes when every pattern in 'all' matches somewhere in the guide text (case-insensitive).",
+  "github": [
+    {
+      "fact": "Organizations can block the app until an owner approves it",
+      "all": [
+        "organi[sz]ation",
+        "approv"
+      ]
+    },
+    {
+      "fact": "No GitHub review before users can connect",
+      "all": [
+        "no (github |provider )?review"
+      ]
+    },
+    {
+      "fact": "Expire user access tokens is on by default",
+      "all": [
+        "expire user access tokens"
+      ]
+    },
+    {
+      "fact": "Device flow is a setting to decide on",
+      "all": [
+        "device flow"
+      ]
+    },
+    {
+      "fact": "Redirect (callback) URL must be registered",
+      "all": [
+        "redirect|callback"
+      ]
+    }
+  ],
+  "gmail": [
+    {
+      "fact": "Restricted Gmail scopes need Google verification",
+      "all": [
+        "restricted",
+        "verif"
+      ]
+    },
+    {
+      "fact": "Restricted scopes need a security assessment (CASA)",
+      "all": [
+        "casa|security assessment"
+      ]
+    },
+    {
+      "fact": "The assessment repeats every 12 months",
+      "all": [
+        "12 months|annual|every year|yearly"
+      ]
+    },
+    {
+      "fact": "Testing mode: 100 test users",
+      "all": [
+        "100 (test )?users"
+      ]
+    },
+    {
+      "fact": "Testing mode: authorizations expire after 7 days",
+      "all": [
+        "7 days|seven days"
+      ]
+    },
+    {
+      "fact": "gmail.send is sensitive, not restricted, so it avoids the assessment",
+      "all": [
+        "gmail\\.send[^.]{0,150}sensitive|sensitive[^.]{0,150}gmail\\.send"
+      ]
+    },
+    {
+      "fact": "Workspace admins can block the app",
+      "all": [
+        "workspace",
+        "admin"
+      ]
+    },
+    {
+      "fact": "Google's estimate for restricted-scope review",
+      "all": [
+        "6 weeks|six weeks|several weeks"
+      ]
+    }
+  ]
+}

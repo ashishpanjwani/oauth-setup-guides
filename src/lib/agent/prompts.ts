@@ -15,8 +15,9 @@ ${GATES}
 
 Use web search (up to 5 searches) and return:
 - developerConsoleUrl: the page where a developer registers the OAuth app.
-- gates: one finding per gate, each with the official URL it comes from.
-- pages: up to 8 official provider documentation pages (not blogs, not the developer console itself) to read in full. Together they must cover: the app-registration page, the page(s) explaining each setting or option on the registration form (so the guide can say what each one does and why its default is what it is), and every gate you found applies. Skip legal terms and agreements.
+- gates: one finding per gate (applies yes, no or unknown), each with the official URL it comes from.
+- pages: up to 8 official provider documentation pages (not blogs, not the developer console itself) to read in full, each labelled with its kind: registration, settings (explains the options on the registration form), scopes (the scopes or permissions reference for this specific product's API), review, admin, limits, pricing, or other. You must include a registration page and this product's scopes page, plus a page for every gate that applies. Skip legal terms and agreements.
+  Every page must be about this product, or be the provider's general OAuth/app-review documentation that applies to it. Never use pages about the provider's other products (for Gmail, not Google Health or Classroom pages).
 - notes: anything else from search results about wait times, costs, or rejection reasons, each followed by its URL. Community sources are fine here; say they are community sources.`;
 
 export const COMPOSE_SYSTEM = `You write a short OAuth app setup guide for a developer from the provider pages you are given. They should be able to read it in two minutes and know what to do next.
@@ -55,7 +56,7 @@ ${GATES}
 
 Evidence (strict, checked by code after you answer):
 - Every fact the summary, gates, requirements, steps or blockers rely on is a claim in claims[], referenced by claimIds. At most 15 claims.
-- "sourced": sourceUrl is one of the <page> URLs, and quote is one sentence copied exactly, word for word, from that page's text. The statement must say no more than the quote does: no added facts, no stronger or opposite wording. If you can't copy an exact sentence that supports the statement, use "uncertain".
+- "sourced": sourceUrl is one of the <page> URLs, and quote is one full sentence (not a URL, heading or list item) copied exactly, word for word, from that page's text. The statement must say no more than the quote does: no added facts, no stronger or opposite wording. If you can't copy an exact sentence that supports the statement, use "uncertain".
 - "tested": only for what a <probes> line shows; sourceUrl is the probe URL and quote is empty.
 - "uncertain": estimates (time and effort, unless the page states them), search notes, gate findings from pages you were not given, inferences. Leave quote empty and explain in note.`;
 
