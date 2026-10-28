@@ -1,11 +1,13 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
 /**
- * Cost controls. One model for every phase; change it here.
- * Haiku 5.5 is ~40x cheaper than Opus 5.5 per token, which is the difference between
- * ~$0.70 and a few cents per guide.
+ * Cost controls. Models per phase; change them here.
+ * Research is search-and-pick, which Haiku does well and cheaply. Writing and editing must
+ * follow a long list of rules at once, where Haiku kept dropping a few each run, so they
+ * use Sonnet (~$0.25 per guide in total, vs ~$0.06 all-Haiku).
  */
-export const MODEL = "claude-haiku-5-5";
+export const RESEARCH_MODEL = "claude-haiku-5-5";
+export const WRITER_MODEL = "claude-sonnet-5-5";
 
 // USD per million tokens. Haiku 5.5 bills a whole request at the higher card when its
 // prompt exceeds 100K tokens, so research is sized to stay under that.
@@ -18,7 +20,7 @@ const LONG_PROMPT_TOKENS = 100_000;
 const WEB_SEARCH_USD = 0.01; // $10 per 1,000 searches; fetches cost only the tokens they add
 
 /** Hard ceiling per guide run (research + compose, or verify). The loop aborts past it. */
-export const RUN_CAP_USD = Number(process.env.RUN_CAP_USD ?? 0.3);
+export const RUN_CAP_USD = Number(process.env.RUN_CAP_USD ?? 0.6);
 /** Ceiling on what the public demo can spend per UTC day across all visitors. */
 export const DAILY_CAP_USD = Number(process.env.DAILY_CAP_USD ?? 2);
 
