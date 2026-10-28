@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { GuideDraft, type Claim, type Guide } from "@/lib/schema";
+import { GateId, GuideDraft, type Claim, type Guide } from "@/lib/schema";
 import { slugify } from "@/lib/text";
 import { COMPOSE_SYSTEM, RESEARCH_SYSTEM } from "./prompts";
 import { MODEL, RUN_CAP_USD, BudgetError, addTurn, emptyUsage, type Usage } from "./cost";
@@ -53,7 +53,8 @@ async function call(
 // (a) Research: find the official pages worth reading and the developer console URL.
 const Sources = z.object({
   developerConsoleUrl: z.string().describe("Where a developer registers the OAuth app"),
-  pages: z.array(z.object({ url: z.string(), title: z.string() })).describe("Up to 5 official pages: app registration, scopes, review/verification, limits"),
+  gates: z.array(z.object({ gate: GateId, finding: z.string(), url: z.string() })).describe("One finding per launch gate"),
+  pages: z.array(z.object({ url: z.string(), title: z.string() })).describe("Up to 6 official pages covering registration and every gate that applies"),
   notes: z.string().describe("Anything relevant from search results, each fact followed by its URL"),
 });
 
@@ -62,7 +63,7 @@ async function findSources(query: string, usage: Usage, emit: Emit) {
     {
       system: RESEARCH_SYSTEM,
       messages: [{ role: "user", content: `App: ${query}\nToday: ${new Date().toISOString().slice(0, 10)}` }],
-      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }],
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 }],
       output_config: { effort: "medium", format: zodOutputFormat(Sources) },
     },
     usage,
@@ -83,7 +84,7 @@ function extractJson(text: string): unknown {
 const GUIDE_JSON_SCHEMA = JSON.stringify(z.toJSONSchema(GuideDraft));
 
 // (d) Write the guide from the fetched pages and probe results.
-async function writeGuide(query: string, pages: Page[], probes: Probe[], notes: string, usage: Usage, emit: Emit): Promise<GuideDraft> {
+async function writeGuide(query: string, pages: Page[], probes: Probe[], research: z.infer<typeof Sources>, usage: Usage, emit: Emit): Promise<GuideDraft> {
   const docs = pages
     .filter((p) => p.ok)
     .map((p) => `<page url="${p.url}" title="${p.title}">\n${p.text}\n</page>`)
@@ -95,7 +96,9 @@ async function writeGuide(query: string, pages: Page[], probes: Probe[], notes: 
       role: "user",
       content:
         `App: ${query}\n\n<pages>\n${docs}\n</pages>\n\n<unreadable_pages>\n${unreadable}\n</unreadable_pages>\n\n` +
-        `<probes>\n${probeLog}\n</probes>\n\n<search_notes>\n${notes}\n</search_notes>\n\n` +
+        `<probes>\n${probeLog}\n</probes>\n\n` +
+        `<gate_findings>\n${research.gates.map((g) => `- ${g.gate}: ${g.finding} (${g.url})`).join("\n")}\n</gate_findings>\n\n` +
+        `<search_notes>\n${research.notes}\n</search_notes>\n\n` +
         `Respond with only a JSON object (no prose, no code fence) matching this JSON Schema:\n${GUIDE_JSON_SCHEMA}`,
     },
   ];
@@ -153,7 +156,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
   // (b) + (c): plain HTTP, no model involved.
   emit({ type: "phase", phase: "fetch", message: "Reading the docs and checking the developer console" });
   const [pages, consoleProbe] = await Promise.all([
-    Promise.all(sources.pages.slice(0, 5).map((p) => fetchPage(p.url, p.title))),
+    Promise.all(sources.pages.slice(0, 6).map((p) => fetchPage(p.url, p.title))),
     probeConsole(sources.developerConsoleUrl),
   ]);
   pages.forEach((p) => emit({ type: "fetch", url: p.url, ok: p.ok, error: p.error }));
@@ -161,7 +164,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
   const probes = [consoleProbe];
 
   emit({ type: "phase", phase: "compose", message: "Writing the guide" });
-  const draft = await writeGuide(query, pages, probes, sources.notes, usage, emit);
+  const draft = await writeGuide(query, pages, probes, sources, usage, emit);
 
   emit({ type: "phase", phase: "check", message: "Checking every quote against its page" });
   const checked = checkClaims(draft.claims, pages, probes);

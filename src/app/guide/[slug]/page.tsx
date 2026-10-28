@@ -72,6 +72,36 @@ export default async function GuidePage({ params }: Props) {
         </dl>
       </section>
 
+      {(g.gates ?? []).some((x) => x.applies === "yes") && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">What can stop you from launching</h2>
+          <div className="space-y-3">
+            {g.gates
+              .filter((x) => x.applies === "yes")
+              .map((x) => (
+                <div key={x.gate} className="card space-y-2 border-l-4 border-l-amber-400 p-4">
+                  <div className="font-medium">{x.title}<Refs ids={x.claimIds} /></div>
+                  {x.what && <p className="text-sm">{x.what}</p>}
+                  <dl className="grid gap-1 text-sm sm:grid-cols-[5rem_1fr]">
+                    {x.where && (
+                      <>
+                        <dt className="muted">Where</dt>
+                        <dd>{x.where}</dd>
+                      </>
+                    )}
+                    {x.todo && (
+                      <>
+                        <dt className="muted">What to do</dt>
+                        <dd>{x.todo}</dd>
+                      </>
+                    )}
+                  </dl>
+                </div>
+              ))}
+          </div>
+        </section>
+      )}
+
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Requirements</h2>
         <ul className="list-disc space-y-1.5 pl-5">

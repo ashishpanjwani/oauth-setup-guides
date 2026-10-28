@@ -16,6 +16,17 @@ export function guideToMarkdown(g: Guide, url?: string): string {
     `| ${DIFFICULTY[g.difficulty].label} | ${g.timeToTest} | ${g.timeToProduction} | ${g.effort} | ${g.cost} |`,
     "",
   );
+  const gates = (g.gates ?? []).filter((x) => x.applies === "yes");
+  if (gates.length) {
+    out.push("## What can stop you from launching", "");
+    gates.forEach((x) => {
+      out.push(`**${x.title}**${refs(x.claimIds)}`, "");
+      if (x.what) out.push(x.what, "");
+      if (x.where) out.push(`- Where: ${x.where}`);
+      if (x.todo) out.push(`- What to do: ${x.todo}`);
+      out.push("");
+    });
+  }
   out.push("## Requirements", "", ...g.requirements.map((r) => `- ${r.text}${refs(r.claimIds)}`), "");
   out.push("## Steps", "");
   g.steps.forEach((s, i) => {

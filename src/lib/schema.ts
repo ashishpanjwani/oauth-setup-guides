@@ -27,6 +27,24 @@ export const Claim = z.object({
 });
 export type Claim = z.infer<typeof Claim>;
 
+/**
+ * The same six gates are checked for every provider, so each app's real catch surfaces
+ * from the method rather than from per-app prompting.
+ */
+export const GateId = z.enum(["register", "test_limits", "review", "admin_approval", "paid_access", "ongoing"]);
+export type GateId = z.infer<typeof GateId>;
+
+export const Gate = z.object({
+  gate: GateId,
+  applies: z.enum(["yes", "no", "unknown"]),
+  title: z.string().describe("Plain statement of the gate for this app, e.g. 'Organizations must approve your app before you can access their repos'"),
+  what: z.string().describe("What it means for the developer, in one or two sentences. Empty if applies is 'no'."),
+  where: z.string().describe("Exactly where it lives: console path or page, and who acts there. Empty if not applicable."),
+  todo: z.string().describe("What the developer should do about it. Empty if not applicable."),
+  claimIds: z.array(z.string()),
+});
+export type Gate = z.infer<typeof Gate>;
+
 export const GuideDraft = z.object({
   appName: z.string(),
   developerPortal: z.string(),
@@ -37,6 +55,7 @@ export const GuideDraft = z.object({
   effort: z.string().describe("Total hands-on work, excluding waiting, e.g. '1–2 days'"),
   cost: z.string().describe("What the developer pays the provider or third parties, e.g. 'Free' or '$500–4,500 security audit'"),
   summaryClaimIds: z.array(z.string()),
+  gates: z.array(Gate).describe("Exactly one entry for each of the six gates, in order"),
   requirements: z.array(z.object({ text: z.string(), claimIds: z.array(z.string()) })),
   steps: z.array(
     z.object({
