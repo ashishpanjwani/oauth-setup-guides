@@ -29,6 +29,8 @@ function toRow(e: AgentEvent): Row | null {
       return e.found.length || !e.missing.length
         ? { icon: e.missing.length ? "!" : "✓", text: `Found the missing docs: ${e.found.join(", ") || "none"}`, sub: e.missing.length ? `Still missing: ${e.missing.join(", ")}` : undefined, tone: e.missing.length ? "bad" : "ok" }
         : { icon: "⌕", text: `Missing docs for: ${e.missing.join(", ")}. Searching once more` };
+    case "requote":
+      return { icon: e.fixed ? "✓" : "!", text: `Found the right sentence for ${e.fixed} of ${e.tried} claims whose first quote didn't hold up`, tone: e.fixed === e.tried ? "ok" : "note" };
     case "support":
       return { icon: e.downgraded ? "!" : "✓", text: `Checked each quote supports its statement: ${e.downgraded} marked uncertain`, tone: e.downgraded ? "note" : "ok" };
     case "check":

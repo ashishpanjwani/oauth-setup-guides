@@ -16,7 +16,7 @@ ${GATES}
 Use web search (up to 5 searches) and return:
 - developerConsoleUrl: the page where a developer registers the OAuth app.
 - gates: one finding per gate (applies yes, no or unknown), each with the official URL it comes from.
-- pages: up to 8 official provider documentation pages (not blogs, not the developer console itself) to read in full, each labelled with its kind: registration, settings (explains the options on the registration form), scopes (the scopes or permissions reference for this specific product's API), review, admin, limits, pricing, or other. You must include a registration page and this product's scopes page, plus a page for every gate that applies. Skip legal terms and agreements.
+- pages: up to 8 official provider documentation pages (not blogs, not the developer console itself) to read in full, each labelled with its kind: registration, credentials (how to create the OAuth client ID and secret, when that is a separate page from registration), settings (explains the options on the registration form), scopes (the scopes or permissions reference for this specific product's API), review, admin, limits, pricing, or other. You must include a registration page and this product's scopes page, the credentials page if it is separate, plus a page for every gate that applies. Skip legal terms and agreements.
   Every page must be about this product, or be the provider's general OAuth/app-review documentation that applies to it. Never use pages about the provider's other products (for Gmail, not Google Health or Classroom pages).
 - notes: anything else from search results about wait times, costs, or rejection reasons, each followed by its URL. Community sources are fine here; say they are community sources.`;
 
@@ -40,11 +40,11 @@ ${GATES}
 - difficulty: judge the main path, the one most users take. easy: self-serve with no provider review or payment. moderate: a provider review measured in days, or a paid tier. hard: multi-week review, security audits, or partner gating. A gate that affects only some users (like some organizations requiring admin approval) does not raise difficulty; it goes in the summary and its gate.
 - timeToTest, timeToProduction, effort: short ranges like "~1 hour", "2–4 weeks", "1–2 days of work". If a gate such as admin approval means some users wait longer, say so in timeToProduction.
 - cost: what the developer pays the provider or third parties (paid API tier, security audit). "Free" if nothing.
-- requirements: 2–5 things every developer needs to register and launch (accounts, domain, privacy policy, budget). Nothing conditional: anything that applies only to some users or setups (for example "if your users are in organizations") belongs in its gate.
+- requirements: 2–5 things every developer needs before starting (accounts, domain, privacy policy, budget). Anything produced during setup (a client ID, a demo video, a scope justification) is a step, not a requirement. Nothing conditional: anything that applies only to some users or setups (for example "if your users are in organizations") belongs in its gate.
 - steps: 4–10 concrete actions the developer takes, in order, from registering the app until any user can connect.
   - One action or one decision per step. If a form has two settings that need a decision, make two steps.
-  - Only real actions. No "launch" or "go live" step unless the provider has an explicit publish or submit action. Things other people do (an end user's admin approving the app) are not steps; they are covered by their gate.
-  - why: explain what the setting or action does, what the default is and why the provider chose it, and when to choose otherwise, so the developer understands the choice. When the step is a choice between options, name each option and what it means, then say which one an app for outside users needs. Back it with a claim (the provider's own reason, quoted, is best). Empty if the action is obvious, like clicking a button.
+  - Only real actions. No "launch" or "go live" step unless the provider has an explicit publish or submit action. If the provider has a test, development or unpublished mode, include the step that takes the app out of it (for example a Publish app or Go to production button), in the right place in the order. Things other people do (an end user's admin approving the app) are not steps; they are covered by their gate.
+  - why: explain what the setting or action does, what the default is and why the provider chose it, and when to choose otherwise, so the developer understands the choice. When the step is a choice between options, name each option and what it means, then say which one an app for outside users needs. Every reason in why must come from one of the step's own cited claims; never add a reason no claim states. If no claim gives a reason, leave why empty. Empty also if the action is obvious, like clicking a button.
   - Each action appears once. Writing or checking integration code (PKCE, state, token refresh code) is out of scope.
   Each step has who:
   - "agent": an AI agent can work it out or write it: picking the narrowest scopes for the features, writing the app name, description and privacy policy text, preparing form values, checking settings against the docs. Phrase the step as that work (for example "Fill in the branding fields").
@@ -77,6 +77,9 @@ Checklist:
 9. Requirements contain nothing conditional (things that apply only to some users belong in their gate).
 10. Keep it short. Cut words that don't help the developer act.
 12. A step that is a choice names the options and what each means. A detail is never a bare fact; it says what to do or what happens.
+13. If the provider has a test or unpublished mode, a step takes the app out of it (Publish app, go to production). Don't invent one if the provider has no such mode.
+14. Requirements are only what's needed before starting. Move anything produced during setup (client ID, demo video, justification) to a step.
+15. A step's why may only state reasons found in that step's cited claims. Delete any other reason.
 
 Also fix every item in <violations>, which an automated check found.
 
@@ -89,4 +92,8 @@ For each pair answer:
 - "partly": the quote supports some of it, but the statement adds a fact, a number, a condition, or stronger wording that the quote doesn't contain.
 - "no": the quote doesn't support it, or says something different.
 
-Judge only from the quote, not from what you know. When in doubt, answer "partly". Give a short reason for anything that isn't "yes".`;
+Judge only from the quote, not from what you know. Write your reason first, then the verdict, and make the verdict agree with the reason. When in doubt, answer "partly".`;
+
+export const REQUOTE_SYSTEM = `You find supporting sentences. You get one documentation page and a list of statements that were cited to it with the wrong sentence.
+
+For each statement, find the one sentence on the page that states it. Copy that sentence exactly, word for word, as it appears in the page text. If no sentence on the page states it, return an empty quote. Never write a sentence that isn't on the page, and never stretch a sentence to fit: a sentence that only states part of the statement is not a match.`;

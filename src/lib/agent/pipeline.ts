@@ -3,7 +3,7 @@ import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { GateId, GuideDraft, type Claim, type Gate, type Guide } from "@/lib/schema";
 import { slugify } from "@/lib/text";
-import { COMPOSE_SYSTEM, EDITOR_SYSTEM, RESEARCH_SYSTEM, SUPPORT_SYSTEM } from "./prompts";
+import { COMPOSE_SYSTEM, EDITOR_SYSTEM, REQUOTE_SYSTEM, RESEARCH_SYSTEM, SUPPORT_SYSTEM } from "./prompts";
 import { lintGuide, type Violation } from "./lint";
 import { RESEARCH_MODEL, WRITER_MODEL, RUN_CAP_USD, BudgetError, addTurn, emptyUsage, type Usage } from "./cost";
 import { fetchPage, probeConsole, quoteOnPage, type Page, type Probe } from "./web";
@@ -17,6 +17,7 @@ export type AgentEvent =
   | { type: "check"; kept: number; downgraded: number }
   | { type: "coverage"; missing: string[]; found: string[] }
   | { type: "support"; checked: number; downgraded: number }
+  | { type: "requote"; tried: number; fixed: number }
   | { type: "edit"; before: number; after: number }
   | { type: "guide"; slug: string }
   | { type: "cost"; usd: number }
@@ -57,7 +58,7 @@ async function call(
 }
 
 // (a) Research: find the official pages worth reading and the developer console URL.
-const PageKind = z.enum(["registration", "settings", "scopes", "review", "admin", "limits", "pricing", "other"]);
+const PageKind = z.enum(["registration", "credentials", "settings", "scopes", "review", "admin", "limits", "pricing", "other"]);
 type PageKind = z.infer<typeof PageKind>;
 const SourcePage = z.object({ url: z.string(), title: z.string(), kind: PageKind });
 
@@ -200,8 +201,9 @@ function checkClaims(claims: Claim[], pages: Page[], probes: Probe[]): { claims:
   return { claims: out, kept, downgraded };
 }
 
+// Reason comes before the verdict so the verdict is decided after the reasoning, not before it.
 const SupportResult = z.object({
-  results: z.array(z.object({ id: z.string(), supported: z.enum(["yes", "partly", "no"]), reason: z.string() })),
+  results: z.array(z.object({ id: z.string(), reason: z.string(), supported: z.enum(["yes", "partly", "no"]) })),
 });
 
 /**
@@ -234,6 +236,56 @@ export async function checkSupport(claims: Claim[], usage: Usage, emit: Emit): P
   });
   emit({ type: "support", checked: quoted.length, downgraded });
   return out;
+}
+
+const RequoteResult = z.object({ results: z.array(z.object({ id: z.string(), quote: z.string() })) });
+
+/**
+ * Automates the manual fix for "right fact, wrong sentence": for each claim that lost its
+ * Sourced status, ask for the sentence on the cited page that states it, then accept it only
+ * if code finds it on the page word for word and the support check agrees. Anything else
+ * stays uncertain.
+ */
+async function requoteClaims(draft: Claim[], checked: Claim[], pages: Page[], usage: Usage, emit: Emit): Promise<Claim[]> {
+  const norm = (u: string) => u.replace(/\/$/, "");
+  const byUrl = new Map(pages.filter((p) => p.ok).map((p) => [norm(p.url), p]));
+  const wasSourced = new Set(draft.filter((c) => c.status === "sourced").map((c) => c.id));
+  const failed = checked.filter((c) => c.status === "uncertain" && wasSourced.has(c.id) && byUrl.has(norm(c.sourceUrl)));
+  if (!failed.length) return checked;
+
+  // One call per page, so each page's text is sent once.
+  const candidates: Claim[] = [];
+  for (const [url, claims] of Map.groupBy(failed, (c) => norm(c.sourceUrl))) {
+    const page = byUrl.get(url)!;
+    const text = await call(
+      RESEARCH_MODEL,
+      {
+        system: REQUOTE_SYSTEM,
+        messages: [
+          {
+            role: "user",
+            content: `<page url="${page.url}">\n${page.text}\n</page>\n\n<statements>\n${claims.map((c) => `${c.id}: ${c.statement}`).join("\n")}\n</statements>`,
+          },
+        ],
+        output_config: { effort: "low", format: zodOutputFormat(RequoteResult) },
+      },
+      usage,
+      emit,
+    );
+    for (const r of RequoteResult.parse(JSON.parse(text)).results) {
+      const c = claims.find((x) => x.id === r.id);
+      const words = r.quote.replace(/https?:\/\/\S+/g, "").trim().split(/\s+/).filter(Boolean).length;
+      if (c && words >= 6 && quoteOnPage(r.quote, page.text)) candidates.push({ ...c, status: "sourced", quote: r.quote });
+    }
+  }
+  // The new quotes go through the same support check; only claims that pass are restored.
+  const verified = await checkSupport(candidates, usage, () => {});
+  const restored = new Map(verified.filter((c) => c.status === "sourced").map((c) => [c.id, c]));
+  emit({ type: "requote", tried: failed.length, fixed: restored.size });
+  return checked.map((c) => {
+    const r = restored.get(c.id);
+    return r ? { ...r, note: `${c.note.replace(/\s*\[Check:[^\]]*\]/g, "").trim()} [Re-quoted automatically: the first quote didn't state this.]`.trim() } : c;
+  });
 }
 
 /**
@@ -334,6 +386,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
   const checked = checkClaims(draft.claims, pages, probes);
   emit({ type: "check", kept: checked.kept, downgraded: checked.downgraded });
   checked.claims = await checkSupport(checked.claims, usage, emit);
+  checked.claims = await requoteClaims(draft.claims, checked.claims, pages, usage, emit);
 
   emit({ type: "phase", phase: "edit", message: "Editing against the checklist" });
   const before = lintGuide(draft);
