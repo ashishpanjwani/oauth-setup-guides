@@ -1,7 +1,8 @@
 /**
  * Generate library guides with the same agent pipeline the live flow uses, then verify them.
- *   npx tsx --env-file=.env.local scripts/build-library.ts "GitHub" "Slack"
+ *   npx tsx --env-file=.env.local scripts/build-library.ts [--max-usd 1] "GitHub" "Slack"
  *   npx tsx --env-file=.env.local scripts/build-library.ts --reindex
+ * Apps run one at a time; the script stops before starting an app once --max-usd (default $1) is spent.
  * Library guides are then reviewed by hand; corrections go into each JSON's `corrections`.
  */
 import { promises as fs } from "fs";
@@ -10,8 +11,24 @@ import { compose, research, verifyGuide, type AgentEvent, type Research } from "
 import { slugify } from "@/lib/directory";
 
 const DIR = path.join(process.cwd(), "src/data/library");
+const REPLAY_DIR = path.join(process.cwd(), "src/data/replay");
 // Research is the slow, costly part; cache it so a compose/verify failure doesn't redo it.
 const CACHE = path.join(process.cwd(), ".data", "research");
+
+let events: AgentEvent[] = [];
+let phaseCost = 0;
+
+function log(e: AgentEvent) {
+  events.push(e);
+  if (e.type === "cost") phaseCost = e.usd;
+  const line =
+    e.type === "phase" ? `\n== ${e.phase}: ${e.message}` :
+    e.type === "search" ? `  search: ${e.query}` :
+    e.type === "fetch" ? `  fetch: ${e.url}` :
+    e.type === "probe" ? `  probe ${e.probe.name}: ${e.probe.result.slice(0, 160)}` :
+    e.type === "claim_check" ? `  ${e.claimId}: ${e.verdict}` : null;
+  if (line) console.log(line);
+}
 
 async function cachedResearch(app: string): Promise<Research> {
   const file = path.join(CACHE, `${slugify(app)}.json`);
@@ -23,17 +40,6 @@ async function cachedResearch(app: string): Promise<Research> {
     await fs.writeFile(file, JSON.stringify(r, null, 2));
     return r;
   }
-}
-
-function log(e: AgentEvent) {
-  const line =
-    e.type === "phase" ? `\n== ${e.phase}: ${e.message}` :
-    e.type === "search" ? `  search: ${e.query}` :
-    e.type === "fetch" ? `  fetch: ${e.url}` :
-    e.type === "probe" ? `  probe ${e.probe.name}: ${e.probe.result.slice(0, 160)}` :
-    e.type === "claim_check" ? `  ${e.claimId}: ${e.verdict}` :
-    e.type === "note" ? `  · ${e.text.slice(0, 160)}` : null;
-  if (line) console.log(line);
 }
 
 async function reindex() {
@@ -53,12 +59,42 @@ async function reindex() {
 
 async function main() {
   const args = process.argv.slice(2);
-  for (const app of args.filter((a) => a !== "--reindex")) {
-    const guide = await verifyGuide(await compose(await cachedResearch(app), log, "library"), log);
-    await fs.writeFile(path.join(DIR, `${guide.slug}.json`), JSON.stringify(guide, null, 2));
-    const counts = guide.claims.reduce<Record<string, number>>((m, c) => ((m[c.status] = (m[c.status] ?? 0) + 1), m), {});
-    console.log(`\nSaved ${guide.slug}.json: ${guide.verdict.tier}, ${guide.claims.length} claims ${JSON.stringify(counts)}, ${guide.agentRun?.durationSec}s`);
+  const capIdx = args.indexOf("--max-usd");
+  const maxUsd = capIdx >= 0 ? Number(args[capIdx + 1]) : 1;
+  const apps = args.filter((a, i) => a !== "--reindex" && a !== "--max-usd" && i !== capIdx + 1);
+  let spent = 0;
+
+  for (const app of apps) {
+    if (spent >= maxUsd) {
+      console.log(`\nStopping before ${app}: spent $${spent.toFixed(3)} of the $${maxUsd} limit.`);
+      break;
+    }
+    events = [];
+    let total = 0;
+    try {
+      const r = await cachedResearch(app);
+      total += phaseCost;
+      phaseCost = 0;
+      const draft = await compose(r, log, "library");
+      total += phaseCost - (r.usage?.usd ?? 0);
+      phaseCost = 0;
+      const guide = await verifyGuide(draft, log);
+      total += phaseCost;
+      phaseCost = 0;
+      await fs.writeFile(path.join(DIR, `${guide.slug}.json`), JSON.stringify(guide, null, 2));
+      await fs.mkdir(REPLAY_DIR, { recursive: true });
+      events.push({ type: "guide", slug: guide.slug }, { type: "phase", phase: "done", message: "Replay complete" });
+      await fs.writeFile(path.join(REPLAY_DIR, `${guide.slug}.ndjson`), events.map((e) => JSON.stringify(e)).join("\n") + "\n");
+      const counts = guide.claims.reduce<Record<string, number>>((m, c) => ((m[c.status] = (m[c.status] ?? 0) + 1), m), {});
+      console.log(`\nSaved ${guide.slug}.json: ${guide.verdict.tier}, ${guide.claims.length} claims ${JSON.stringify(counts)}, ${guide.agentRun?.durationSec}s, this run $${total.toFixed(3)}`);
+    } catch (e) {
+      total += phaseCost;
+      phaseCost = 0;
+      console.error(`\nFailed on ${app} after $${total.toFixed(3)}: ${(e as Error).message}`);
+    }
+    spent += total;
   }
+  console.log(`\nTotal spent this invocation: $${spent.toFixed(3)}`);
   await reindex();
 }
 

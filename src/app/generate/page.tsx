@@ -41,7 +41,9 @@ function toRow(e: AgentEvent): Row | null {
 }
 
 function Generator() {
-  const q = useSearchParams().get("q") ?? "";
+  const params = useSearchParams();
+  const q = params.get("q") ?? "";
+  const replay = params.get("replay");
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("research");
   const [rows, setRows] = useState<Row[]>([]);
@@ -62,15 +64,18 @@ function Generator() {
 
     (async () => {
       let newSlug: string | null = null;
+      let finished = false;
       try {
-        for await (const e of streamEvents("/api/generate", { query: q })) {
+        for await (const e of streamEvents("/api/generate", { query: q, replay })) {
           if (e.type === "phase") setPhase(e.phase);
+          if (e.type === "phase" && e.phase === "done") finished = true;
           if (e.type === "guide") newSlug = e.slug;
           if (e.type === "error") throw new Error(e.message);
           push(e);
         }
         if (!newSlug) throw new Error("The agent finished without producing a guide.");
         setSlug(newSlug);
+        if (finished) return router.push(`/guides/${newSlug}`); // replay already included verification
         setPhase("verify");
         for await (const e of streamEvents("/api/verify", { slug: newSlug })) {
           if (e.type === "error") throw new Error(e.message);
@@ -84,7 +89,7 @@ function Generator() {
         clearInterval(timer);
       }
     })();
-  }, [q, router]);
+  }, [q, replay, router]);
 
   if (!q) return <p className="muted">Nothing to investigate. <Link href="/" className="underline">Search for an app</Link>.</p>;
 
@@ -92,7 +97,7 @@ function Generator() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm muted">Live investigation</p>
+        <p className="text-sm muted">{replay ? "Replay of a recorded investigation (no API cost)" : "Live investigation"}</p>
         <h1 className="text-2xl font-semibold">{q}</h1>
         <p className="mt-1 text-sm muted">
           Usually 2–4 minutes. You can leave this page open and share the guide link when it&rsquo;s done. {elapsed > 0 && <span className="font-mono">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>}
