@@ -95,9 +95,9 @@
       ]
     },
     {
-      "text": "A callback URL for your app (up to 10 allowed)",
+      "text": "A redirect URI for your app (up to 10 allowed)",
       "claimIds": [
-        "c9"
+        "c20"
       ]
     }
   ],
@@ -112,21 +112,22 @@
       ]
     },
     {
-      "text": "Enter the application name, homepage URL and optional description.",
-      "why": "Users see these on the authorization screen.",
+      "text": "Fill in Application name, Homepage URL and Application description.",
+      "why": "Users see these when they authorize your app. Name and homepage are required; the description is optional.",
       "detail": "",
-      "who": "agent_prepares",
+      "who": "agent",
       "claimIds": [
         "c9"
       ]
     },
     {
-      "text": "Set the Authorization callback URL.",
-      "why": "A redirect_uri that does not match a registered URL causes an error.",
-      "detail": "Up to 10 callback URLs can be added.",
+      "text": "Under Redirect URIs, enter the URL GitHub should send users back to after they authorize.",
+      "why": "The redirect_uri your app sends must match one of these, or authorization fails.",
+      "detail": "Up to 10, via Add redirect URI. Leave Allow wildcard matching off unless you control every subdomain and path. GitHub's docs still call this field \"Authorization callback URL\".",
       "who": "you",
       "claimIds": [
-        "c9",
+        "c20",
+        "c21",
         "c10"
       ]
     },
@@ -137,7 +138,8 @@
       "who": "you",
       "claimIds": [
         "c17",
-        "c18"
+        "c18",
+        "c22"
       ]
     },
     {
@@ -146,10 +148,11 @@
       "detail": "",
       "who": "you",
       "claimIds": [
+        "c12",
+        "c15",
         "c16",
         "c19",
-        "c12",
-        "c15"
+        "c22"
       ]
     },
     {
@@ -349,6 +352,33 @@
       "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
       "quote": "To enforce regular token rotation and reduce the impact of a compromised token, you can configure your OAuth app to get access tokens that expire.",
       "note": ""
+    },
+    {
+      "id": "c20",
+      "statement": "On the live registration form, the callback field is a \"Redirect URIs\" section: up to 10 URIs, added with \"Add redirect URI\", each with an \"Allow wildcard matching\" checkbox. GitHub's docs still call it \"Authorization callback URL\".",
+      "status": "tested",
+      "sourceUrl": "https://github.com/settings/applications/new",
+      "sourceTitle": "GitHub: Register a new OAuth app (live form)",
+      "quote": "You may add up to 10 redirect URIs.",
+      "note": "Observed by a person on the live form on 2026-10-28 (screenshot)."
+    },
+    {
+      "id": "c21",
+      "statement": "Wildcard matching sends tokens to every subdomain and path of the redirect URI; GitHub advises enabling it only if you control all of them.",
+      "status": "tested",
+      "sourceUrl": "https://github.com/settings/applications/new",
+      "sourceTitle": "GitHub: Register a new OAuth app (live form)",
+      "quote": "Only enable this if you are sure you have control over all possible matches.",
+      "note": "Text on the live form, observed 2026-10-28."
+    },
+    {
+      "id": "c22",
+      "statement": "On the live form, Enable Device Flow is unchecked and Expire user access tokens is checked by default.",
+      "status": "tested",
+      "sourceUrl": "https://github.com/settings/applications/new",
+      "sourceTitle": "GitHub: Register a new OAuth app (live form)",
+      "quote": "",
+      "note": "Observed by a person on the live form on 2026-10-28 (screenshot). Matches the docs."
     }
   ],
   "slug": "github",
@@ -371,5 +401,5 @@
     "durationSec": 77,
     "costUsd": 0.211
   },
-  "reviewNote": "Corrected by hand on 2026-10-28: explained the device flow and token expiry settings from GitHub's docs, removed a false 'docs conflict' note, fixed one step's who label, removed an edge-case blocker. Shortened the two settings explanations, removed a non-setup step, and relabelled the name/description step."
+  "reviewNote": "Corrected by hand on 2026-10-28: explained the device flow and token expiry settings from GitHub's docs, removed a false 'docs conflict' note, fixed one step's who label, removed an edge-case blocker. Shortened the two settings explanations, removed a non-setup step, and relabelled the name/description step. Steps checked against the live registration form on 2026-10-28; GitHub renamed the callback field to Redirect URIs."
 }

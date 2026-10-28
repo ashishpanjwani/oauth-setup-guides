@@ -42,13 +42,12 @@ ${GATES}
 - requirements: 2–5 things every developer needs to register and launch (accounts, domain, privacy policy, budget). Nothing conditional: anything that applies only to some users or setups (for example "if your users are in organizations") belongs in its gate.
 - steps: 4–10 concrete actions the developer takes, in order, from registering the app until any user can connect.
   - One action or one decision per step. If a form has two settings that need a decision, make two steps.
-  - Only real actions. No "launch" or "go live" step unless the provider has an explicit publish or submit action. Things other people do (an end user's admin approving the app) are not steps; they are covered by their gate. Add a developer step for them only if there is something concrete to do, like preparing the text that tells users how to request approval.
+  - Only real actions. No "launch" or "go live" step unless the provider has an explicit publish or submit action. Things other people do (an end user's admin approving the app) are not steps; they are covered by their gate.
   - why: explain what the setting or action does, what the default is and why the provider chose it, and when to choose otherwise, so the developer understands the choice. Back it with a claim (the provider's own reason, quoted, is best). Empty if the action is obvious, like clicking a button.
   - Each action appears once. Writing or checking integration code (PKCE, state, token refresh code) is out of scope.
   Each step has who:
-  - "agent": an AI agent can do it alone, with no login to the developer's accounts and no decision to make: producing a scope list, drafting text, checking console settings against the docs.
-  - "agent_prepares": an agent drafts it, the developer submits, signs in, or signs off.
-  - "you": anything inside the provider's console, and any decision.
+  - "agent": an AI agent can do or prepare it: choosing scopes, writing the app name, description and privacy policy text, filling in form values, checking settings against the docs.
+  - "you": only the developer can do it: signing in, clicking submit or register, accepting terms, paying, or making a decision.
   - "waiting": only for waiting on a review or approval the provider itself runs. Put the expected wait in detail.
   detail: exact values or the one gotcha; empty string if none.
 - blockers: 3–5 problems developers commonly hit while setting up or launching, each with the fix. Not legal terms or rare edge cases.

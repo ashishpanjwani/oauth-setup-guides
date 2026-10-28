@@ -10,7 +10,7 @@ export const EvidenceStatus = z.enum(["tested", "sourced", "uncertain"]);
 export type EvidenceStatus = z.infer<typeof EvidenceStatus>;
 
 /** Who does a step. "waiting" marks time spent on the provider's side (reviews, approvals). */
-export const Who = z.enum(["agent", "agent_prepares", "you", "waiting"]);
+export const Who = z.enum(["agent", "you", "waiting"]);
 export type Who = z.infer<typeof Who>;
 
 export const Difficulty = z.enum(["easy", "moderate", "hard"]);

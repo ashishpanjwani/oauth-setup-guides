@@ -61,7 +61,7 @@
     {
       "text": "Draft the privacy policy and the explanation of why you need each scope",
       "detail": "",
-      "who": "agent_prepares",
+      "who": "agent",
       "claimIds": [
         "c8"
       ]
@@ -97,7 +97,7 @@
     {
       "text": "Record a demo video of the consent screen and each scope in use",
       "detail": "The agent can write the script and shot list; you record it.",
-      "who": "agent_prepares",
+      "who": "agent",
       "claimIds": [
         "c9"
       ]
