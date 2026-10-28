@@ -50,7 +50,7 @@
       "applies": "yes",
       "title": "Organizations with access restrictions block your app",
       "what": "When an organization has OAuth app access restrictions on, its members cannot authorize your app for organization resources. New organizations have restrictions enabled by default.",
-      "where": "Organization Settings > Third-party Access > OAuth app policy.",
+      "where": "Organization Settings > Third-party Access > OAuth app policy. The organization owner acts here, not you.",
       "todo": "Tell users in restricted organizations to request approval for your app from their organization owner.",
       "claimIds": [
         "c4",
@@ -131,21 +131,25 @@
       ]
     },
     {
-      "text": "Decide whether to check Enable Device Flow.",
-      "why": "Device flow must be enabled in the app settings before use.",
+      "text": "Leave Enable Device Flow unchecked unless your app has no browser (a CLI, IoT device or headless tool).",
+      "why": "It's off by default. Turning it on lets users sign in by typing a code your app shows them, for apps that can't open a browser. But device flow skips redirect URIs, so attackers can use it to impersonate your app in phishing attacks, which is why GitHub advises enabling it only when you need it.",
       "detail": "",
       "who": "you",
       "claimIds": [
-        "c11"
+        "c17",
+        "c18"
       ]
     },
     {
-      "text": "Decide whether to keep Expire user access tokens checked.",
-      "why": "Expiring tokens last eight hours, and refresh tokens expire after six months without use.",
-      "detail": "The docs conflict on the default. Check the live form.",
+      "text": "Keep Expire user access tokens checked.",
+      "why": "It's on by default so tokens rotate regularly and a leaked token stops working quickly: access tokens last 8 hours, and your app uses a refresh token (valid for 6 months if unused) to get new ones. If you turn it off, tokens stay valid until revoked, and GitHub only revokes ones unused for a year. Turn it off only if your app can't handle refresh tokens yet.",
+      "detail": "",
       "who": "you",
       "claimIds": [
-        "c12"
+        "c16",
+        "c19",
+        "c12",
+        "c15"
       ]
     },
     {
@@ -158,10 +162,10 @@
       ]
     },
     {
-      "text": "Prepare the text that tells users in restricted organizations how to request owner approval for your app.",
+      "text": "Draft the text that tells users in restricted organizations how to request owner approval for your app.",
       "why": "Members of organizations with restrictions cannot authorize your app for organization resources.",
       "detail": "",
-      "who": "you",
+      "who": "agent_prepares",
       "claimIds": [
         "c5",
         "c6"
@@ -185,13 +189,6 @@
       ]
     },
     {
-      "problem": "Users are redirected with error=application_suspended.",
-      "fix": "GitHub can suspend apps for reported abuse, spam or API misuse. Contact GitHub Support.",
-      "claimIds": [
-        "c14"
-      ]
-    },
-    {
       "problem": "Tokens stop working unexpectedly.",
       "fix": "GitHub revokes an OAuth token unused for a year. Send the user through authorization again.",
       "claimIds": [
@@ -199,9 +196,7 @@
       ]
     }
   ],
-  "couldNotVerify": [
-    "Whether Expire user access tokens is checked by default on the live registration form; the pages disagree."
-  ],
+  "couldNotVerify": [],
   "claims": [
     {
       "id": "c1",
@@ -321,21 +316,48 @@
       "note": ""
     },
     {
-      "id": "c14",
-      "statement": "Apps can be suspended for abuse, spam or API misuse.",
-      "status": "sourced",
-      "sourceUrl": "https://developer.github.com/apps/building-integrations/managing-oauth-apps/troubleshooting-authorization-request-errors/",
-      "sourceTitle": "Troubleshooting authorization request errors - GitHub Docs",
-      "quote": "If the OAuth app you set up has been suspended (due to reported abuse, spam, or a mis-use of the API), GitHub will redirect to the registered callback URL using the following parameters to summarize the error:",
-      "note": ""
-    },
-    {
       "id": "c15",
       "statement": "OAuth tokens unused for a year are revoked.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/token-expiration-and-revocation",
       "sourceTitle": "Token expiration and revocation - GitHub Docs",
       "quote": "GitHub will automatically revoke an OAuth token or personal access token when the token hasn't been used in one year.",
+      "note": ""
+    },
+    {
+      "id": "c16",
+      "statement": "Expire user access tokens is on by default for new OAuth apps.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+      "sourceTitle": "Creating an OAuth app - GitHub Docs",
+      "quote": "Expire user access tokens is enabled by default.",
+      "note": ""
+    },
+    {
+      "id": "c17",
+      "statement": "Device flow lets users sign in to apps without a browser, such as CLI tools.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+      "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
+      "quote": "The device flow allows you to authorize users for a headless application, such as a CLI tool or the Git Credential Manager",
+      "note": ""
+    },
+    {
+      "id": "c18",
+      "statement": "Device flow needs no redirect URI, so attackers can use it to impersonate the app in phishing attacks; GitHub advises enabling it only for CLIs, IoT devices or headless systems.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
+      "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
+      "quote": "The device flow does not require redirect URIs at all, which means that an attacker can use the device flow to remotely impersonate your app as part of a phishing attack.",
+      "note": ""
+    },
+    {
+      "id": "c19",
+      "statement": "Expiring tokens exist to enforce regular token rotation and limit the damage of a leaked token.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+      "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
+      "quote": "To enforce regular token rotation and reduce the impact of a compromised token, you can configure your OAuth app to get access tokens that expire.",
       "note": ""
     }
   ],
@@ -358,5 +380,6 @@
     "probes": 1,
     "durationSec": 77,
     "costUsd": 0.211
-  }
+  },
+  "reviewNote": "Corrected by hand on 2026-10-28: explained the device flow and token expiry settings from GitHub's docs, removed a false 'docs conflict' note, fixed one step's who label, removed an edge-case blocker."
 }
