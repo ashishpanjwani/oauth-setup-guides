@@ -1,103 +1,88 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Search } from "@/components/search";
+import { DirectoryTable } from "@/components/directory-table";
+import { Difficulty } from "@/components/guide-bits";
+import { libraryGuides } from "@/lib/store";
+import { DIRECTORY } from "@/lib/directory";
+import { EVIDENCE, TIER } from "@/lib/labels";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const library = [...libraryGuides()].sort((a, b) => a.verdict.difficulty - b.verdict.difficulty);
+  const byo = DIRECTORY.toolkits.filter((t) => !t.managed).length;
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <div className="space-y-14">
+      <section className="space-y-5 pt-4">
+        <h1 className="max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl">
+          Know what it takes to get an OAuth app approved <span className="muted">before you start.</span>
+        </h1>
+        <p className="max-w-2xl text-lg muted">
+          Look up an app to see how hard setup is, how long approval takes, what usually blocks it, and which steps an agent can do for you.
+          If there&rsquo;s no guide yet, an agent investigates the app live and writes one you can share.
+        </p>
+        <Search library={library.map((g) => ({ slug: g.slug, appName: g.appName, tier: g.verdict.tier }))} />
+        <p className="text-sm muted">
+          {byo} of {DIRECTORY.toolkits.length} OAuth toolkits on Composio have no managed app, so developers must register their own before any user can connect.
+        </p>
+      </section>
+
+      <section id="library" className="space-y-4">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Guide library</h2>
+            <p className="text-sm muted">Agent-researched, fact-checked, then reviewed by a person. Ordered from easiest to hardest.</p>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        {library.length === 0 ? (
+          <p className="card p-6 muted">No library guides yet.</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {library.map((g) => {
+              const tested = g.claims.filter((c) => c.status === "tested" || c.status === "verified").length;
+              return (
+                <Link key={g.slug} href={`/guides/${g.slug}`} className="card group flex flex-col gap-3 p-4 transition hover:border-zinc-400 dark:hover:border-zinc-600">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-semibold">{g.appName}</span>
+                    <span className={`chip ${TIER[g.verdict.tier].cls}`}>{TIER[g.verdict.tier].label}</span>
+                  </div>
+                  <p className="text-sm muted line-clamp-2">{g.verdict.headline}</p>
+                  <dl className="mt-auto grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <dt className="muted">To production</dt>
+                      <dd className="font-medium">{g.verdict.timeToProduction}</dd>
+                    </div>
+                    <div>
+                      <dt className="muted">Difficulty</dt>
+                      <dd><Difficulty n={g.verdict.difficulty} /></dd>
+                    </div>
+                  </dl>
+                  <div className="flex items-center justify-between text-xs muted">
+                    <span>{g.composio.managedAuth === "yes" ? "Composio-managed app available" : "Bring your own app"}</span>
+                    <span>{tested}/{g.claims.length} claims checked</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="card grid gap-4 p-5 sm:grid-cols-4">
+        {(Object.keys(EVIDENCE) as (keyof typeof EVIDENCE)[]).map((k) => (
+          <div key={k} className="space-y-1">
+            <span className={`chip ${EVIDENCE[k].cls}`}>{EVIDENCE[k].label}</span>
+            <p className="text-xs muted">{EVIDENCE[k].blurb}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold">Every OAuth app on Composio</h2>
+          <p className="text-sm muted">Pick any app to generate its guide live. Start with the ones where you have to bring your own app.</p>
+        </div>
+        <DirectoryTable librarySlugs={library.map((g) => g.slug)} />
+      </section>
     </div>
   );
 }
