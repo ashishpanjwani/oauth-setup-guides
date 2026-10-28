@@ -2,14 +2,19 @@ import { promises as fs } from "fs";
 import path from "path";
 import { get, list, put } from "@vercel/blob";
 import type { Guide } from "./schema";
-import { LIBRARY } from "@/data/library";
 
-// Library guides ship in the repo. Generated guides go to Vercel Blob when a token
-// is configured (deployed), otherwise to a local .data/ folder (dev).
+// Seed guides ship in the repo under data/guides. Generated guides go to Vercel Blob when a
+// token is configured (deployed), otherwise to a local .data/ folder (dev).
+const SEED_DIR = path.join(process.cwd(), "data", "guides");
 const LOCAL_DIR = path.join(process.cwd(), ".data");
+
+async function seedGuides(): Promise<Guide[]> {
+  const files = await fs.readdir(SEED_DIR).catch(() => [] as string[]);
+  return Promise.all(files.filter((f) => f.endsWith(".json")).sort().map(async (f) => JSON.parse(await fs.readFile(path.join(SEED_DIR, f), "utf8"))));
+}
 const blobEnabled = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
-/** Library guides plus every guide generated so far, newest first. */
+/** Seed guides plus every guide generated so far, newest first. */
 export async function allGuides(): Promise<Guide[]> {
   let slugs: string[] = [];
   if (blobEnabled()) {
@@ -22,7 +27,7 @@ export async function allGuides(): Promise<Guide[]> {
       .catch(() => []);
   }
   const generated = (await Promise.all(slugs.map((s) => readJson<Guide>(`guides/${s}.json`)))).filter((g): g is Guide => Boolean(g));
-  return [...LIBRARY, ...generated.sort((a, b) => b.createdAt.localeCompare(a.createdAt))];
+  return [...(await seedGuides()), ...generated.sort((a, b) => b.createdAt.localeCompare(a.createdAt))];
 }
 
 async function readJson<T>(key: string): Promise<T | null> {
@@ -50,9 +55,9 @@ async function writeJson(key: string, value: unknown): Promise<void> {
 }
 
 export async function getGuide(slug: string): Promise<Guide | null> {
-  const lib = LIBRARY.find((g) => g.slug === slug);
-  if (lib) return lib;
   if (!/^[a-z0-9-]+$/.test(slug)) return null;
+  const seed = await fs.readFile(path.join(SEED_DIR, `${slug}.json`), "utf8").catch(() => null);
+  if (seed) return JSON.parse(seed);
   return readJson<Guide>(`guides/${slug}.json`);
 }
 

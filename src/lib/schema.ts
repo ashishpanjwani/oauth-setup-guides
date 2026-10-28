@@ -20,7 +20,9 @@ export const Claim = z.object({
   id: z.string().describe("c1, c2, ..."),
   statement: z.string(),
   status: EvidenceStatus,
-  sources: z.array(z.object({ url: z.string(), title: z.string() })),
+  sourceUrl: z.string().describe("The page this comes from. Empty string for estimates."),
+  sourceTitle: z.string(),
+  quote: z.string().describe("Exact sentence copied from the source page that supports the statement. Empty string if none."),
   note: z.string().describe("How we know, or why it's uncertain. Empty string if nothing to add."),
 });
 export type Claim = z.infer<typeof Claim>;
@@ -50,7 +52,8 @@ export const GuideDraft = z.object({
 });
 export type GuideDraft = z.infer<typeof GuideDraft>;
 
-export type Probe = { name: string; target: string; ok: boolean; result: string };
+import type { Probe } from "./agent/web";
+export type { Probe };
 
 export type Guide = GuideDraft & {
   slug: string;

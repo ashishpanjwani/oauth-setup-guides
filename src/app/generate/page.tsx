@@ -6,31 +6,26 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { streamEvents } from "@/lib/client/ndjson";
 import type { AgentEvent } from "@/lib/agent/pipeline";
 
-type Phase = "research" | "compose" | "verify" | "done";
+type Phase = "research" | "fetch" | "compose" | "check" | "done";
 const PHASES: { id: Phase; label: string; hint: string }[] = [
-  { id: "research", label: "Research", hint: "Reads the provider's docs and checks its live OAuth endpoints" },
-  { id: "compose", label: "Write", hint: "Turns what it found into steps, blockers and time estimates" },
-  { id: "verify", label: "Fact-check", hint: "Re-opens the sources and flags anything that doesn't hold up" },
+  { id: "research", label: "Find docs", hint: "Searches for the provider's official pages" },
+  { id: "fetch", label: "Read & probe", hint: "Reads those pages and checks the developer console" },
+  { id: "compose", label: "Write", hint: "Turns them into steps, blockers and time estimates" },
+  { id: "check", label: "Check quotes", hint: "Confirms every quoted sentence is on its page" },
 ];
 
 type Row = { icon: string; text: string; sub?: string; tone?: "ok" | "bad" | "note" };
 
 function toRow(e: AgentEvent): Row | null {
   switch (e.type) {
-    case "note":
-      return { icon: "·", text: e.text, tone: "note" };
     case "search":
       return { icon: "⌕", text: `Searching “${e.query}”` };
-    case "search_results":
-      return e.results.length ? { icon: " ", text: e.results.map((r) => r.title).slice(0, 3).join(" · "), tone: "note" } : null;
     case "fetch":
-      return { icon: "↗", text: `Reading ${e.url}` };
-    case "fetch_result":
-      return e.ok ? null : { icon: "✗", text: "Page could not be read", tone: "bad" };
+      return e.ok ? { icon: "✓", text: `Read ${e.url}`, tone: "ok" } : { icon: "✗", text: `Couldn't read ${e.url}`, sub: e.error, tone: "bad" };
     case "probe":
-      return { icon: e.probe.ok ? "✓" : "✗", text: `Probe ${e.probe.name}: ${e.probe.target}`, sub: e.probe.result.slice(0, 220), tone: e.probe.ok ? "ok" : "bad" };
-    case "claim_check":
-      return { icon: e.verdict === "supported" ? "✓" : "!", text: `${e.claimId}: ${e.verdict.replace("_", " ")}`, sub: e.evidence.slice(0, 200), tone: e.verdict === "supported" ? "ok" : "bad" };
+      return { icon: e.probe.ok ? "✓" : "✗", text: `Developer console: ${e.probe.target}`, sub: e.probe.result, tone: e.probe.ok ? "ok" : "bad" };
+    case "check":
+      return { icon: e.downgraded ? "!" : "✓", text: `${e.kept} claims confirmed on their pages, ${e.downgraded} marked uncertain`, tone: e.downgraded ? "note" : "ok" };
     case "error":
       return { icon: "✗", text: e.message, tone: "bad" };
     default:
@@ -94,7 +89,7 @@ function Generator() {
         </p>
       </div>
 
-      <ol className="grid gap-3 sm:grid-cols-3">
+      <ol className="grid gap-3 sm:grid-cols-4">
         {PHASES.map((p, i) => {
           const state = phase === "done" || i < idx ? "done" : i === idx ? "active" : "todo";
           return (

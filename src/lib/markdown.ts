@@ -24,8 +24,7 @@ export function guideToMarkdown(g: Guide, url?: string): string {
   out.push("", "## Blockers", "", ...g.blockers.map((b) => `- **${b.problem}**: ${b.fix}${refs(b.claimIds)}`), "");
   if (g.couldNotVerify.length) out.push("## Could not verify", "", ...g.couldNotVerify.map((x) => `- ${x}`), "");
   g.claims.forEach((c, i) => {
-    const links = c.sources.map((s) => s.url).join(", ");
-    out.push(`[^${i + 1}]: **${EVIDENCE[c.status].label}.** ${c.statement}${links ? ` ${links}` : ""}${c.note ? ` (${c.note})` : ""}`);
+    out.push(`[^${i + 1}]: **${EVIDENCE[c.status].label}.** ${c.statement}${c.quote ? ` "${c.quote}"` : ""}${c.sourceUrl ? ` ${c.sourceUrl}` : ""}${c.note ? ` (${c.note})` : ""}`);
   });
   return out.join("\n");
 }

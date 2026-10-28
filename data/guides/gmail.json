@@ -8,12 +8,39 @@
   "timeToProduction": "6–10 weeks",
   "effort": "1–2 days of work",
   "cost": "$500–4,500/year security audit if you read or change mail; otherwise free",
-  "summaryClaimIds": ["c1", "c2", "c3", "c4", "c5", "c11", "c12"],
+  "summaryClaimIds": [
+    "c1",
+    "c2",
+    "c3",
+    "c4",
+    "c5",
+    "c11",
+    "c12"
+  ],
   "requirements": [
-    { "text": "A Google account and a Google Cloud project (free)", "claimIds": [] },
-    { "text": "A domain you own, with a public home page and a privacy policy on it", "claimIds": ["c8"] },
-    { "text": "A privacy policy that follows Google's User Data Policy, including the Limited Use rules", "claimIds": ["c8"] },
-    { "text": "Budget for a CASA security assessment if your agent reads or changes mail", "claimIds": ["c3", "c4"] }
+    {
+      "text": "A Google account and a Google Cloud project (free)",
+      "claimIds": []
+    },
+    {
+      "text": "A domain you own, with a public home page and a privacy policy on it",
+      "claimIds": [
+        "c8"
+      ]
+    },
+    {
+      "text": "A privacy policy that follows Google's User Data Policy, including the Limited Use rules",
+      "claimIds": [
+        "c8"
+      ]
+    },
+    {
+      "text": "Budget for a CASA security assessment if your agent reads or changes mail",
+      "claimIds": [
+        "c3",
+        "c4"
+      ]
+    }
   ],
   "steps": [
     {
@@ -26,13 +53,18 @@
       "text": "Pick the narrowest Gmail scopes your agent needs",
       "detail": "Send only → gmail.send (no audit). Read, label or archive mail → gmail.readonly or gmail.modify (restricted: review + audit).",
       "who": "agent",
-      "claimIds": ["c1", "c5"]
+      "claimIds": [
+        "c1",
+        "c5"
+      ]
     },
     {
       "text": "Draft the privacy policy and the explanation of why you need each scope",
       "detail": "",
       "who": "agent_prepares",
-      "claimIds": ["c8"]
+      "claimIds": [
+        "c8"
+      ]
     },
     {
       "text": "Set up the OAuth consent screen: app name, logo, support email, home page, privacy policy, authorized domain",
@@ -50,76 +82,106 @@
       "text": "Add test users and connect your own account",
       "detail": "Up to 100 test users. In Testing, logins expire after 7 days.",
       "who": "you",
-      "claimIds": ["c6"]
+      "claimIds": [
+        "c6"
+      ]
     },
     {
       "text": "Verify your domain in Google Search Console",
       "detail": "Use a Google account that is Owner or Editor on the Cloud project.",
       "who": "you",
-      "claimIds": ["c8"]
+      "claimIds": [
+        "c8"
+      ]
     },
     {
       "text": "Record a demo video of the consent screen and each scope in use",
       "detail": "The agent can write the script and shot list; you record it.",
       "who": "agent_prepares",
-      "claimIds": ["c9"]
+      "claimIds": [
+        "c9"
+      ]
     },
     {
       "text": "Submit for verification",
       "detail": "Brand verification first, then scope verification.",
       "who": "you",
-      "claimIds": ["c7"]
+      "claimIds": [
+        "c7"
+      ]
     },
     {
       "text": "Wait for brand verification",
       "detail": "Typically 2–3 business days.",
       "who": "waiting",
-      "claimIds": ["c7"]
+      "claimIds": [
+        "c7"
+      ]
     },
     {
       "text": "Complete the CASA security assessment with a Google-approved assessor",
       "detail": "Only for restricted scopes. Repeat at least every 12 months.",
       "who": "you",
-      "claimIds": ["c3", "c4"]
+      "claimIds": [
+        "c3",
+        "c4"
+      ]
     },
     {
       "text": "Wait for restricted-scope review",
       "detail": "Google says it \"can potentially take several weeks\".",
       "who": "waiting",
-      "claimIds": ["c2"]
+      "claimIds": [
+        "c2"
+      ]
     },
     {
       "text": "Publish the app to Production",
       "detail": "Removes the 100-user cap and the 7-day login expiry.",
       "who": "you",
-      "claimIds": ["c6", "c10"]
+      "claimIds": [
+        "c6",
+        "c10"
+      ]
     }
   ],
   "blockers": [
     {
       "problem": "Review rejected: privacy policy doesn't follow Google's Limited Use rules",
       "fix": "Say exactly how Gmail data is used and stored, and that it isn't sold, used for ads, or read by people except as allowed. Resubmit.",
-      "claimIds": ["c8"]
+      "claimIds": [
+        "c8"
+      ]
     },
     {
       "problem": "Review rejected: demo video doesn't show every scope",
       "fix": "Re-record it showing the consent screen and each requested scope in action.",
-      "claimIds": ["c9"]
+      "claimIds": [
+        "c9"
+      ]
     },
     {
       "problem": "Users see \"Google hasn't verified this app\", or you hit 100 users",
       "fix": "Expected until verification is done. Add people as test users in the meantime.",
-      "claimIds": ["c6", "c10"]
+      "claimIds": [
+        "c6",
+        "c10"
+      ]
     },
     {
       "problem": "Users get logged out every 7 days during testing",
       "fix": "A Testing-mode limit. It goes away once the app is published.",
-      "claimIds": ["c6"]
+      "claimIds": [
+        "c6"
+      ]
     },
     {
       "problem": "Review drags on because you asked for more access than you use",
       "fix": "Drop scopes you don't use. If you only send email, use gmail.send alone.",
-      "claimIds": ["c1", "c5"]
+      "claimIds": [
+        "c1",
+        "c5"
+      ]
     }
   ],
   "couldNotVerify": [
@@ -132,88 +194,109 @@
       "id": "c1",
       "statement": "Gmail scopes that read or change mail (for example gmail.readonly and gmail.modify) are restricted scopes.",
       "status": "sourced",
-      "sources": [{ "url": "https://developers.google.com/workspace/gmail/api/auth/scopes", "title": "Google: Choose Gmail API scopes" }],
-      "note": ""
+      "note": "",
+      "sourceUrl": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "sourceTitle": "Google: Choose Gmail API scopes",
+      "quote": ""
     },
     {
       "id": "c2",
       "statement": "Restricted scopes need restricted-scope verification, which \"can potentially take several weeks to complete.\"",
       "status": "sourced",
-      "sources": [{ "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification", "title": "Google: Restricted scope verification" }],
-      "note": ""
+      "note": "",
+      "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
+      "sourceTitle": "Google: Restricted scope verification",
+      "quote": "can potentially take several weeks to complete"
     },
     {
       "id": "c3",
       "statement": "Apps that access restricted data from or through a third-party server need a security assessment (CASA) by a Google-approved assessor, repeated at least every 12 months.",
       "status": "sourced",
-      "sources": [{ "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification", "title": "Google: Restricted scope verification" }],
-      "note": "Page says: \"complete a security assessment at least every 12 months\"."
+      "note": "Page says: \"complete a security assessment at least every 12 months\".",
+      "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
+      "sourceTitle": "Google: Restricted scope verification",
+      "quote": "complete a security assessment at least every 12 months"
     },
     {
       "id": "c4",
       "statement": "A CASA assessment costs roughly $500–4,500 depending on the assessor and assurance level. Google itself charges nothing.",
       "status": "uncertain",
-      "sources": [{ "url": "https://deepstrike.io/blog/google-casa-security-assessment-2025", "title": "DeepStrike: Google CASA security assessment (third-party)" }],
-      "note": "Third-party figure. Google doesn't publish prices; assessors quote individually."
+      "note": "Third-party figure. Google doesn't publish prices; assessors quote individually.",
+      "sourceUrl": "https://deepstrike.io/blog/google-casa-security-assessment-2025",
+      "sourceTitle": "DeepStrike: Google CASA security assessment (third-party)",
+      "quote": ""
     },
     {
       "id": "c5",
       "statement": "gmail.send on its own is a sensitive scope, not restricted: it needs verification but no CASA assessment.",
       "status": "sourced",
-      "sources": [
-        { "url": "https://developers.google.com/workspace/gmail/api/auth/scopes", "title": "Google: Choose Gmail API scopes" },
-        { "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification", "title": "Google: Restricted scope verification" }
-      ],
-      "note": "The scopes page classes gmail.send as sensitive; the CASA requirement applies to restricted scopes."
+      "note": "The scopes page classes gmail.send as sensitive; the CASA requirement applies to restricted scopes.",
+      "sourceUrl": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "sourceTitle": "Google: Choose Gmail API scopes",
+      "quote": ""
     },
     {
       "id": "c6",
       "statement": "An app in Testing is limited to 100 test users, and their logins (including refresh tokens) expire after 7 days.",
       "status": "sourced",
-      "sources": [{ "url": "https://support.google.com/cloud/answer/15549945", "title": "Google Cloud Help: Manage app audience" }],
-      "note": "Page says: \"limited to up to 100 test users\"."
+      "note": "Page says: \"limited to up to 100 test users\".",
+      "sourceUrl": "https://support.google.com/cloud/answer/15549945",
+      "sourceTitle": "Google Cloud Help: Manage app audience",
+      "quote": "limited to up to 100 test users"
     },
     {
       "id": "c7",
       "statement": "Brand verification typically takes 2–3 business days and comes before scope verification.",
       "status": "sourced",
-      "sources": [{ "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification", "title": "Google: Restricted scope verification" }],
-      "note": "Only needed if branding changed since the last approved verification."
+      "note": "Only needed if branding changed since the last approved verification.",
+      "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
+      "sourceTitle": "Google: Restricted scope verification",
+      "quote": "typically takes 2-3 business days"
     },
     {
       "id": "c8",
       "statement": "Verification requires verified domain ownership in Search Console, a public home page, and a privacy policy that complies with the Google API Services User Data Policy.",
       "status": "sourced",
-      "sources": [{ "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification", "title": "Google: Restricted scope verification" }],
-      "note": ""
+      "note": "",
+      "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
+      "sourceTitle": "Google: Restricted scope verification",
+      "quote": ""
     },
     {
       "id": "c9",
       "statement": "The submission needs a demo video showing the consent flow and how each sensitive or restricted scope is used.",
       "status": "sourced",
-      "sources": [{ "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification", "title": "Google: Restricted scope verification" }],
-      "note": ""
+      "note": "",
+      "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
+      "sourceTitle": "Google: Restricted scope verification",
+      "quote": ""
     },
     {
       "id": "c10",
       "statement": "Unverified apps show an \"unverified app\" screen and are limited to 100 new users until verified.",
       "status": "sourced",
-      "sources": [{ "url": "https://support.google.com/cloud/answer/7454865", "title": "Google Cloud Help: Unverified apps" }],
-      "note": ""
+      "note": "",
+      "sourceUrl": "https://support.google.com/cloud/answer/7454865",
+      "sourceTitle": "Google Cloud Help: Unverified apps",
+      "quote": ""
     },
     {
       "id": "c11",
       "statement": "Google's authorize endpoint is live and rejects an unknown client ID with \"invalid_client: The OAuth client was not found.\"",
       "status": "tested",
-      "sources": [{ "url": "https://accounts.google.com/o/oauth2/v2/auth", "title": "Probe: authorize endpoint with a fake client ID" }],
-      "note": "Probed 2026-10-28."
+      "note": "Probed 2026-10-28.",
+      "sourceUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+      "sourceTitle": "Probe: authorize endpoint with a fake client ID",
+      "quote": ""
     },
     {
       "id": "c12",
       "statement": "6–10 weeks to production with restricted scopes, and 1–2 days of hands-on work.",
       "status": "uncertain",
-      "sources": [],
-      "note": "Our estimate: 2–3 days brand review + several weeks scope review + the CASA assessment. Google publishes no deadline."
+      "note": "Our estimate: 2–3 days brand review + several weeks scope review + the CASA assessment. Google publishes no deadline.",
+      "sourceUrl": "",
+      "sourceTitle": "",
+      "quote": ""
     }
   ],
   "reviewed": false,

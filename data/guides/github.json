@@ -1,0 +1,319 @@
+{
+  "appName": "GitHub",
+  "developerPortal": "https://github.com/settings/developers",
+  "summary": "Registering a GitHub OAuth app is self-serve and takes minutes, with no review step found for connecting users. The main decision is whether to use an OAuth app at all, since GitHub's docs steer most builders to a GitHub App, and the scopes you request determine how much access users see.",
+  "difficulty": "easy",
+  "timeToTest": "~30 minutes",
+  "timeToProduction": "~30 minutes (no review step found for OAuth apps)",
+  "effort": "0.5–1 day of work, including token handling and callback code",
+  "cost": "Free",
+  "summaryClaimIds": [
+    "c1",
+    "c2",
+    "c9"
+  ],
+  "requirements": [
+    {
+      "text": "A GitHub account, or an organization where you have admin access, to own the OAuth app.",
+      "claimIds": [
+        "c1"
+      ]
+    },
+    {
+      "text": "A public homepage URL and a callback URL for your app, both free of internal hostnames.",
+      "claimIds": [
+        "c3"
+      ]
+    },
+    {
+      "text": "A place to store the client secret and tokens server-side (for example a secrets manager or encrypted environment variables).",
+      "claimIds": [
+        "c8"
+      ]
+    },
+    {
+      "text": "A decision on scopes: request the minimum your app needs.",
+      "claimIds": [
+        "c7"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "text": "Decide whether an OAuth app fits, or whether a GitHub App is the better choice.",
+      "detail": "GitHub's docs say GitHub Apps are preferred and use fine-grained permissions and short-lived tokens. Use an OAuth app if you only need to act as the user.",
+      "who": "agent",
+      "claimIds": [
+        "c9"
+      ]
+    },
+    {
+      "text": "Open Settings, then Developer settings, then OAuth apps, then click New OAuth App.",
+      "detail": "If this is your first app, the button says Register a new application.",
+      "who": "you",
+      "claimIds": [
+        "c1"
+      ]
+    },
+    {
+      "text": "Enter the application name, homepage URL, optional description, and the authorization callback URL.",
+      "detail": "Use only public information. You can add up to 10 callback URLs.",
+      "who": "you",
+      "claimIds": [
+        "c1",
+        "c3"
+      ]
+    },
+    {
+      "text": "Leave Device Flow unchecked unless your app is a CLI or headless tool.",
+      "detail": "GitHub warns that device flow lets attackers impersonate your app in phishing attacks.",
+      "who": "you",
+      "claimIds": [
+        "c10"
+      ]
+    },
+    {
+      "text": "Decide on expiring user tokens. The default is on; only uncheck it if your code can't handle short-lived tokens.",
+      "detail": "Access tokens expire after eight hours and refresh tokens after six months.",
+      "who": "you",
+      "claimIds": [
+        "c11",
+        "c12"
+      ]
+    },
+    {
+      "text": "Click Register application, then copy the Client ID and generate a Client Secret into your server's secret store.",
+      "detail": "Do not put the client secret in browser or mobile code.",
+      "who": "you",
+      "claimIds": [
+        "c8"
+      ]
+    },
+    {
+      "text": "Draft the authorize request with state, PKCE (code_challenge with S256), and the scopes you chose.",
+      "detail": "Scopes are space-separated, for example scope=read:user%20user:email.",
+      "who": "agent_prepares",
+      "claimIds": [
+        "c4",
+        "c5"
+      ]
+    },
+    {
+      "text": "Implement the callback: verify state, exchange the code for a token, then call GET /user and store the user's id, not their login.",
+      "detail": "Re-check identity on every sign-in.",
+      "who": "you",
+      "claimIds": [
+        "c6",
+        "c13"
+      ]
+    },
+    {
+      "text": "Test with your own account, then confirm the scopes shown on the consent screen match what you requested.",
+      "detail": "Users can edit scopes later, so handle reduced access.",
+      "who": "you",
+      "claimIds": [
+        "c7"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "problem": "App requests broad scopes such as repo, and users decline or reviewers flag it.",
+      "fix": "Request only the scopes the feature needs. Scope-matching is 'no scope' for public read-only access.",
+      "claimIds": [
+        "c7"
+      ]
+    },
+    {
+      "problem": "Callback redirect fails with a mismatched URL.",
+      "fix": "The redirect_uri must exactly match a registered callback URL unless wildcard matching is enabled, and wildcards widen the attack surface, so avoid them.",
+      "claimIds": [
+        "c14"
+      ]
+    },
+    {
+      "problem": "Token exchange fails after a token is reused or the refresh token expired.",
+      "fix": "Refresh tokens are single use; on bad_refresh_token, send the user through the web flow again.",
+      "claimIds": [
+        "c12"
+      ]
+    },
+    {
+      "problem": "Users with multiple GitHub accounts end up with another user's data.",
+      "fix": "Re-validate identity via GET /user after every sign-in and key records on the numeric id.",
+      "claimIds": [
+        "c13"
+      ]
+    },
+    {
+      "problem": "Device flow errors such as slow_down or expired_token.",
+      "fix": "Poll at the returned interval, add 5 seconds on slow_down, and request a new device code after expiry.",
+      "claimIds": [
+        "c10"
+      ]
+    }
+  ],
+  "couldNotVerify": [
+    "Whether GitHub requires any review or verification before arbitrary users can connect a standard OAuth app. No official page found saying so; the only statement is a community project's claim.",
+    "GitHub account fees, if any, for OAuth apps. No fee was found on the pages provided.",
+    "Publisher verification requirements for Marketplace paid plans beyond the 200-user rule. Third-party and news sources only.",
+    "Community-reported rate limits and token lifetimes (the 5,000 requests/hour figure) are unconfirmed and not used here."
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "statement": "You register an OAuth app at Settings > Developer settings > OAuth apps by clicking New OAuth App.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+      "sourceTitle": "Creating an OAuth app - GitHub Docs",
+      "quote": "In the left sidebar, click OAuth apps .",
+      "note": "Steps are from the page's ordered list."
+    },
+    {
+      "id": "c2",
+      "statement": "Connecting users to a registered OAuth app requires no GitHub review step, based on the pages provided.",
+      "status": "uncertain",
+      "sourceUrl": "",
+      "sourceTitle": "",
+      "quote": "",
+      "note": "Not stated on the OAuth pages. The Marketplace page covers only Marketplace listings. A community project claims no pre-connection review, but that is not official."
+    },
+    {
+      "id": "c3",
+      "statement": "Registration asks for an application name, homepage URL, optional description, and authorization callback URL, and you can add up to 10 callback URLs.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+      "sourceTitle": "Creating an OAuth app - GitHub Docs",
+      "quote": "You can enter up to 10 callback URLs.",
+      "note": ""
+    },
+    {
+      "id": "c4",
+      "statement": "The authorize request accepts state (strongly recommended) and PKCE code_challenge with S256 only.",
+      "status": "sourced",
+      "sourceUrl": "https://developer.github.com/v3/oauth/",
+      "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
+      "quote": "Must be S256 - the plain code challenge method is not supported.",
+      "note": ""
+    },
+    {
+      "id": "c5",
+      "statement": "Scopes are sent space-delimited in the scope parameter and shown to the user on the authorization form.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+      "sourceTitle": "Scopes for OAuth apps - GitHub Docs",
+      "quote": "When setting up an OAuth app on GitHub, requested scopes are displayed to the user on the authorization form.",
+      "note": ""
+    },
+    {
+      "id": "c6",
+      "statement": "After the code exchange, the user's identity should be revalidated with the API on every sign-in.",
+      "status": "sourced",
+      "sourceUrl": "https://developer.github.com/v3/oauth/",
+      "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
+      "quote": "Every time you receive an access token, you should use the token to revalidate the user's identity.",
+      "note": ""
+    },
+    {
+      "id": "c7",
+      "statement": "Users can edit scopes, so the granted scopes may be fewer than requested, and apps should request minimal scopes.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+      "sourceTitle": "Scopes for OAuth apps - GitHub Docs",
+      "quote": "However, users can edit their scopes, effectively granting your application less access than you originally requested.",
+      "note": ""
+    },
+    {
+      "id": "c8",
+      "statement": "The client secret must be stored securely, and public clients cannot keep it secret.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
+      "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
+      "quote": "You must store your app's client secret and any generated tokens securely, if possible.",
+      "note": ""
+    },
+    {
+      "id": "c9",
+      "statement": "GitHub recommends building a GitHub App instead of an OAuth app because GitHub Apps use fine-grained permissions and short-lived tokens.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
+      "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
+      "quote": "In general, GitHub Apps are preferred over OAuth apps.",
+      "note": ""
+    },
+    {
+      "id": "c10",
+      "statement": "Device flow should be enabled only for constrained environments such as CLIs, because it lets attackers impersonate the app in phishing.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
+      "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
+      "quote": "For this reason, do not enable the device flow for your application unless you are using the app in a constrained environment (CLIs, IoT devices, or headless systems).",
+      "note": ""
+    },
+    {
+      "id": "c11",
+      "statement": "Expiring user access tokens are enabled by default on new apps; uncheck only if your code does not support short-lived tokens.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+      "sourceTitle": "Creating an OAuth app - GitHub Docs",
+      "quote": "Expire user access tokens is enabled by default.",
+      "note": ""
+    },
+    {
+      "id": "c12",
+      "statement": "Access tokens expire after eight hours and refresh tokens after six months without use; a used refresh token is replaced.",
+      "status": "sourced",
+      "sourceUrl": "https://developer.github.com/v3/oauth/",
+      "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
+      "quote": "The access token expires after eight hours, and the refresh token expires after six months without use.",
+      "note": ""
+    },
+    {
+      "id": "c13",
+      "statement": "Apps should key users on the durable numeric id, since logins and emails can change.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
+      "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
+      "quote": "Never use identifiers that can change over time, including user handles, organization slugs, or email addresses.",
+      "note": ""
+    },
+    {
+      "id": "c14",
+      "statement": "Wildcard callback matching is a security risk and should be enabled only when absolutely needed.",
+      "status": "sourced",
+      "sourceUrl": "https://developer.github.com/v3/oauth/",
+      "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
+      "quote": "Only enable wildcard matching if you absolutely need it and you are entirely certain that you control all possible subdomains and paths of the callback URL.",
+      "note": ""
+    },
+    {
+      "id": "c15",
+      "statement": "No GitHub fee for registering an OAuth app was found on the provided pages.",
+      "status": "uncertain",
+      "sourceUrl": "",
+      "sourceTitle": "",
+      "quote": "",
+      "note": "Absence of a stated fee in the sources, not a confirmed free policy."
+    }
+  ],
+  "slug": "github",
+  "reviewed": false,
+  "createdAt": "2026-10-28T15:06:43.648Z",
+  "checkedAt": "2026-10-28T15:06:43.648Z",
+  "probes": [
+    {
+      "name": "console",
+      "target": "https://github.com/settings/developers",
+      "ok": true,
+      "result": "HTTP 200, redirected to https://github.com/login?return_to=https%3A%2F%2Fgithub.com%2Fsettings%2Fdevelopers (login required)"
+    }
+  ],
+  "agentRun": {
+    "model": "claude-haiku-5-5",
+    "searches": 3,
+    "fetches": 5,
+    "probes": 1,
+    "durationSec": 40,
+    "costUsd": 0.039
+  }
+}

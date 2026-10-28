@@ -129,9 +129,10 @@ export default async function GuidePage({ params }: Props) {
                   <span className={`chip mr-2 ${EVIDENCE[c.status].cls}`}>{EVIDENCE[c.status].label}</span>
                   {c.statement}
                 </div>
-                {c.sources.map((s) => (
-                  <a key={s.url} href={s.url} target="_blank" rel="noreferrer" className="block truncate text-sky-700 hover:underline dark:text-sky-400">{s.title || s.url}</a>
-                ))}
+                {c.quote && <blockquote className="border-l-2 border-zinc-300 pl-2 italic muted dark:border-zinc-700">&ldquo;{c.quote}&rdquo;</blockquote>}
+                {c.sourceUrl && (
+                  <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="block truncate text-sky-700 hover:underline dark:text-sky-400">{c.sourceTitle || c.sourceUrl}</a>
+                )}
                 {c.note && <div className="muted">{c.note}</div>}
               </div>
             </li>
