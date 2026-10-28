@@ -8,7 +8,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { compose, research, verifyGuide, type AgentEvent, type Research } from "@/lib/agent/pipeline";
-import { slugify } from "@/lib/directory";
+import { slugify } from "@/lib/text";
 
 const DIR = path.join(process.cwd(), "src/data/library");
 const REPLAY_DIR = path.join(process.cwd(), "src/data/replay");
@@ -75,7 +75,7 @@ async function main() {
       const r = await cachedResearch(app);
       total += phaseCost;
       phaseCost = 0;
-      const draft = await compose(r, log, "library");
+      const draft = await compose(r, log, true);
       total += phaseCost - (r.usage?.usd ?? 0);
       phaseCost = 0;
       const guide = await verifyGuide(draft, log);
@@ -86,7 +86,7 @@ async function main() {
       events.push({ type: "guide", slug: guide.slug }, { type: "phase", phase: "done", message: "Replay complete" });
       await fs.writeFile(path.join(REPLAY_DIR, `${guide.slug}.ndjson`), events.map((e) => JSON.stringify(e)).join("\n") + "\n");
       const counts = guide.claims.reduce<Record<string, number>>((m, c) => ((m[c.status] = (m[c.status] ?? 0) + 1), m), {});
-      console.log(`\nSaved ${guide.slug}.json: ${guide.verdict.tier}, ${guide.claims.length} claims ${JSON.stringify(counts)}, ${guide.agentRun?.durationSec}s, this run $${total.toFixed(3)}`);
+      console.log(`\nSaved ${guide.slug}.json: ${guide.difficulty}, ${guide.claims.length} claims ${JSON.stringify(counts)}, ${guide.agentRun?.durationSec}s, this run $${total.toFixed(3)}`);
     } catch (e) {
       total += phaseCost;
       phaseCost = 0;

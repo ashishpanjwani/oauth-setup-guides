@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { get, put } from "@vercel/blob";
+import { get, list, put } from "@vercel/blob";
 import type { Guide } from "./schema";
 import { LIBRARY } from "@/data/library";
 
@@ -9,8 +9,20 @@ import { LIBRARY } from "@/data/library";
 const LOCAL_DIR = path.join(process.cwd(), ".data");
 const blobEnabled = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
-export function libraryGuides(): Guide[] {
-  return LIBRARY;
+/** Library guides plus every guide generated so far, newest first. */
+export async function allGuides(): Promise<Guide[]> {
+  let slugs: string[] = [];
+  if (blobEnabled()) {
+    const { blobs } = await list({ prefix: "guides/", limit: 200 });
+    slugs = blobs.map((b) => b.pathname.replace(/^guides\//, "").replace(/\.json$/, ""));
+  } else {
+    slugs = await fs
+      .readdir(path.join(LOCAL_DIR, "guides"))
+      .then((f) => f.filter((x) => x.endsWith(".json")).map((x) => x.replace(/\.json$/, "")))
+      .catch(() => []);
+  }
+  const generated = (await Promise.all(slugs.map((s) => readJson<Guide>(`guides/${s}.json`)))).filter((g): g is Guide => Boolean(g));
+  return [...LIBRARY, ...generated.sort((a, b) => b.createdAt.localeCompare(a.createdAt))];
 }
 
 async function readJson<T>(key: string): Promise<T | null> {

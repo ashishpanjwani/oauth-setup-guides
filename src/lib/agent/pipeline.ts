@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { GuideDraft, type Claim, type Guide } from "@/lib/schema";
-import { DIRECTORY, slugify } from "@/lib/directory";
+import { slugify } from "@/lib/text";
 import { CLIENT_TOOLS, runClientTool, type ProbeResult } from "./probes";
 import { COMPOSE_SYSTEM, RESEARCH_SYSTEM, VERIFY_SYSTEM } from "./prompts";
 import { BudgetError, MODEL, RUN_CAP_USD, addTurn, emptyUsage, type Usage } from "./cost";
@@ -17,7 +17,6 @@ export type AgentEvent =
   | { type: "fetch"; url: string }
   | { type: "fetch_result"; url: string; ok: boolean }
   | { type: "probe"; probe: ProbeResult }
-  | { type: "directory"; text: string }
   | { type: "claim_check"; claimId: string; verdict: string; evidence: string }
   | { type: "guide"; slug: string }
   | { type: "cost"; usd: number }
@@ -144,8 +143,6 @@ async function runLoop(opts: {
           st.probes.push(out.probe);
           st.sources.set(normUrl(out.probe.target), `Probe: ${out.probe.name}`);
           emit({ type: "probe", probe: out.probe });
-        } else {
-          emit({ type: "directory", text: out.text });
         }
         results.push({ type: "tool_result", tool_use_id: block.id, content: out.text });
       } catch (e) {
@@ -166,7 +163,6 @@ function finalText(msg: Anthropic.Beta.Messages.BetaMessage): string {
 
 /**
  * Enforce the evidence rules in code rather than trusting the model:
- * - "verified" can only come from the verify pass
  * - "tested" needs a source that is one of our probe targets
  * - every cited URL must have been seen during research; otherwise the claim is uncertain
  */
@@ -176,7 +172,6 @@ function enforceEvidence(claims: Claim[], st: LoopState): Claim[] {
   return claims.map((c) => {
     let { status, note } = c;
     const unseen = c.sources.filter((s) => !seen(s.url));
-    if (status === "verified") status = "sourced";
     if (status === "tested" && !c.sources.some((s) => probeTargets.has(normUrl(s.url)))) status = "sourced";
     if (unseen.length && unseen.length === c.sources.length && status !== "uncertain") {
       status = "uncertain";
@@ -199,17 +194,9 @@ export type Research = {
   usage: Usage;
 };
 
-// Composio facts the agent gets from our tool and prompt, so claims about them can cite these.
-const COMPOSIO_SOURCES: [string, string][] = [
-  [DIRECTORY.source, "Composio: managed OAuth apps directory"],
-  ["https://docs.composio.dev/docs/authentication/white-labeling-authentication", "Composio: white-labeling authentication (callback URL)"],
-  ["https://docs.composio.dev/docs/authentication/custom-app-vs-managed-app", "Composio: managed vs custom auth"],
-];
-
 export async function research(query: string, emit: Emit): Promise<Research> {
   const started = Date.now();
   const st = newState();
-  COMPOSIO_SOURCES.forEach(([u, t]) => st.sources.set(normUrl(u), t));
 
   emit({ type: "phase", phase: "research", message: `Investigating ${query}` });
   const msg = await runLoop({
@@ -248,7 +235,8 @@ function extractJson(text: string): unknown {
 // prompt and the output is validated here, with one repair round on failure.
 const GUIDE_JSON_SCHEMA = JSON.stringify(z.toJSONSchema(GuideDraft));
 
-export async function compose(r: Research, emit: Emit, origin: Guide["origin"] = "generated"): Promise<Guide> {
+/** library=true gives a stable slug (for the repo's library); live guides get a unique one. */
+export async function compose(r: Research, emit: Emit, library = false): Promise<Guide> {
   const started = Date.now();
   const st: LoopState = { sources: new Map(r.sources), probes: r.probes, searches: r.searches, fetches: r.fetches, usage: { ...(r.usage ?? emptyUsage()) } };
 
@@ -277,20 +265,23 @@ export async function compose(r: Research, emit: Emit, origin: Guide["origin"] =
   }
   if (!draft) throw new Error("No guide produced");
 
-  const slug = origin === "library" ? slugify(r.query) : `${slugify(draft.appName)}-${Math.random().toString(36).slice(2, 7)}`;
+  const slug = library ? slugify(r.query) : `${slugify(draft.appName)}-${Math.random().toString(36).slice(2, 7)}`;
+  const now = new Date().toISOString();
   return {
     ...draft,
     claims: enforceEvidence(draft.claims, st),
     slug,
-    origin,
-    createdAt: new Date().toISOString(),
+    reviewed: false,
+    createdAt: now,
+    checkedAt: now,
     probes: r.probes,
     agentRun: { model: MODEL, searches: r.searches, fetches: r.fetches, probes: r.probes.length, durationSec: r.durationSec + Math.round((Date.now() - started) / 1000), costUsd: Math.round(st.usage.usd * 1000) / 1000 },
   };
 }
 
-export async function generateGuide(query: string, emit: Emit, origin: Guide["origin"] = "generated"): Promise<Guide> {
-  return compose(await research(query, emit), emit, origin);
+/** Research, write, then fact-check: the whole live flow in one call (~2–3 min). */
+export async function generateGuide(query: string, emit: Emit, library = false): Promise<Guide> {
+  return verifyGuide(await compose(await research(query, emit), emit, library), emit);
 }
 
 const VerifyResult = z.object({
@@ -303,14 +294,14 @@ const VerifyResult = z.object({
   ),
 });
 
-/** Claims the verdict and blockers depend on are checked first. */
+/** Claims the summary and blockers depend on are checked first. */
 function pickClaimsToVerify(guide: Guide, max: number): Claim[] {
   const weight = new Map<string, number>();
   const bump = (ids: string[], w: number) => ids.forEach((id) => weight.set(id, (weight.get(id) ?? 0) + w));
-  bump(guide.verdict.claimIds, 5);
+  bump(guide.summaryClaimIds, 5);
   guide.blockers.forEach((b) => bump(b.claimIds, 3));
-  guide.prerequisites.forEach((p) => bump(p.claimIds, 2));
-  guide.stages.forEach((s) => s.steps.forEach((st) => bump(st.claimIds, 1)));
+  guide.requirements.forEach((r) => bump(r.claimIds, 2));
+  guide.steps.forEach((s) => bump(s.claimIds, 1));
   return guide.claims
     .filter((c) => c.status === "sourced" && c.sources.length > 0)
     .sort((a, b) => (weight.get(b.id) ?? 0) - (weight.get(a.id) ?? 0))
@@ -321,7 +312,7 @@ function pickClaimsToVerify(guide: Guide, max: number): Claim[] {
 export async function verifyGuide(guide: Guide, emit: Emit, max = 8): Promise<Guide> {
   const targets = pickClaimsToVerify(guide, max);
   emit({ type: "phase", phase: "verify", message: `Re-checking ${targets.length} key claims against their sources` });
-  if (!targets.length) return { ...guide, verifiedAt: new Date().toISOString() };
+  if (!targets.length) return guide;
 
   const st = newState();
   const list = targets.map((c) => `${c.id}: ${c.statement}\n  cited: ${c.sources.map((s) => s.url).join(" , ")}`).join("\n");
@@ -344,7 +335,7 @@ export async function verifyGuide(guide: Guide, emit: Emit, max = 8): Promise<Gu
     const add = (s: string) => `${c.note ? c.note + " " : ""}[Checker: ${s}]`;
     switch (r.verdict) {
       case "supported":
-        return { ...c, status: "verified", note: add(`confirmed in source. ${r.evidence}`) };
+        return { ...c, note: add(`confirmed in source. ${r.evidence}`) };
       case "partial":
         return { ...c, note: add(`only partly supported. ${r.evidence}`) };
       case "not_found":
@@ -356,5 +347,5 @@ export async function verifyGuide(guide: Guide, emit: Emit, max = 8): Promise<Gu
     }
   });
   const run = guide.agentRun && { ...guide.agentRun, costUsd: Math.round(((guide.agentRun.costUsd ?? 0) + st.usage.usd) * 1000) / 1000 };
-  return { ...guide, claims, agentRun: run, verifiedAt: new Date().toISOString() };
+  return { ...guide, claims, agentRun: run, checkedAt: new Date().toISOString() };
 }

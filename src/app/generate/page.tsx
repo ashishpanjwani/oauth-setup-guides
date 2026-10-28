@@ -8,9 +8,9 @@ import type { AgentEvent } from "@/lib/agent/pipeline";
 
 type Phase = "research" | "compose" | "verify" | "done";
 const PHASES: { id: Phase; label: string; hint: string }[] = [
-  { id: "research", label: "Investigate", hint: "Searches docs, reads policy pages, probes live OAuth endpoints" },
-  { id: "compose", label: "Write guide", hint: "Turns findings into steps, blockers and timelines, with evidence on every claim" },
-  { id: "verify", label: "Fact-check", hint: "A second pass re-opens cited sources and confirms or flags each key claim" },
+  { id: "research", label: "Research", hint: "Reads the provider's docs and checks its live OAuth endpoints" },
+  { id: "compose", label: "Write", hint: "Turns what it found into steps, blockers and time estimates" },
+  { id: "verify", label: "Fact-check", hint: "Re-opens the sources and flags anything that doesn't hold up" },
 ];
 
 type Row = { icon: string; text: string; sub?: string; tone?: "ok" | "bad" | "note" };
@@ -29,8 +29,6 @@ function toRow(e: AgentEvent): Row | null {
       return e.ok ? null : { icon: "✗", text: "Page could not be read", tone: "bad" };
     case "probe":
       return { icon: e.probe.ok ? "✓" : "✗", text: `Probe ${e.probe.name}: ${e.probe.target}`, sub: e.probe.result.slice(0, 220), tone: e.probe.ok ? "ok" : "bad" };
-    case "directory":
-      return { icon: "◎", text: `Composio directory: ${e.text.slice(0, 200)}` };
     case "claim_check":
       return { icon: e.verdict === "supported" ? "✓" : "!", text: `${e.claimId}: ${e.verdict.replace("_", " ")}`, sub: e.evidence.slice(0, 200), tone: e.verdict === "supported" ? "ok" : "bad" };
     case "error":
@@ -64,25 +62,17 @@ function Generator() {
 
     (async () => {
       let newSlug: string | null = null;
-      let finished = false;
       try {
         for await (const e of streamEvents("/api/generate", { query: q, replay })) {
           if (e.type === "phase") setPhase(e.phase);
-          if (e.type === "phase" && e.phase === "done") finished = true;
           if (e.type === "guide") newSlug = e.slug;
           if (e.type === "error") throw new Error(e.message);
           push(e);
         }
         if (!newSlug) throw new Error("The agent finished without producing a guide.");
         setSlug(newSlug);
-        if (finished) return router.push(`/guides/${newSlug}`); // replay already included verification
-        setPhase("verify");
-        for await (const e of streamEvents("/api/verify", { slug: newSlug })) {
-          if (e.type === "error") throw new Error(e.message);
-          push(e);
-        }
         setPhase("done");
-        router.push(`/guides/${newSlug}`);
+        router.push(`/guide/${newSlug}`);
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -100,7 +90,7 @@ function Generator() {
         <p className="text-sm muted">{replay ? "Replay of a recorded investigation (no API cost)" : "Live investigation"}</p>
         <h1 className="text-2xl font-semibold">{q}</h1>
         <p className="mt-1 text-sm muted">
-          Usually 2–4 minutes. You can leave this page open and share the guide link when it&rsquo;s done. {elapsed > 0 && <span className="font-mono">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>}
+          Usually 2–3 minutes. {elapsed > 0 && <span className="font-mono">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>}
         </p>
       </div>
 
@@ -119,16 +109,10 @@ function Generator() {
         })}
       </ol>
 
-      {slug && phase !== "done" && (
-        <div className="card flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-          <span>The guide is written. Fact-checking now; you can open it already.</span>
-          <Link href={`/guides/${slug}`} className="btn-primary">Open guide</Link>
-        </div>
-      )}
       {error && (
         <div className="card border-rose-300 p-4 text-sm dark:border-rose-900">
           <strong>Something went wrong:</strong> {error}
-          {slug ? <> The guide was saved: <Link className="underline" href={`/guides/${slug}`}>open it</Link>.</> : <> <button className="underline" onClick={() => location.reload()}>Try again</button>.</>}
+          {slug ? <> The guide was saved: <Link className="underline" href={`/guide/${slug}`}>open it</Link>.</> : <> <button className="underline" onClick={() => location.reload()}>Try again</button>.</>}
         </div>
       )}
 

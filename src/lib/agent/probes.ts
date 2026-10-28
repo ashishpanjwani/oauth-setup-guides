@@ -1,4 +1,3 @@
-import { DIRECTORY, lookupToolkits } from "@/lib/directory";
 
 /**
  * Client-side tools the research agent can call. These are the "attempt the setup"
@@ -6,8 +5,8 @@ import { DIRECTORY, lookupToolkits } from "@/lib/directory";
  * the provider's OAuth endpoints actually behave and record that as tested evidence.
  */
 
-// Composio's callback, used so the probe looks like a real Composio-bound request.
-const COMPOSIO_CALLBACK = "https://backend.composio.dev/api/v3.1/toolkits/auth/callback";
+// A placeholder redirect; the probe only observes how the provider rejects an unknown client.
+const PROBE_REDIRECT = "https://example.com/oauth/callback";
 const PROBE_CLIENT_ID = "oauth-guide-probe-invalid-client";
 
 export type ProbeResult = { name: string; target: string; ok: boolean; result: string };
@@ -66,14 +65,13 @@ async function probeDiscovery(issuer: string): Promise<ProbeResult> {
 }
 
 /**
- * Hit the authorize endpoint with a deliberately invalid client_id and Composio's
- * callback. How the provider rejects it tells us the endpoint is live and how it
- * validates clients and redirect URIs.
+ * Hit the authorize endpoint with a deliberately invalid client_id. How the provider
+ * rejects it tells us the endpoint is live and how it validates clients.
  */
 async function probeAuthorize(authorizeUrl: string, scope?: string): Promise<ProbeResult> {
   const url = assertPublicHttps(authorizeUrl);
   url.searchParams.set("client_id", PROBE_CLIENT_ID);
-  url.searchParams.set("redirect_uri", COMPOSIO_CALLBACK);
+  url.searchParams.set("redirect_uri", PROBE_REDIRECT);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("state", "probe");
   if (scope) url.searchParams.set("scope", scope);
@@ -117,7 +115,7 @@ export const CLIENT_TOOLS = [
     name: "probe_oauth",
     description:
       "Make a live, read-only HTTP observation of a provider. kind=discovery fetches the OpenID/OAuth discovery document for an issuer base URL. " +
-      "kind=authorize calls the provider's OAuth authorize URL with a deliberately invalid client_id and Composio's redirect URI and reports how the provider responds " +
+      "kind=authorize calls the provider's OAuth authorize URL with a deliberately invalid client_id and a placeholder redirect URI and reports how the provider responds " +
       "(confirms the endpoint is live and how it rejects unknown clients). kind=page checks whether a developer-portal URL is public or behind a login. " +
       "Results are recorded as 'tested' evidence, so use this to confirm endpoints rather than relying on docs alone.",
     input_schema: {
@@ -132,26 +130,9 @@ export const CLIENT_TOOLS = [
     },
     strict: true,
   },
-  {
-    name: "lookup_composio_toolkit",
-    description:
-      "Look up an app in Composio's OAuth toolkit directory (snapshot of docs.composio.dev/toolkits/managed-auth). " +
-      "Returns matching toolkits and whether Composio provides a managed OAuth app (managed=true) or the developer must bring their own (managed=false).",
-    input_schema: {
-      type: "object" as const,
-      properties: { query: { type: "string" } },
-      required: ["query"],
-      additionalProperties: false,
-    },
-    strict: true,
-  },
 ];
 
 export async function runClientTool(name: string, input: Record<string, string>): Promise<{ text: string; probe?: ProbeResult }> {
-  if (name === "lookup_composio_toolkit") {
-    const matches = lookupToolkits(input.query);
-    return { text: matches.length ? JSON.stringify({ source: DIRECTORY.source, checkedAt: DIRECTORY.checkedAt, matches }) : "No match in Composio's OAuth directory (the app may be unsupported or listed under another name)." };
-  }
   if (name === "probe_oauth") {
     const probe =
       input.kind === "discovery" ? await probeDiscovery(input.url) : input.kind === "authorize" ? await probeAuthorize(input.url, input.scope) : await probePage(input.url);
