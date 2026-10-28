@@ -18,15 +18,23 @@ export function Search({ existing }: { existing: { slug: string; appName: string
   }
 
   return (
-    <form onSubmit={submit} className="flex gap-2">
+    <form
+      onSubmit={submit}
+      className="gradient-border mx-auto flex w-full max-w-xl items-center gap-2 rounded-full bg-[var(--card)] p-1.5 pl-5 shadow-[0_0_60px_-20px_var(--brand)] transition focus-within:shadow-[0_0_70px_-12px_var(--brand)]"
+    >
+      <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-none stroke-current muted" strokeWidth="2">
+        <circle cx="9" cy="9" r="6" />
+        <path d="m14 14 4 4" strokeLinecap="round" />
+      </svg>
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="App name or website, e.g. Slack or xero.com"
-        className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-base outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-zinc-700"
+        aria-label="App name or website"
+        className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-[var(--muted)]"
         autoFocus
       />
-      <button className="btn-primary shrink-0 px-5" disabled={q.trim().length < 2}>
+      <button className="btn-primary shrink-0" disabled={q.trim().length < 2}>
         Generate guide
       </button>
     </form>

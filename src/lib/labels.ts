@@ -1,19 +1,19 @@
 import type { Difficulty, EvidenceStatus, Who } from "./schema";
 
 export const WHO: Record<Who, { label: string; cls: string }> = {
-  agent: { label: "Agent", cls: "bg-violet-50 text-violet-800 ring-violet-600/20 dark:bg-violet-950 dark:text-violet-300 dark:ring-violet-400/30" },
-  you: { label: "You", cls: "bg-zinc-100 text-zinc-700 ring-zinc-500/20 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-400/30" },
-  waiting: { label: "Waiting", cls: "bg-amber-50 text-amber-800 ring-amber-600/20 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-400/30" },
+  agent: { label: "Agent", cls: "bg-violet-500/10 text-violet-300 ring-violet-400/30" },
+  you: { label: "You", cls: "bg-white/5 text-zinc-300 ring-white/15" },
+  waiting: { label: "Waiting", cls: "bg-amber-500/10 text-amber-300 ring-amber-400/30" },
 };
 
 export const EVIDENCE: Record<EvidenceStatus, { label: string; cls: string }> = {
-  tested: { label: "Tested", cls: "bg-emerald-50 text-emerald-800 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-400/30" },
-  sourced: { label: "Sourced", cls: "bg-sky-50 text-sky-800 ring-sky-600/20 dark:bg-sky-950 dark:text-sky-300 dark:ring-sky-400/30" },
-  uncertain: { label: "Uncertain", cls: "bg-orange-50 text-orange-800 ring-orange-600/20 dark:bg-orange-950 dark:text-orange-300 dark:ring-orange-400/30" },
+  tested: { label: "Tested", cls: "bg-emerald-500/10 text-emerald-300 ring-emerald-400/30" },
+  sourced: { label: "Sourced", cls: "bg-[#51a2ff]/10 text-[#8fc2ff] ring-[#51a2ff]/30" },
+  uncertain: { label: "Uncertain", cls: "bg-orange-500/10 text-orange-300 ring-orange-400/30" },
 };
 
-export const DIFFICULTY: Record<Difficulty, { label: string; cls: string }> = {
-  easy: { label: "Easy", cls: "text-emerald-700 dark:text-emerald-400" },
-  moderate: { label: "Moderate", cls: "text-amber-700 dark:text-amber-400" },
-  hard: { label: "Hard", cls: "text-rose-700 dark:text-rose-400" },
+export const DIFFICULTY: Record<Difficulty, { label: string; cls: string; dot: string }> = {
+  easy: { label: "Easy", cls: "text-emerald-300", dot: "bg-emerald-400 shadow-[0_0_10px] shadow-emerald-400/60" },
+  moderate: { label: "Moderate", cls: "text-amber-300", dot: "bg-amber-400 shadow-[0_0_10px] shadow-amber-400/60" },
+  hard: { label: "Hard", cls: "text-rose-300", dot: "bg-rose-400 shadow-[0_0_10px] shadow-rose-400/60" },
 };

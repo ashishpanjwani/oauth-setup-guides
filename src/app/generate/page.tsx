@@ -89,22 +89,22 @@ function Generator() {
 
   const idx = PHASES.findIndex((p) => p.id === phase);
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <p className="text-sm muted">{replay ? "Replay of a recorded investigation (no API cost)" : "Live investigation"}</p>
-        <h1 className="text-2xl font-semibold">{q}</h1>
+        <p className="eyebrow">{replay ? "Replay of a recorded investigation (no API cost)" : "Live investigation"}</p>
+        <h1 className="mt-1 font-display text-4xl">{q}</h1>
         <p className="mt-1 text-sm muted">
           Usually 2–3 minutes. {elapsed > 0 && <span className="font-mono">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>}
         </p>
       </div>
 
-      <ol className="grid gap-3 sm:grid-cols-5">
+      <ol className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {PHASES.map((p, i) => {
           const state = phase === "done" || i < idx ? "done" : i === idx ? "active" : "todo";
           return (
-            <li key={p.id} className={`card p-3 ${state === "active" ? "border-zinc-900 dark:border-white" : ""} ${state === "todo" ? "opacity-50" : ""}`}>
+            <li key={p.id} className={`card p-3 ${state === "active" ? "gradient-border border-transparent" : ""} ${state === "todo" ? "opacity-50" : ""}`}>
               <div className="flex items-center gap-2 text-sm font-medium">
-                <span className={`h-2 w-2 rounded-full ${state === "done" ? "bg-emerald-500" : state === "active" ? (error ? "bg-rose-500" : "animate-pulse bg-amber-500") : "bg-zinc-300"}`} />
+                <span className={`h-2 w-2 rounded-full ${state === "done" ? "bg-emerald-500" : state === "active" ? (error ? "bg-rose-500" : "animate-pulse bg-[var(--cyan)] shadow-[0_0_8px_var(--cyan)]") : "bg-zinc-300"}`} />
                 {p.label}
               </div>
               <p className="mt-1 text-xs muted">{p.hint}</p>
