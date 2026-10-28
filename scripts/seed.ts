@@ -13,6 +13,7 @@ function log(e: AgentEvent) {
   if (e.type === "fetch") console.log(`  fetch ${e.ok ? "ok  " : "FAIL"} ${e.url}${e.error ? ` (${e.error})` : ""}`);
   if (e.type === "probe") console.log(`  probe: ${e.probe.target} -> ${e.probe.result}`);
   if (e.type === "check") console.log(`  quotes confirmed: ${e.kept}, downgraded to uncertain: ${e.downgraded}`);
+  if (e.type === "edit") console.log(`  rule violations before edit: ${e.before}, after: ${e.after}`);
 }
 
 async function main() {

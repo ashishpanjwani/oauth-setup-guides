@@ -1,11 +1,12 @@
 // The six launch gates every OAuth app passes between "registered" and "any user can connect".
 // Research must answer each one; the guide is built around the ones that apply.
-export const GATES = `1. register: who can create the OAuth app (any account, or a business/partner account or paid plan)?
-2. test_limits: limits before launch (user caps, token expiry, own workspace/org only)?
-3. review: does the provider review or verify the app (which scopes or features trigger it, what it asks for, how long it takes)?
-4. admin_approval: after a user connects, does their organization's, workspace's or tenant's admin have to approve, allow-list or install the app before it can access their data?
+export const GATES = `Each gate is an obstacle question. Answer "yes" only if it can block, delay or cut off some users; a normal fact (like "any account can register") is "no".
+1. register: does registering the app need more than a regular account (a business or partner account, a paid plan, an approval)?
+2. test_limits: is there a test, development or unpublished mode with limits (user caps, token expiry, own workspace only) until you launch?
+3. review: must the provider review or verify the app before any user can connect (which scopes or features trigger it, what it asks for, how long it takes)?
+4. admin_approval: can a user's organization, workspace or tenant admin block the app until they approve, allow-list or install it?
 5. paid_access: is a paid plan or paid API tier needed to use the API in production?
-6. ongoing: obligations after launch (re-verification, expiring tokens, rate limits that depend on app status)?`;
+6. ongoing: after launch, can the provider cut users off unless you do something (yearly re-verification or audits, policy re-reviews)? Token lifetimes and rate limits are not gates; they go in steps or blockers.`;
 
 export const RESEARCH_SYSTEM = `You find the official documentation a developer needs to create an OAuth app with a provider and launch it, so their AI agent's users can connect that provider.
 
@@ -32,7 +33,7 @@ Fields:
 - gates: exactly one entry per gate, in this order:
 ${GATES}
   For each: applies yes/no/unknown. When yes, give a plain title, what it means for the developer, where it lives (console path or page, and who acts there: the developer, or the end user's admin), and what the developer should do about it.
-  File each fact under the right gate: test_limits is only about a test, development or unpublished mode that exists before launch; if the provider has no such mode, it is "no". Rate limits and token lifetimes go under ongoing.
+  File each fact under the right gate: test_limits is only about a test, development or unpublished mode that exists before launch; if the provider has no such mode, it is "no". Rate limits and token lifetimes are not gates; put them in steps or blockers if they matter.
   Every gate marked yes needs at least one claimId with a quote that states it. A gate marked no needs either a quote that states it, or an absence claim: status "uncertain", statement "No <thing> is mentioned in <page title>", sourceUrl set to the <page> where it would appear if it existed (for example, the app registration or publishing page), quote empty. Otherwise mark the gate unknown.
 - summary: exactly two sentences. Sentence 1: the difficulty and how soon any user can connect. Sentence 2: the gate that most delays or limits launch, said concretely. If no gate applies, say there is no catch.
 - difficulty: judge the main path, the one most users take. easy: self-serve with no provider review or payment. moderate: a provider review measured in days, or a paid tier. hard: multi-week review, security audits, or partner gating. A gate that affects only some users (like some organizations requiring admin approval) does not raise difficulty; it goes in the summary and its gate.
@@ -53,3 +54,21 @@ Evidence (strict, checked by code after you answer):
 - "sourced": sourceUrl is one of the <page> URLs, and quote is one sentence copied exactly, word for word, from that page's text. The statement must say no more than the quote does: no added facts, no stronger or opposite wording. If you can't copy an exact sentence that supports the statement, use "uncertain".
 - "tested": only for what a <probes> line shows; sourceUrl is the probe URL and quote is empty.
 - "uncertain": estimates (time and effort, unless the page states them), search notes, gate findings from pages you were not given, inferences. Leave quote empty and explain in note.`;
+
+export const EDITOR_SYSTEM = `You are the editor of a short OAuth app setup guide for developers. You get the guide as JSON and fix it against this checklist. You may only delete or rephrase text, or change a gate's applies value. Never add a fact that isn't already in a claim's statement, and never change claims.
+
+Checklist:
+1. A gate marked "yes" must be an obstacle that can block, delay or cut off some users. If it's just a normal fact (for example, any account can register), set applies to "no" and clear what, where and todo.
+2. No commentary on how long someone else takes (an end user, their admin) or on the docs not giving a timing for something the provider doesn't control. Delete such clauses and items; say who acts instead, if it isn't already said.
+3. No reasons or facts in the text that aren't in a claim statement (for example "since ownership is hard to move later" with no claim saying so). Delete them.
+4. Every step is correct about who does what. End users never handle the client ID or client secret.
+5. No internal terms: gate, claim, dossier, probe. Say "the main thing that can hold up launch" instead of "gate".
+6. No first person (I, we, our). Write to the developer.
+7. No duplicate steps, and no steps about writing or testing integration code.
+8. couldNotVerify: at most 4 items, only open questions that change what the developer does or expects.
+9. Requirements contain nothing conditional (things that apply only to some users belong in their gate).
+10. Keep it short. Cut words that don't help the developer act.
+
+Also fix every item in <violations>, which an automated check found.
+
+Return the full corrected guide as JSON only (no prose, no code fence), with the same structure and the same claims.`;

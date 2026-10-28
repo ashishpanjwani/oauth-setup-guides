@@ -6,12 +6,13 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { streamEvents } from "@/lib/client/ndjson";
 import type { AgentEvent } from "@/lib/agent/pipeline";
 
-type Phase = "research" | "fetch" | "compose" | "check" | "done";
+type Phase = "research" | "fetch" | "compose" | "check" | "edit" | "done";
 const PHASES: { id: Phase; label: string; hint: string }[] = [
   { id: "research", label: "Find docs", hint: "Searches for the provider's official pages" },
   { id: "fetch", label: "Read & probe", hint: "Reads those pages and checks the developer console" },
   { id: "compose", label: "Write", hint: "Turns them into steps, blockers and time estimates" },
   { id: "check", label: "Check quotes", hint: "Confirms every quoted sentence is on its page" },
+  { id: "edit", label: "Edit", hint: "Fixes the guide against a fixed checklist" },
 ];
 
 type Row = { icon: string; text: string; sub?: string; tone?: "ok" | "bad" | "note" };
@@ -89,7 +90,7 @@ function Generator() {
         </p>
       </div>
 
-      <ol className="grid gap-3 sm:grid-cols-4">
+      <ol className="grid gap-3 sm:grid-cols-5">
         {PHASES.map((p, i) => {
           const state = phase === "done" || i < idx ? "done" : i === idx ? "active" : "todo";
           return (

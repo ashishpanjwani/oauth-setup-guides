@@ -1,34 +1,47 @@
 {
-  "appName": "GitHub",
+  "appName": "GitHub OAuth app",
   "developerPortal": "https://github.com/settings/developers",
-  "summary": "Easy: any GitHub account can register an OAuth app now, with no provider review or payment, so you can connect your own account as soon as setup is done. The gate that most limits launch is organization approval: if a user's organization restricts OAuth apps, its members cannot connect until an organization owner approves your app.",
+  "summary": "Registering a GitHub OAuth app is self-serve, with no provider review or payment, so any GitHub account can connect right away. The main thing that can hold up launch is organization approval: members of an org with OAuth app access restrictions cannot authorize your app until that org's owner approves it.",
   "difficulty": "easy",
-  "timeToTest": "~1 hour",
-  "timeToProduction": "Immediate for users on personal accounts. Members of restricted organizations wait until the organization owner approves the app, a wait GitHub does not time.",
+  "timeToTest": "~30 minutes",
+  "timeToProduction": "Same day for personal-account users. Members of restricted organizations wait for their org owner to approve the app, and the owner controls that timing.",
   "effort": "1–2 hours",
   "cost": "Free",
   "summaryClaimIds": [
     "c1",
-    "c5"
+    "c2",
+    "c3",
+    "c4",
+    "c16"
   ],
   "gates": [
     {
       "gate": "register",
-      "applies": "yes",
+      "applies": "no",
       "title": "Any GitHub account can register the app",
-      "what": "You can register the app under your personal account or under any organization where you have admin access. No business account, partner status or paid plan is required. Each user or organization can own up to 100 OAuth apps.",
-      "where": "Settings > Developer settings > OAuth apps > New OAuth App. You act here.",
-      "todo": "Register the app under the account that should own it, since ownership is hard to move later.",
+      "what": "",
+      "where": "",
+      "todo": "",
       "claimIds": [
-        "c1",
-        "c2"
+        "c1"
       ]
     },
     {
       "gate": "test_limits",
       "applies": "no",
-      "title": "No separate test mode before launch",
-      "what": "No sandbox or test mode is documented for OAuth apps. Test by connecting your own account to the app.",
+      "title": "No test mode with user caps",
+      "what": "",
+      "where": "",
+      "todo": "",
+      "claimIds": [
+        "c2"
+      ]
+    },
+    {
+      "gate": "review",
+      "applies": "no",
+      "title": "No provider review before users can connect",
+      "what": "",
       "where": "",
       "todo": "",
       "claimIds": [
@@ -36,191 +49,169 @@
       ]
     },
     {
-      "gate": "review",
-      "applies": "no",
-      "title": "No provider review for a basic OAuth app",
-      "what": "Registering an OAuth app involves no review or verification step in the docs. Marketplace listing has its own requirements, but it is optional for connecting users.",
-      "where": "",
-      "todo": "",
-      "claimIds": [
-        "c4"
-      ]
-    },
-    {
       "gate": "admin_approval",
       "applies": "yes",
-      "title": "Organization owners may need to approve your app",
-      "what": "If a user's organization has OAuth app access restrictions enabled, its members cannot authorize your app against organization resources. They can request approval, and owners are notified.",
-      "where": "Organization Settings > Third-party access > OAuth app policy. The organization owner acts here, not you.",
-      "todo": "Tell users in restricted organizations that their owner must approve the app. Keep your app's description accurate, since owners review it.",
+      "title": "Organizations must approve your app before their members can connect",
+      "what": "If an org has OAuth app access restrictions on, its members and outside collaborators must request approval from an owner before they can authorize your app. Until approved, your app can only reach the org's public resources. New orgs have restrictions on by default.",
+      "where": "Organization settings, Third-party Access, OAuth app policy. The org owner acts here, not you.",
+      "todo": "Tell target organizations' owners to approve the app. Members can request approval from the app's authorization flow, and owners are notified.",
       "claimIds": [
-        "c5"
+        "c4",
+        "c5",
+        "c6",
+        "c14"
       ]
     },
     {
       "gate": "paid_access",
       "applies": "no",
-      "title": "No paid plan needed to use the API",
-      "what": "Connecting users and calling the API does not require a paid plan. A higher rate limit exists only for apps owned or approved by a GitHub Enterprise Cloud organization.",
+      "title": "No paid plan needed for production API access",
+      "what": "",
       "where": "",
       "todo": "",
       "claimIds": [
-        "c6",
-        "c9"
+        "c7"
       ]
     },
     {
       "gate": "ongoing",
-      "applies": "yes",
-      "title": "Access tokens expire by default and rate limits are per user",
-      "what": "Expiring user access tokens are enabled by default, so tokens last eight hours and come with a refresh token. Each user's requests count against their own 5,000 requests per hour. Rate-limit increases are granted per app.",
-      "where": "App settings > Expire user access tokens checkbox. You act here.",
-      "todo": "Implement refresh-token handling before launch. Watch for rate-limit responses, and do not retry until the reset time.",
+      "applies": "no",
+      "title": "No recurring re-verification, but GitHub can cut off access at its discretion",
+      "what": "",
+      "where": "",
+      "todo": "",
       "claimIds": [
-        "c7",
-        "c8",
-        "c9",
-        "c13",
-        "c15"
+        "c17",
+        "c8"
       ]
     }
   ],
   "requirements": [
     {
-      "text": "A GitHub account, or an organization where you have admin access, to own the app.",
+      "text": "A GitHub account. Register the app under your personal account or under an organization where you are an admin.",
       "claimIds": [
         "c1"
       ]
     },
     {
-      "text": "A public homepage URL and at least one authorization callback URL.",
-      "claimIds": [
-        "c12"
-      ]
-    },
-    {
-      "text": "A privacy-safe app name and description, since everything you enter is public.",
-      "claimIds": [
-        "c12"
-      ]
-    }
-  ],
-  "steps": [
-    {
-      "text": "Open Settings > Developer settings > OAuth apps in your GitHub account or organization.",
-      "detail": "Use the account that should own the app.",
-      "who": "you",
-      "claimIds": [
-        "c1"
-      ]
-    },
-    {
-      "text": "Click New OAuth App and enter the application name, homepage URL and authorization callback URL.",
-      "detail": "Callback URL is where users return after approval. You can add up to 10 callback URLs.",
-      "who": "you",
-      "claimIds": [
-        "c1",
-        "c2"
-      ]
-    },
-    {
-      "text": "Leave Enable Device Flow unchecked unless the app runs on a CLI, IoT device or headless system.",
-      "detail": "Device flow lets attackers impersonate the app in phishing, so it should stay off for web apps.",
-      "who": "you",
-      "claimIds": [
-        "c10"
-      ]
-    },
-    {
-      "text": "Keep Expire user access tokens checked unless your authentication code cannot yet handle short-lived tokens.",
-      "detail": "If you must uncheck it, do so only until refresh-token support is added.",
-      "who": "you",
-      "claimIds": [
-        "c15",
-        "c7"
-      ]
-    },
-    {
-      "text": "Click Register application and store the client secret in a secure secret store.",
-      "detail": "Never put the client secret in client-side code or code on user devices.",
-      "who": "you",
-      "claimIds": [
-        "c11"
-      ]
-    },
-    {
-      "text": "Draft the setup text users will see when approving the app, including a note about organization approval.",
-      "detail": "Keep it factual: name the data the app accesses and the scopes it requests.",
-      "who": "agent_prepares",
-      "claimIds": []
-    },
-    {
-      "text": "Connect your own account to the app end to end, including token refresh.",
-      "detail": "Test from a personal account and from an organization you administer.",
-      "who": "you",
-      "claimIds": []
-    },
-    {
-      "text": "Ask organization owners in restricted organizations to approve the app.",
-      "detail": "Owners act in their organization's OAuth app policy. Their response time is not controlled by GitHub.",
-      "who": "waiting",
-      "claimIds": [
-        "c5"
-      ]
-    },
-    {
-      "text": "Launch and share the client ID with users.",
-      "detail": "",
-      "who": "you",
-      "claimIds": []
-    }
-  ],
-  "blockers": [
-    {
-      "problem": "Members of a restricted organization get an error or cannot authorize the app.",
-      "fix": "Have the organization owner approve the app under Third-party access > OAuth app policy.",
-      "claimIds": [
-        "c5"
-      ]
-    },
-    {
-      "problem": "Client secret is exposed in a public repo or front-end code.",
-      "fix": "Rotate the secret, update your app, and delete the old one. Keep the secret server-side only.",
-      "claimIds": [
-        "c11"
-      ]
-    },
-    {
-      "problem": "Users are logged out after eight hours because refresh is not implemented.",
-      "fix": "Store the refresh token and exchange it for a new access token before expiry.",
-      "claimIds": [
-        "c7",
-        "c8"
-      ]
-    },
-    {
-      "problem": "Rate-limit errors appear because your app shares the user's 5,000 requests per hour with their other tools.",
-      "fix": "Pace requests using the x-ratelimit headers and back off on 403 or 429 responses.",
+      "text": "A public homepage URL for the app, entered as the full URL in the registration form.",
       "claimIds": [
         "c9"
       ]
     },
     {
-      "problem": "Device flow enabled on a web app allows phishing against your users.",
-      "fix": "Turn off Enable Device Flow in the app settings.",
+      "text": "Only public information in the app's name, homepage and description, since these are visible to users.",
       "claimIds": [
-        "c10"
+        "c9"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "text": "Open Settings, then Developer settings, then OAuth Apps, then New OAuth App.",
+      "detail": "The button reads 'Register a new application' if this is your first app.",
+      "who": "you",
+      "claimIds": [
+        "c1",
+        "c15"
+      ]
+    },
+    {
+      "text": "Enter the application name, homepage URL, optional description and authorization callback URL.",
+      "detail": "Keep internal URLs out of these fields. Add more callback URLs only if you need them (up to 10).",
+      "who": "agent_prepares",
+      "claimIds": [
+        "c1"
+      ]
+    },
+    {
+      "text": "Decide whether to enable the device flow, and whether to keep 'Expire user access tokens' on.",
+      "detail": "Token expiry is on by default. Turn it off only if your app does not yet support short-lived tokens.",
+      "who": "you",
+      "claimIds": [
+        "c9"
+      ]
+    },
+    {
+      "text": "Click Register application, then store the client secret on the server.",
+      "detail": "Never put the client secret in client-side code or on a user device.",
+      "who": "you",
+      "claimIds": [
+        "c11"
+      ]
+    },
+    {
+      "text": "Connect your own GitHub account to confirm the flow works end to end.",
+      "detail": "Your personal account needs a verified email address before it can authorize any OAuth app.",
+      "who": "you",
+      "claimIds": [
+        "c13"
+      ]
+    },
+    {
+      "text": "Ask each target organization's owner to approve the app.",
+      "detail": "Owners review the app under OAuth app policy and click Grant access.",
+      "who": "waiting",
+      "claimIds": [
+        "c14",
+        "c4"
+      ]
+    },
+    {
+      "text": "Launch to users with personal accounts, and to org members once their org has approved the app.",
+      "detail": "Org members who are not yet approved can still use the app with their personal account.",
+      "who": "you",
+      "claimIds": [
+        "c6"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "problem": "Org members see an error or cannot authorize the app.",
+      "fix": "The org has OAuth app access restrictions on and has not approved the app. Members must request approval, and the org owner must grant access.",
+      "claimIds": [
+        "c4",
+        "c6"
+      ]
+    },
+    {
+      "problem": "Users cannot authorize the app because their email is unverified.",
+      "fix": "The user must verify their email address on GitHub before authorizing any OAuth app.",
+      "claimIds": [
+        "c13"
+      ]
+    },
+    {
+      "problem": "Short-lived tokens break the app's sign-in after registration.",
+      "fix": "Default token expiry is on. Either update the app to handle expiring tokens or turn the option off until it does.",
+      "claimIds": [
+        "c9"
+      ]
+    },
+    {
+      "problem": "The client secret is exposed in a browser or mobile build.",
+      "fix": "Keep the client secret on the server only. Rotate it if it was exposed.",
+      "claimIds": [
+        "c11"
+      ]
+    },
+    {
+      "problem": "GitHub cuts off your app without notice.",
+      "fix": "GitHub may change or end API access at any time. Monitor the Registered Developer Agreement and the app's status, and plan a fallback path.",
+      "claimIds": [
+        "c8"
       ]
     }
   ],
   "couldNotVerify": [
-    "Exact time an organization owner takes to approve an app; GitHub does not state this.",
-    "Whether a new OAuth app's organization restriction default applies to every organization, as the official pages do not state it."
+    "Whether the GitHub Marketplace listing path has its own review rules. Not checked.",
+    "Whether the developer portal URL is the exact console location. Only the login redirect was tested."
   ],
   "claims": [
     {
       "id": "c1",
-      "statement": "Any user can create and register an OAuth app under a personal account or an organization where they have administrative access.",
+      "statement": "Any GitHub user can register an OAuth app under their personal account or under an organization they administer, with no approval step.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
       "sourceTitle": "Creating an OAuth app - GitHub Docs",
@@ -229,52 +220,70 @@
     },
     {
       "id": "c2",
-      "statement": "A user or organization can own up to 100 OAuth apps.",
-      "status": "sourced",
+      "statement": "No test, development or unpublished mode is mentioned in Creating an OAuth app - GitHub Docs.",
+      "status": "uncertain",
       "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
       "sourceTitle": "Creating an OAuth app - GitHub Docs",
-      "quote": "A user or organization can own up to 100 OAuth apps.",
-      "note": ""
+      "quote": "",
+      "note": "Absence claim. The registration steps create the app directly, with no mode switch."
     },
     {
       "id": "c3",
-      "statement": "No sandbox or test mode is mentioned in Creating an OAuth app - GitHub Docs.",
+      "statement": "No provider review or verification step is mentioned for registering an OAuth app in Creating an OAuth app - GitHub Docs.",
       "status": "uncertain",
       "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
       "sourceTitle": "Creating an OAuth app - GitHub Docs",
       "quote": "",
-      "note": "Absence claim from the registration page."
+      "note": "Absence claim. GitHub Marketplace listing rules were not checked."
     },
     {
       "id": "c4",
-      "statement": "No app review or verification step is mentioned in Creating an OAuth app - GitHub Docs.",
-      "status": "uncertain",
-      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
-      "sourceTitle": "Creating an OAuth app - GitHub Docs",
-      "quote": "",
-      "note": "Absence claim from the registration page. Marketplace listing has a separate review and is not required."
+      "statement": "When org OAuth app restrictions are enabled, members and outside collaborators must get owner approval before authorizing an app that accesses org resources.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/approving-oauth-apps-for-your-organization",
+      "sourceTitle": "Approving OAuth apps for your organization - GitHub Docs",
+      "quote": "When OAuth app access restrictions are enabled, organization members and outside collaborators must request approval from an organization owner before they can authorize an OAuth app that has access to the organization's resources.",
+      "note": ""
     },
     {
       "id": "c5",
-      "statement": "When an organization has OAuth app access restrictions enabled, its members cannot authorize the app against organization resources until an owner approves it.",
+      "statement": "New organizations have OAuth app access restrictions enabled by default.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions",
       "sourceTitle": "About OAuth app access restrictions - GitHub Docs",
-      "quote": "When OAuth app access restrictions are enabled, organization members and outside collaborators cannot authorize OAuth app access to organization resources.",
+      "quote": "When you create a new organization, OAuth app access restrictions are enabled by default.",
       "note": ""
     },
     {
       "id": "c6",
-      "statement": "No paid plan is mentioned as required for OAuth app API access in Creating an OAuth app - GitHub Docs.",
-      "status": "uncertain",
-      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
-      "sourceTitle": "Creating an OAuth app - GitHub Docs",
-      "quote": "",
-      "note": "Absence claim from the registration page."
+      "statement": "If an org does not approve the app, the app can only access that org's public resources.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/using-oauth-apps/authorizing-oauth-apps",
+      "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
+      "quote": "If the organization does not approve the application, then the application will only be able to access the organization's public resources.",
+      "note": ""
     },
     {
       "id": "c7",
-      "statement": "Expiring user access tokens are enabled by default for new OAuth apps.",
+      "statement": "No paid plan or paid API tier is mentioned as required for production API access in Rate limits for the REST API - GitHub Docs.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api",
+      "sourceTitle": "Rate limits for the REST API - GitHub Docs",
+      "quote": "",
+      "note": "Absence claim. The 15,000/hour limit for Enterprise Cloud apps is a rate perk, not a gate."
+    },
+    {
+      "id": "c8",
+      "statement": "GitHub may change or end a developer's API access at any time, with or without notice.",
+      "status": "sourced",
+      "sourceUrl": "https://github.com/github/site-policy/blob/main/Policies/github-terms/github-registered-developer-agreement.md",
+      "sourceTitle": "GitHub Registered Developer Agreement",
+      "quote": "We reserve the right at any time to modify or discontinue, temporarily or permanently, your access to the API (or any part of it) with or without notice.",
+      "note": ""
+    },
+    {
+      "id": "c9",
+      "statement": "'Expire user access tokens' is enabled by default when registering an OAuth app.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
       "sourceTitle": "Creating an OAuth app - GitHub Docs",
@@ -282,82 +291,64 @@
       "note": ""
     },
     {
-      "id": "c8",
-      "statement": "With expiring tokens, the access token expires after eight hours and the refresh token expires after six months.",
-      "status": "sourced",
-      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
-      "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
-      "quote": "The access token expires after eight hours, and the refresh token expires after six months.",
-      "note": ""
-    },
-    {
-      "id": "c9",
-      "statement": "Requests made with an OAuth app's tokens count against the authorizing user's personal limit of 5,000 requests per hour.",
+      "id": "c11",
+      "statement": "The client secret must never be placed in client-side code or code running on a user device.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api",
       "sourceTitle": "Rate limits for the REST API - GitHub Docs",
-      "quote": "All of these requests count towards your personal rate limit of 5,000 requests per hour.",
-      "note": ""
-    },
-    {
-      "id": "c10",
-      "statement": "Device flow should stay disabled unless the app runs in a constrained environment, because it can be used for phishing.",
-      "status": "sourced",
-      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
-      "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
-      "quote": "For this reason, do not enable the device flow for your application unless you are using the app in a constrained environment (CLIs, IoT devices, or headless systems).",
-      "note": ""
-    },
-    {
-      "id": "c11",
-      "statement": "The client secret and generated tokens must be stored securely.",
-      "status": "sourced",
-      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
-      "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
-      "quote": "You must store your app's client secret and any generated tokens securely, if possible.",
-      "note": ""
-    },
-    {
-      "id": "c12",
-      "statement": "Only public information should be used in the OAuth app's name, URLs and description.",
-      "status": "sourced",
-      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
-      "sourceTitle": "Creating an OAuth app - GitHub Docs",
-      "quote": "Only use information in your OAuth app that you consider public.",
+      "quote": "Never include your app's client secret in client-side code or in code that runs on a user device.",
       "note": ""
     },
     {
       "id": "c13",
-      "statement": "Rate-limit increases are granted per OAuth app, and every token granted to that app gets the increased limit.",
+      "statement": "Users must verify their email address before they can authorize any OAuth app.",
       "status": "sourced",
-      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/differences-between-github-apps-and-oauth-apps",
-      "sourceTitle": "Differences between GitHub Apps and OAuth apps - GitHub Docs",
-      "quote": "Rate limit increases are granted per OAuth app.",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/using-oauth-apps/authorizing-oauth-apps",
+      "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
+      "quote": "You must verify your email address before you can authorize an OAuth app.",
       "note": ""
     },
     {
       "id": "c14",
-      "statement": "Time to test and effort estimates are approximate, based on the registration steps.",
+      "statement": "Org owners approve a pending app by reviewing it and clicking Grant access.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/approving-oauth-apps-for-your-organization",
+      "sourceTitle": "Approving OAuth apps for your organization - GitHub Docs",
+      "quote": "After you review the information about the requested application, click Grant access .",
+      "note": ""
+    },
+    {
+      "id": "c15",
+      "statement": "The GitHub developer settings page exists and requires sign-in.",
+      "status": "tested",
+      "sourceUrl": "https://github.com/settings/developers",
+      "sourceTitle": "GitHub developer settings",
+      "quote": "",
+      "note": "Probe: HTTP 200, redirected to login."
+    },
+    {
+      "id": "c16",
+      "statement": "Setup takes about 1–2 hours of hands-on work, and testing with your own account about 30 minutes.",
       "status": "uncertain",
       "sourceUrl": "",
       "sourceTitle": "",
       "quote": "",
-      "note": "Estimate, not from a source."
+      "note": "Estimate from the number of form fields and steps, not from a source."
     },
     {
-      "id": "c15",
-      "statement": "If the authentication code does not support short-lived tokens, the expiring-token checkbox should be unchecked until support is added.",
-      "status": "sourced",
+      "id": "c17",
+      "statement": "No yearly re-verification, audit or policy re-review is mentioned for OAuth apps in Creating an OAuth app - GitHub Docs.",
+      "status": "uncertain",
       "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
       "sourceTitle": "Creating an OAuth app - GitHub Docs",
-      "quote": "If your app's authentication code hasn't been updated to support short-lived tokens, uncheck the box until support is added.",
-      "note": ""
+      "quote": "",
+      "note": "Absence claim."
     }
   ],
   "slug": "github",
   "reviewed": false,
-  "createdAt": "2026-10-28T16:24:02.918Z",
-  "checkedAt": "2026-10-28T16:24:02.918Z",
+  "createdAt": "2026-10-28T16:34:03.600Z",
+  "checkedAt": "2026-10-28T16:34:03.600Z",
   "probes": [
     {
       "name": "console",
@@ -371,7 +362,7 @@
     "searches": 4,
     "fetches": 6,
     "probes": 1,
-    "durationSec": 54,
-    "costUsd": 0.052
+    "durationSec": 71,
+    "costUsd": 0.055
   }
 }

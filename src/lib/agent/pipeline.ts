@@ -3,18 +3,20 @@ import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { GateId, GuideDraft, type Claim, type Gate, type Guide } from "@/lib/schema";
 import { slugify } from "@/lib/text";
-import { COMPOSE_SYSTEM, RESEARCH_SYSTEM } from "./prompts";
+import { COMPOSE_SYSTEM, EDITOR_SYSTEM, RESEARCH_SYSTEM } from "./prompts";
+import { lintGuide, type Violation } from "./lint";
 import { MODEL, RUN_CAP_USD, BudgetError, addTurn, emptyUsage, type Usage } from "./cost";
 import { fetchPage, probeConsole, quoteOnPage, type Page, type Probe } from "./web";
 
 export { MODEL };
 
 export type AgentEvent =
-  | { type: "phase"; phase: "research" | "fetch" | "compose" | "check" | "done"; message: string }
+  | { type: "phase"; phase: "research" | "fetch" | "compose" | "check" | "edit" | "done"; message: string }
   | { type: "search"; query: string }
   | { type: "fetch"; url: string; ok: boolean; error?: string }
   | { type: "probe"; probe: Probe }
   | { type: "check"; kept: number; downgraded: number }
+  | { type: "edit"; before: number; after: number }
   | { type: "guide"; slug: string }
   | { type: "cost"; usd: number }
   | { type: "error"; message: string };
@@ -146,6 +148,48 @@ function checkClaims(claims: Claim[], pages: Page[], probes: Probe[]): { claims:
 }
 
 /**
+ * (f) Editor pass: fix the guide against the checklist and the code-found violations.
+ * It may only delete or rephrase; claims are restored from the original afterwards, and
+ * any claimId the editor invented is dropped.
+ */
+async function editGuide(draft: GuideDraft, violations: Violation[], usage: Usage, emit: Emit): Promise<GuideDraft> {
+  const text = await call(
+    {
+      system: EDITOR_SYSTEM,
+      messages: [
+        {
+          role: "user",
+          content:
+            `<guide>\n${JSON.stringify(draft)}\n</guide>\n\n<violations>\n` +
+            (violations.map((v) => `- ${v.field} (${v.rule}: ${v.why}): ${v.text}`).join("\n") || "(none)") +
+            `\n</violations>`,
+        },
+      ],
+      output_config: { effort: "low" },
+    },
+    usage,
+    emit,
+  );
+  let edited: GuideDraft;
+  try {
+    edited = GuideDraft.parse(extractJson(text));
+  } catch {
+    return draft; // a broken edit never replaces a valid guide
+  }
+  const ids = new Set(draft.claims.map((c) => c.id));
+  const keep = (xs: string[]) => xs.filter((id) => ids.has(id));
+  return {
+    ...edited,
+    claims: draft.claims,
+    summaryClaimIds: keep(edited.summaryClaimIds),
+    gates: edited.gates.map((g) => ({ ...g, claimIds: keep(g.claimIds) })),
+    requirements: edited.requirements.map((r) => ({ ...r, claimIds: keep(r.claimIds) })),
+    steps: edited.steps.map((s) => ({ ...s, claimIds: keep(s.claimIds) })),
+    blockers: edited.blockers.map((b) => ({ ...b, claimIds: keep(b.claimIds) })),
+  };
+}
+
+/**
  * A gate's yes/no answer must rest on at least one claim that passed the check;
  * otherwise it becomes "unknown" and is listed under could-not-verify.
  */
@@ -188,16 +232,23 @@ export async function generateGuide(query: string, emit: Emit, library = false):
 
   emit({ type: "phase", phase: "check", message: "Checking every quote against its page" });
   const checked = checkClaims(draft.claims, pages, probes);
-  const gates = checkGates(draft.gates, checked.claims, pages);
   emit({ type: "check", kept: checked.kept, downgraded: checked.downgraded });
+
+  emit({ type: "phase", phase: "edit", message: "Editing against the checklist" });
+  const before = lintGuide(draft);
+  const edited = await editGuide({ ...draft, claims: checked.claims }, before, usage, emit);
+  const after = lintGuide(edited);
+  emit({ type: "edit", before: before.length, after: after.length });
+  // Gates are checked after editing, since the editor may change what applies.
+  const gates = checkGates(edited.gates, checked.claims, pages);
 
   const unreadable = pages.filter((p) => !p.ok).map((p) => `Couldn't read ${p.url} (${p.error}), so nothing from it is confirmed.`);
   const now = new Date().toISOString();
   return {
-    ...draft,
+    ...edited,
     claims: checked.claims,
     gates: gates.gates,
-    couldNotVerify: [...draft.couldNotVerify, ...gates.unconfirmed, ...unreadable],
+    couldNotVerify: [...edited.couldNotVerify, ...gates.unconfirmed, ...unreadable],
     slug: library ? slugify(query) : `${slugify(draft.appName)}-${Math.random().toString(36).slice(2, 7)}`,
     reviewed: false,
     createdAt: now,
