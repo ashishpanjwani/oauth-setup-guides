@@ -18,19 +18,30 @@ export default async function GuidePage({ params }: Props) {
   const g = await getGuide((await params).slug);
   if (!g) notFound();
 
-  // Claims render as footnote numbers in reading order.
+  // Claims render as footnote numbers in reading order. A line with no tested or sourced
+  // claim behind it is marked Unverified, so nothing unconfirmed reads as fact.
   const num = new Map(g.claims.map((c, i) => [c.id, i + 1]));
+  const status = new Map(g.claims.map((c) => [c.id, c.status]));
   const Refs = ({ ids }: { ids: string[] }) => {
     const n = ids.filter((id) => num.has(id));
-    if (!n.length) return null;
+    const backed = n.some((id) => status.get(id) !== "uncertain");
     return (
-      <sup className="ml-0.5 space-x-0.5 text-[10px]">
-        {n.map((id) => (
-          <a key={id} href={`#${id}`} className="text-sky-700 hover:underline dark:text-sky-400">
-            {num.get(id)}
-          </a>
-        ))}
-      </sup>
+      <>
+        {n.length > 0 && (
+          <sup className="ml-0.5 space-x-0.5 text-[10px]">
+            {n.map((id) => (
+              <a key={id} href={`#${id}`} className="text-sky-700 hover:underline dark:text-sky-400">
+                {num.get(id)}
+              </a>
+            ))}
+          </sup>
+        )}
+        {!backed && (
+          <span className={`chip ml-1.5 px-1.5 py-0 align-middle text-[10px] ${EVIDENCE.uncertain.cls}`} title="No tested or sourced claim confirms this line">
+            Unverified
+          </span>
+        )}
+      </>
     );
   };
 

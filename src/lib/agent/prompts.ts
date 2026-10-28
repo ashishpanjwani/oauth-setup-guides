@@ -55,7 +55,9 @@ ${GATES}
 - couldNotVerify: at most 4 items, only open questions that could change what the developer does or expects. Empty is fine. Never list things you chose not to research, sources you didn't read, or how something was tested.
 
 Evidence (strict, checked by code after you answer):
-- Every fact the summary, gates, requirements, steps or blockers rely on is a claim in claims[], referenced by claimIds. At most 15 claims.
+- Every fact the summary, gates, requirements, steps or blockers rely on is a claim in claims[], referenced by claimIds. At most 20 claims.
+- One fact per claim. The statement restates what its quote says, nothing more: if a line relies on two facts from two sentences, make two claims. A later check downgrades any claim whose quote doesn't fully support it.
+- Every summary, gate marked yes, requirement, step and blocker cites at least one claim. Anything without a confirmed claim is shown to the reader as "Unverified", so when you are unsure, say so with an uncertain claim rather than leaving it uncited.
 - "sourced": sourceUrl is one of the <page> URLs, and quote is one full sentence (not a URL, heading or list item) copied exactly, word for word, from that page's text. The statement must say no more than the quote does: no added facts, no stronger or opposite wording. If you can't copy an exact sentence that supports the statement, use "uncertain".
 - "tested": only for what a <probes> line shows; sourceUrl is the probe URL and quote is empty.
 - "uncertain": estimates (time and effort, unless the page states them), search notes, gate findings from pages you were not given, inferences. Leave quote empty and explain in note.`;
@@ -79,3 +81,12 @@ Checklist:
 Also fix every item in <violations>, which an automated check found.
 
 Return the full corrected guide as JSON only (no prose, no code fence), with the same structure and the same claims.`;
+
+export const SUPPORT_SYSTEM = `You check whether each quote fully supports its statement. You get pairs of a statement and the exact quote it relies on.
+
+For each pair answer:
+- "yes": the quote says everything the statement says (paraphrase is fine).
+- "partly": the quote supports some of it, but the statement adds a fact, a number, a condition, or stronger wording that the quote doesn't contain.
+- "no": the quote doesn't support it, or says something different.
+
+Judge only from the quote, not from what you know. When in doubt, answer "partly". Give a short reason for anything that isn't "yes".`;

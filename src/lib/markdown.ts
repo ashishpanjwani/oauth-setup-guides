@@ -4,7 +4,13 @@ import { DIFFICULTY, EVIDENCE, WHO } from "./labels";
 /** Plain Markdown so a guide can be pasted into a ticket, PR, or doc. Claims become footnotes. */
 export function guideToMarkdown(g: Guide, url?: string): string {
   const num = new Map(g.claims.map((c, i) => [c.id, i + 1]));
-  const refs = (ids: string[]) => ids.filter((id) => num.has(id)).map((id) => `[^${num.get(id)}]`).join("");
+  const status = new Map(g.claims.map((c) => [c.id, c.status]));
+  // Same rule as the page: a line with no tested or sourced claim is marked unverified.
+  const refs = (ids: string[]) => {
+    const n = ids.filter((id) => num.has(id));
+    const backed = n.some((id) => status.get(id) !== "uncertain");
+    return n.map((id) => `[^${num.get(id)}]`).join("") + (backed ? "" : " _(unverified)_");
+  };
   const out: string[] = [];
 
   out.push(`# ${g.appName}: OAuth app setup guide`, "");

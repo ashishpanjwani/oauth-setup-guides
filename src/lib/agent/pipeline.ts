@@ -3,7 +3,7 @@ import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { GateId, GuideDraft, type Claim, type Gate, type Guide } from "@/lib/schema";
 import { slugify } from "@/lib/text";
-import { COMPOSE_SYSTEM, EDITOR_SYSTEM, RESEARCH_SYSTEM } from "./prompts";
+import { COMPOSE_SYSTEM, EDITOR_SYSTEM, RESEARCH_SYSTEM, SUPPORT_SYSTEM } from "./prompts";
 import { lintGuide, type Violation } from "./lint";
 import { RESEARCH_MODEL, WRITER_MODEL, RUN_CAP_USD, BudgetError, addTurn, emptyUsage, type Usage } from "./cost";
 import { fetchPage, probeConsole, quoteOnPage, type Page, type Probe } from "./web";
@@ -16,6 +16,7 @@ export type AgentEvent =
   | { type: "probe"; probe: Probe }
   | { type: "check"; kept: number; downgraded: number }
   | { type: "coverage"; missing: string[]; found: string[] }
+  | { type: "support"; checked: number; downgraded: number }
   | { type: "edit"; before: number; after: number }
   | { type: "guide"; slug: string }
   | { type: "cost"; usd: number }
@@ -199,6 +200,42 @@ function checkClaims(claims: Claim[], pages: Page[], probes: Probe[]): { claims:
   return { claims: out, kept, downgraded };
 }
 
+const SupportResult = z.object({
+  results: z.array(z.object({ id: z.string(), supported: z.enum(["yes", "partly", "no"]), reason: z.string() })),
+});
+
+/**
+ * Does each quote fully support its statement? The code check only proves the quote is on
+ * the page. This pass can only downgrade a claim to "uncertain", never upgrade one, so a
+ * mistake here makes the guide more cautious, not less.
+ */
+export async function checkSupport(claims: Claim[], usage: Usage, emit: Emit): Promise<Claim[]> {
+  // A statement that is its quote, word for word, is supported by definition; no model needed.
+  const same = (c: Claim) => c.statement.replace(/\W+/g, " ").trim().toLowerCase() === c.quote.replace(/\W+/g, " ").trim().toLowerCase();
+  const quoted = claims.filter((c) => c.status === "sourced" && c.quote && !same(c));
+  if (!quoted.length) return claims;
+  const text = await call(
+    RESEARCH_MODEL,
+    {
+      system: SUPPORT_SYSTEM,
+      messages: [{ role: "user", content: quoted.map((c) => `${c.id}\nstatement: ${c.statement}\nquote: ${c.quote}`).join("\n\n") }],
+      output_config: { effort: "low", format: zodOutputFormat(SupportResult) },
+    },
+    usage,
+    emit,
+  );
+  const verdicts = new Map(SupportResult.parse(JSON.parse(text)).results.map((r) => [r.id, r]));
+  let downgraded = 0;
+  const out = claims.map((c): Claim => {
+    const v = verdicts.get(c.id);
+    if (!v || v.supported === "yes" || c.status !== "sourced") return c;
+    downgraded++;
+    return { ...c, status: "uncertain", note: `${c.note ? c.note + " " : ""}[Check: the quote ${v.supported === "partly" ? "only partly supports" : "doesn't support"} this. ${v.reason}]` };
+  });
+  emit({ type: "support", checked: quoted.length, downgraded });
+  return out;
+}
+
 /**
  * (f) Editor pass: fix the guide against the checklist and the code-found violations.
  * It may only delete or rephrase; claims are restored from the original afterwards, and
@@ -296,6 +333,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
   emit({ type: "phase", phase: "check", message: "Checking every quote against its page" });
   const checked = checkClaims(draft.claims, pages, probes);
   emit({ type: "check", kept: checked.kept, downgraded: checked.downgraded });
+  checked.claims = await checkSupport(checked.claims, usage, emit);
 
   emit({ type: "phase", phase: "edit", message: "Editing against the checklist" });
   const before = lintGuide(draft);

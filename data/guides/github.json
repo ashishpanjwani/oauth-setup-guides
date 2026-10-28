@@ -66,7 +66,7 @@
       "where": "",
       "todo": "",
       "claimIds": [
-        "c7"
+        "c25"
       ]
     },
     {
@@ -91,7 +91,7 @@
     {
       "text": "A homepage URL for the app",
       "claimIds": [
-        "c9"
+        "c23"
       ]
     },
     {
@@ -117,7 +117,7 @@
       "detail": "",
       "who": "agent",
       "claimIds": [
-        "c9"
+        "c23"
       ]
     },
     {
@@ -139,7 +139,8 @@
       "claimIds": [
         "c17",
         "c18",
-        "c22"
+        "c22",
+        "c24"
       ]
     },
     {
@@ -238,16 +239,16 @@
     },
     {
       "id": "c6",
-      "statement": "Owners approve requests under the OAuth app policy in organization settings.",
+      "statement": "Organization owners can approve or deny a member's request for OAuth app access.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/approving-oauth-apps-for-your-organization",
       "sourceTitle": "Approving OAuth apps for your organization - GitHub Docs",
-      "quote": "In the \"Third-party Access\" section of the sidebar, click OAuth app policy .",
+      "quote": "When an organization member or outside collaborator requests OAuth app access to organization resources, organization owners can approve or deny the request.",
       "note": ""
     },
     {
       "id": "c7",
-      "statement": "No paid plan is mentioned as required for OAuth app API access; the personal rate limit is 5,000 requests per hour.",
+      "statement": "An OAuth app's requests count toward the user's personal rate limit of 5,000 requests per hour.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api",
       "sourceTitle": "Rate limits for the REST API - GitHub Docs",
@@ -265,7 +266,7 @@
     },
     {
       "id": "c9",
-      "statement": "The form takes a homepage URL and callback URLs, up to 10.",
+      "statement": "You can enter up to 10 callback URLs.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
       "sourceTitle": "Creating an OAuth app - GitHub Docs",
@@ -274,11 +275,11 @@
     },
     {
       "id": "c10",
-      "statement": "A mismatched redirect_uri causes an error.",
+      "statement": "If your redirect_uri doesn't match what you registered, GitHub redirects to your registered callback URL with an error.",
       "status": "sourced",
       "sourceUrl": "https://developer.github.com/apps/building-integrations/managing-oauth-apps/troubleshooting-authorization-request-errors/",
       "sourceTitle": "Troubleshooting authorization request errors - GitHub Docs",
-      "quote": "To correct this error, either provide a redirect_uri that matches what you registered or leave out this parameter to use the default one registered with your application.",
+      "quote": "If you provide a redirect_uri that doesn't match what you've registered with your application, GitHub will redirect to the registered callback URL with the following parameters summarizing the error:",
       "note": ""
     },
     {
@@ -319,7 +320,7 @@
     },
     {
       "id": "c16",
-      "statement": "Expire user access tokens is on by default for new OAuth apps.",
+      "statement": "Expire user access tokens is enabled by default.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
       "sourceTitle": "Creating an OAuth app - GitHub Docs",
@@ -337,7 +338,7 @@
     },
     {
       "id": "c18",
-      "statement": "Device flow needs no redirect URI, so attackers can use it to impersonate the app in phishing attacks; GitHub advises enabling it only for CLIs, IoT devices or headless systems.",
+      "statement": "Device flow doesn't use redirect URIs, so an attacker can use it to impersonate your app in a phishing attack.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
       "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
@@ -346,7 +347,7 @@
     },
     {
       "id": "c19",
-      "statement": "Expiring tokens exist to enforce regular token rotation and limit the damage of a leaked token.",
+      "statement": "Expiring tokens enforce regular token rotation and reduce the impact of a compromised token.",
       "status": "sourced",
       "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
       "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
@@ -379,6 +380,33 @@
       "sourceTitle": "GitHub: Register a new OAuth app (live form)",
       "quote": "",
       "note": "Observed by a person on the live form on 2026-10-28 (screenshot). Matches the docs."
+    },
+    {
+      "id": "c23",
+      "statement": "The registration form asks for the full URL of your app's website as the Homepage URL.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+      "sourceTitle": "Creating an OAuth app - GitHub Docs",
+      "quote": "In \"Homepage URL\", type the full URL to your app's website.",
+      "note": ""
+    },
+    {
+      "id": "c24",
+      "statement": "GitHub advises enabling device flow only for CLIs, IoT devices or headless systems.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
+      "sourceTitle": "Best practices for creating an OAuth app - GitHub Docs",
+      "quote": "For this reason, do not enable the device flow for your application unless you are using the app in a constrained environment (CLIs, IoT devices, or headless systems).",
+      "note": ""
+    },
+    {
+      "id": "c25",
+      "statement": "No paid plan is mentioned as a requirement on GitHub's OAuth app creation page.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+      "sourceTitle": "Creating an OAuth app - GitHub Docs",
+      "quote": "",
+      "note": "Absence claim: the page that would state a paid requirement doesn't mention one."
     }
   ],
   "slug": "github",
@@ -401,5 +429,5 @@
     "durationSec": 77,
     "costUsd": 0.211
   },
-  "reviewNote": "Reviewed by a person on 2026-10-28: every step checked against the live registration form (steps 1–5) or GitHub's docs (step 6). Corrections: device flow and token expiry explained from GitHub's docs, false 'docs conflict' note removed, non-setup step removed, callback field renamed to Redirect URIs to match the live form."
+  "reviewNote": "Reviewed by a person on 2026-10-28: every step checked against the live registration form (steps 1–5) or GitHub's docs (step 6). Corrections: device flow and token expiry explained from GitHub's docs, false 'docs conflict' note removed, non-setup step removed, callback field renamed to Redirect URIs to match the live form. On 2026-10-29 the new support check flagged claims that combined two facts under one quote; each was split or re-quoted so every claim states exactly what its quote says."
 }

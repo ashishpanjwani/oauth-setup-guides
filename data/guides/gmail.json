@@ -1,17 +1,17 @@
 {
   "appName": "Gmail",
   "developerPortal": "https://console.cloud.google.com/auth/branding",
-  "summary": "Setup is moderate: registration is self-serve, but any public user can connect only after Google verifies the app when it uses Gmail sensitive or restricted scopes. Restricted scopes add an annual third-party security assessment if data is accessed through a server.",
-  "difficulty": "moderate",
+  "summary": "Hard for an agent that reads email: reading or changing mail uses restricted scopes, which need Google's verification plus a third-party security assessment every 12 months. If your agent only sends email, gmail.send is a sensitive scope, which needs verification but no security assessment.",
+  "difficulty": "hard",
   "timeToTest": "~1 hour",
-  "timeToProduction": "1–2 weeks with sensitive scopes only; several weeks or more with restricted scopes.",
+  "timeToProduction": "Several weeks or more to read mail (restricted scopes); about 3–5 business days with gmail.send only",
   "effort": "2–4 days of work, including the demo video and privacy policy",
-  "cost": "Free with sensitive scopes only; restricted scopes add a third-party security assessment, with a fee set by the assessor.",
+  "cost": "Free with gmail.send only; reading mail adds a yearly third-party security assessment, priced by the assessor",
   "summaryClaimIds": [
     "c1",
-    "c2",
     "c3",
-    "c4"
+    "c13",
+    "c20"
   ],
   "gates": [
     {
@@ -145,11 +145,13 @@
     {
       "text": "Choose the narrowest Gmail scopes for your features and declare them on the Data Access page.",
       "why": "Scope class sets the verification burden: non-sensitive, sensitive or restricted.",
-      "detail": "Use gmail.send rather than gmail.modify if you only send mail.",
+      "detail": "If your agent only sends email, use gmail.send: it's sensitive, so it needs verification but no security assessment. Reading, labelling or archiving mail needs restricted scopes and the assessment.",
       "who": "agent",
       "claimIds": [
         "c1",
-        "c9"
+        "c9",
+        "c20",
+        "c3"
       ]
     },
     {
@@ -265,11 +267,11 @@
     {
       "id": "c1",
       "statement": "Gmail scopes are classed as non-sensitive, sensitive or restricted, each with a different verification burden.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://developers.google.com/workspace/gmail/api/auth/scopes",
       "sourceTitle": "Choose Gmail API scopes | Google for Developers",
       "quote": "Generally, you should choose the most narrowly focused scope possible and avoid requesting scopes that your app doesn't require.",
-      "note": "The page's scope tables list the classes."
+      "note": "The page's scope tables list the classes. [Check: the quote doesn't support this. Quote says to choose the narrowest scopes; it says nothing about non-sensitive, sensitive, or restricted classes or verification burdens.]"
     },
     {
       "id": "c2",
@@ -283,11 +285,11 @@
     {
       "id": "c3",
       "statement": "Restricted scope verification can take several weeks, with an annual third-party security assessment if data is accessed through a server.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
       "sourceTitle": "Restricted scope verification | App verification to use Google Authorization APIs | Google for Developers",
       "quote": "For this reason, the restricted scopes verification process can potentially take several weeks to complete.",
-      "note": ""
+      "note": "[Check: the quote only partly supports this. Quote supports several weeks for restricted scopes but says nothing about an annual third-party security assessment when data is accessed through a server.]"
     },
     {
       "id": "c4",
@@ -310,38 +312,38 @@
     {
       "id": "c6",
       "statement": "Testing status is limited to 100 test users and authorizations expire after seven days.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://support.google.com/cloud/answer/15549945?hl=en",
       "sourceTitle": "Manage App Audience - Google Cloud Platform Console Help",
       "quote": "Authorizations by a test user will expire seven days from the time of consent.",
-      "note": "The same page states the 100 test user limit."
+      "note": "The same page states the 100 test user limit. [Check: the quote only partly supports this. Quote covers seven-day expiry of authorizations but says nothing about a 100 test user limit.]"
     },
     {
       "id": "c7",
       "statement": "Testing is the default publishing status for development and limits the app to listed test users.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification",
       "sourceTitle": "Sensitive scope verification | App verification to use Google Authorization APIs | Google for Developers",
       "quote": "This setting means that your app is still in development and is only available to users you add to the list of test users.",
-      "note": ""
+      "note": "[Check: the quote only partly supports this. Quote says the app is in development and only available to listed test users, but does not say testing is the default publishing status.]"
     },
     {
       "id": "c8",
       "statement": "Verification needs a demo video uploaded to YouTube as Unlisted.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
       "sourceTitle": "Restricted scope verification | App verification to use Google Authorization APIs | Google for Developers",
       "quote": "If any of your OAuth clients aren't ready for production, we suggest that you delete them from the project that's requesting verification.",
-      "note": "Same page describes the Unlisted YouTube video requirement and recommends separate test and production projects."
+      "note": "Same page describes the Unlisted YouTube video requirement and recommends separate test and production projects. [Check: the quote doesn't support this. Quote is about deleting OAuth clients not ready for production; nothing about a demo video or YouTube Unlisted.]"
     },
     {
       "id": "c9",
       "statement": "Sensitive scopes need a justification for each scope and why a narrower scope is not sufficient.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification",
       "sourceTitle": "Sensitive scope verification | App verification to use Google Authorization APIs | Google for Developers",
       "quote": "Sensitive scopes require review by Google before any Google Account can grant access.",
-      "note": "The submission steps ask for per-scope justification."
+      "note": "The submission steps ask for per-scope justification. [Check: the quote doesn't support this. Quote only says sensitive scopes require Google review before access; it says nothing about justification requirements per scope.]"
     },
     {
       "id": "c10",
@@ -391,11 +393,11 @@
     {
       "id": "c15",
       "statement": "Home page must be public and privacy policy hosted on the same domain.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification",
       "sourceTitle": "Sensitive scope verification | App verification to use Google Authorization APIs | Google for Developers",
       "quote": "Your home page must be publicly accessible, and not just accessible to your site's logged-in users.",
-      "note": "Same page requires the privacy policy on the same domain and domain ownership verified in Search Console."
+      "note": "Same page requires the privacy policy on the same domain and domain ownership verified in Search Console. [Check: the quote only partly supports this. Quote supports the home page must be publicly accessible, but says nothing about the privacy policy or same domain requirement.]"
     },
     {
       "id": "c16",
@@ -409,28 +411,37 @@
     {
       "id": "c17",
       "statement": "OAuth clients are created from the Credentials page via Create credentials, OAuth client ID.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://docs.cloud.google.com/endpoints/docs/frameworks/java/creating-client-ids",
       "sourceTitle": "Creating client IDs | Cloud Endpoints Frameworks for App Engine | Google Cloud Documentation",
       "quote": "Select Web application as the application type.",
-      "note": "Page is for Endpoints Frameworks and older console flow; newer docs use the Clients page."
+      "note": "Page is for Endpoints Frameworks and older console flow; newer docs use the Clients page. [Check: the quote doesn't support this. Quote only says to select Web application as application type; it does not describe the Credentials page navigation path.]"
     },
     {
       "id": "c18",
       "statement": "Passing branding results are valid for 7 days before they must be published or rerun.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification",
       "sourceTitle": "Sensitive scope verification | App verification to use Google Authorization APIs | Google for Developers",
       "quote": "Click the Publish branding button to make the new branding live.",
-      "note": "Adjacent note on the page states results are valid for 7 days."
+      "note": "Adjacent note on the page states results are valid for 7 days. [Check: the quote doesn't support this. Quote only says to click Publish branding; nothing about 7-day validity of passing results.]"
     },
     {
       "id": "c19",
       "statement": "Unverified apps requesting sensitive or restricted scopes have a lifetime cap of 100 new users that cannot be reset.",
-      "status": "sourced",
+      "status": "uncertain",
       "sourceUrl": "https://support.google.com/cloud/answer/15549945?hl=en",
       "sourceTitle": "Manage App Audience - Google Cloud Platform Console Help",
       "quote": "The user cap applies over the entire lifetime of the project, and it cannot be reset or changed.",
+      "note": "[Check: the quote only partly supports this. Quote says the user cap applies over the project's lifetime and cannot be reset, but does not specify 100 users or that it applies to sensitive or restricted scopes.]"
+    },
+    {
+      "id": "c20",
+      "statement": "gmail.send is a sensitive scope.",
+      "status": "sourced",
+      "sourceUrl": "https://support.google.com/cloud/answer/13463817?hl=en",
+      "sourceTitle": "Google Cloud Help: OAuth App Verification FAQ",
+      "quote": "To use the Gmail API and continue with the verification process, you will need to migrate off SMTP protocol and use the sensitive https://www.googleapis.com/auth/gmail.send scope instead.",
       "note": ""
     }
   ],
@@ -453,5 +464,6 @@
     "probes": 1,
     "durationSec": 109,
     "costUsd": 0.292
-  }
+  },
+  "reviewNote": "Hand corrections on 2026-10-29: difficulty set to Hard (an agent that reads mail needs restricted scopes), and added why gmail.send matters, from Google's FAQ. Not yet reviewed by a person."
 }
