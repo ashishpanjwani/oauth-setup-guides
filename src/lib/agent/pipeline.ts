@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { GateId, GuideDraft, type Claim, type Guide } from "@/lib/schema";
+import { GateId, GuideDraft, type Claim, type Gate, type Guide } from "@/lib/schema";
 import { slugify } from "@/lib/text";
 import { COMPOSE_SYSTEM, RESEARCH_SYSTEM } from "./prompts";
 import { MODEL, RUN_CAP_USD, BudgetError, addTurn, emptyUsage, type Usage } from "./cost";
@@ -145,6 +145,21 @@ function checkClaims(claims: Claim[], pages: Page[], probes: Probe[]): { claims:
   return { claims: out, kept, downgraded };
 }
 
+/**
+ * A gate's yes/no answer must rest on at least one claim that passed the check;
+ * otherwise it becomes "unknown" and is listed under could-not-verify.
+ */
+function checkGates(gates: Gate[], claims: Claim[]): { gates: Gate[]; unconfirmed: string[] } {
+  const confirmed = new Set(claims.filter((c) => c.status !== "uncertain").map((c) => c.id));
+  const unconfirmed: string[] = [];
+  const out = gates.map((g): Gate => {
+    if (g.applies === "unknown" || g.claimIds.some((id) => confirmed.has(id))) return g;
+    unconfirmed.push(`Whether this applies: "${g.title}". No quote on the provider's pages confirmed it.`);
+    return { ...g, applies: "unknown" };
+  });
+  return { gates: out, unconfirmed };
+}
+
 /** The whole pipeline. library=true gives a stable slug for seed guides; live guides get a unique one. */
 export async function generateGuide(query: string, emit: Emit, library = false): Promise<Guide> {
   const started = Date.now();
@@ -168,6 +183,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
 
   emit({ type: "phase", phase: "check", message: "Checking every quote against its page" });
   const checked = checkClaims(draft.claims, pages, probes);
+  const gates = checkGates(draft.gates, checked.claims);
   emit({ type: "check", kept: checked.kept, downgraded: checked.downgraded });
 
   const unreadable = pages.filter((p) => !p.ok).map((p) => `Couldn't read ${p.url} (${p.error}), so nothing from it is confirmed.`);
@@ -175,7 +191,8 @@ export async function generateGuide(query: string, emit: Emit, library = false):
   return {
     ...draft,
     claims: checked.claims,
-    couldNotVerify: [...draft.couldNotVerify, ...unreadable],
+    gates: gates.gates,
+    couldNotVerify: [...draft.couldNotVerify, ...gates.unconfirmed, ...unreadable],
     slug: library ? slugify(query) : `${slugify(draft.appName)}-${Math.random().toString(36).slice(2, 7)}`,
     reviewed: false,
     createdAt: now,
