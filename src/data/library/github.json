@@ -1,0 +1,837 @@
+{
+  "appName": "GitHub",
+  "website": "https://github.com",
+  "developerPortal": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps",
+  "summary": "A GitHub OAuth app lets your users authorize your agent, through Composio or directly, to act on their GitHub repositories and account with the scopes you request. GitHub has no app review gate, so what decides your effort is organization data: new organizations block unapproved OAuth apps by default, and each customer organization's owner must approve your app before the agent can see private org repos.",
+  "verdict": {
+    "tier": "self_serve",
+    "difficulty": 2,
+    "headline": "No GitHub review. Register in about 15 minutes and any GitHub user can connect today, but each customer org's owner has to approve the app before we can see their private org repos.",
+    "timeToFirstConnection": "Minutes on Composio's managed app. Roughly 15–30 minutes with your own OAuth app. This is our estimate; GitHub publishes no figure.",
+    "timeToProduction": "Same day for personal-account data. Private organization data depends on each org owner approving your app, which can take hours to never and is outside your control.",
+    "activeEffort": "0.5–1 hour for a basic OAuth app. Several more hours if you choose the optional GitHub Marketplace listing. Both are our estimates.",
+    "approvalWait": "None from GitHub (inferred: no review step appears in the docs). Per-organization owner approval is separate and has no SLA.",
+    "confidence": "medium",
+    "claimIds": [
+      "c1",
+      "c4",
+      "c6",
+      "c8",
+      "c15",
+      "c16",
+      "c19",
+      "c20",
+      "c21",
+      "c30"
+    ]
+  },
+  "composio": {
+    "managedAuth": "yes",
+    "guidance": "Composio has a managed GitHub app, so you can build and test today without registering anything. Switch to your own OAuth app before production if you want any of these: your name and branding on the consent screen, custom scopes, your own rate-limit headroom (rate-limit increases are granted per OAuth app), or org owners approving an app with your name on it. Org access restrictions probably apply to the managed app too, so it won't avoid the org-approval problem. We couldn't confirm whether Composio's managed integration is an OAuth app or a GitHub App."
+  },
+  "prerequisites": [
+    {
+      "item": "A GitHub account. A free one works.",
+      "why": "The app registration page requires sign-in. The docs mention no paid plan or business account.",
+      "claimIds": [
+        "c4",
+        "c6"
+      ]
+    },
+    {
+      "item": "Admin rights on the GitHub organization, if you want the app owned by an org rather than your personal account",
+      "why": "OAuth apps can be registered under a personal account or under any organization you administer.",
+      "claimIds": [
+        "c6"
+      ]
+    },
+    {
+      "item": "A homepage URL for your product",
+      "why": "Homepage URL is a required field on the registration form.",
+      "claimIds": [
+        "c8"
+      ]
+    },
+    {
+      "item": "A Composio auth config for GitHub, so you have the exact callback URL",
+      "why": "The callback URL registered on GitHub must match the one Composio sends.",
+      "claimIds": [
+        "c2"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "id": "register",
+      "title": "Register the OAuth app",
+      "goal": "An OAuth app exists under your account or org, with a Client ID and client secret in hand.",
+      "duration": "10–15 min",
+      "steps": [
+        {
+          "text": "Decide whether the app will be owned by your personal account or by your organization.",
+          "actor": "you",
+          "detail": "An org-owned app needs you to be an org admin, and it survives individual staff leaving. Each user or org can own up to 100 OAuth apps.",
+          "claimIds": [
+            "c6",
+            "c7"
+          ]
+        },
+        {
+          "text": "Sign in to GitHub and open the new OAuth app form.",
+          "actor": "you",
+          "detail": "Personal account: https://github.com/settings/applications/new (it redirects to sign-in if you're logged out). For an org-owned app, open the OAuth apps section of that organization's developer settings.",
+          "claimIds": [
+            "c4",
+            "c6"
+          ]
+        },
+        {
+          "text": "Fill in Application name, Homepage URL and Application description.",
+          "actor": "agent_assist",
+          "detail": "An agent can draft the name and description. Homepage URL is required; description is optional. Users see the app name on the consent screen, so use your product name.",
+          "claimIds": [
+            "c8"
+          ]
+        },
+        {
+          "text": "Enter the Authorization callback URL from your Composio auth config.",
+          "actor": "you",
+          "detail": "Expected value: https://backend.composio.dev/api/v3.1/toolkits/auth/callback. Copy the exact value from your Composio dashboard rather than trusting this one. GitHub allows up to 10 callback URLs, so you can also add an older Composio v3 callback if you need it.",
+          "claimIds": [
+            "c2",
+            "c8"
+          ]
+        },
+        {
+          "text": "Decide whether to leave 'Expire user access tokens' checked.",
+          "actor": "you",
+          "detail": "The creating-an-app doc says it is on by default, which gives 8-hour tokens plus a refresh token. Another GitHub doc calls OAuth tokens long-lived by default, so look at the checkbox yourself. Keep it checked only if Composio or your code refreshes tokens.",
+          "claimIds": [
+            "c9",
+            "c25"
+          ]
+        },
+        {
+          "text": "Leave 'Enable Device Flow' unchecked unless you need CLI or device login.",
+          "actor": "you",
+          "detail": "Optional toggle. It isn't needed for a browser-based Composio connection.",
+          "claimIds": [
+            "c8"
+          ]
+        },
+        {
+          "text": "Click Register application, copy the Client ID, then generate and save a client secret.",
+          "actor": "you",
+          "detail": "Store the secret in your secrets manager straight away. The token endpoint is https://github.com/login/oauth/access_token and the authorize endpoint is https://github.com/login/oauth/authorize. There is no OIDC discovery document.",
+          "claimIds": [
+            "c5",
+            "c32"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "configure",
+      "title": "Configure scopes and Composio",
+      "goal": "Composio is using your Client ID and secret with a minimal scope list and a callback that matches exactly.",
+      "duration": "15–20 min",
+      "steps": [
+        {
+          "text": "Write the minimal scope list for what your agent actually does.",
+          "actor": "agent",
+          "detail": "Start from the narrowest scopes that work: no scope gives public read-only access, user:email reads email addresses, repo:status covers commit statuses, read:repo_hook covers webhooks. Use 'repo' only if you need private repo read/write. Scopes never grant more than the user already has.",
+          "claimIds": [
+            "c11",
+            "c12",
+            "c13",
+            "c14",
+            "c28"
+          ]
+        },
+        {
+          "text": "In Composio, set your GitHub auth config to use your own credentials (Client ID, client secret, scopes).",
+          "actor": "agent_assist",
+          "detail": "An agent can prepare the values. You must sign in to the Composio dashboard and paste the secret yourself.",
+          "claimIds": [
+            "c1",
+            "c2"
+          ]
+        },
+        {
+          "text": "Check that the callback URL on GitHub matches Composio's exactly, character for character.",
+          "actor": "agent_assist",
+          "detail": "Check scheme, host, path (v3.1 vs v3) and any trailing slash. You must open both settings pages, because an agent can't see them without your credentials.",
+          "claimIds": [
+            "c2",
+            "c8"
+          ]
+        },
+        {
+          "text": "Confirm token refresh is handled if token expiry is on.",
+          "actor": "agent_assist",
+          "detail": "Expiring tokens last 8 hours. Users can also opt in to expiry per sign-in through the offline_access scope. If refresh isn't handled, connections will break after 8 hours.",
+          "claimIds": [
+            "c9",
+            "c25"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "test",
+      "title": "Test real connections",
+      "goal": "Your own account connects and API calls work, and you know how org-owned repos behave.",
+      "duration": "15–30 min",
+      "steps": [
+        {
+          "text": "Connect your own GitHub account through a Composio connect link.",
+          "actor": "you",
+          "detail": "The authorize endpoint sends you to GitHub sign-in first, then to the consent screen. If you see an error page instead of consent, the client_id or callback is wrong; we couldn't observe the exact error text.",
+          "claimIds": [
+            "c3"
+          ]
+        },
+        {
+          "text": "Run a test API call against a repo you personally own.",
+          "actor": "agent_assist",
+          "detail": "For example, list your repositories. This confirms the token and scopes work.",
+          "claimIds": [
+            "c11"
+          ]
+        },
+        {
+          "text": "Try the same call against a private repo in an organization you belong to.",
+          "actor": "you",
+          "detail": "If the org has OAuth app access restrictions on (the default for new orgs), expect private org data to be missing until an org owner approves your app.",
+          "claimIds": [
+            "c19",
+            "c20"
+          ]
+        },
+        {
+          "text": "Reconnect the same account once, then confirm the earlier connection still works.",
+          "actor": "you",
+          "detail": "GitHub keeps at most 10 tokens per user/app/scope combination and allows 10 new tokens per hour. One community report describes the earlier token being revoked on every login.",
+          "claimIds": [
+            "c23",
+            "c27"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "go_live",
+      "title": "Go live",
+      "goal": "Production users connect through your app, and customers know how to approve it for their orgs.",
+      "duration": "15–30 min hands-on. Org approvals take indefinite time per customer. Marketplace is optional and its timeline is unknown.",
+      "steps": [
+        {
+          "text": "Point production connections at your own auth config.",
+          "actor": "you",
+          "detail": "GitHub has no publish step or test-user cap; any GitHub user can authorize straight away (inferred from the docs).",
+          "claimIds": [
+            "c16"
+          ]
+        },
+        {
+          "text": "Write instructions telling customers' org owners how to approve your OAuth app.",
+          "actor": "agent",
+          "detail": "Explain that members can request access from the authorization flow, that owners get notified, and that until an owner approves, the agent can't read private org repos or write to the org's public repos.",
+          "claimIds": [
+            "c20",
+            "c21"
+          ]
+        },
+        {
+          "text": "Ask each customer's org owner to approve the app, or to confirm that restrictions are off.",
+          "actor": "you",
+          "detail": "This is the customer's decision. Owners can also turn off members' ability to request approval.",
+          "claimIds": [
+            "c19",
+            "c21"
+          ]
+        },
+        {
+          "text": "Optional: if you want discovery or billing through GitHub, prepare a GitHub Marketplace listing.",
+          "actor": "agent_assist",
+          "detail": "An agent can draft the privacy policy, description and support info. You must accept the Marketplace Developer Agreement, set pricing, add plan-change webhooks, complete publisher verification and submit; org-owned apps need an org owner to submit. The app must do more than authentication and must be publicly available. This is not required for users to connect.",
+          "claimIds": [
+            "c17",
+            "c18"
+          ]
+        },
+        {
+          "text": "If heavy users hit rate limits, request a rate-limit increase for your OAuth app.",
+          "actor": "you",
+          "detail": "Each user's token is limited to 5,000 requests/hour and does not scale up. Increases are granted per OAuth app; we didn't find the request process.",
+          "claimIds": [
+            "c24"
+          ]
+        }
+      ]
+    }
+  ],
+  "scopes": [
+    {
+      "scope": "(no scope)",
+      "sensitivity": "basic",
+      "triggersReview": false,
+      "note": "Read-only access to public information."
+    },
+    {
+      "scope": "user:email",
+      "sensitivity": "basic",
+      "triggersReview": false,
+      "note": "Read the user's email addresses."
+    },
+    {
+      "scope": "repo:status",
+      "sensitivity": "basic",
+      "triggersReview": false,
+      "note": "Commit status access without full repo access."
+    },
+    {
+      "scope": "read:repo_hook",
+      "sensitivity": "basic",
+      "triggersReview": false,
+      "note": "Read repository webhooks. write:repo_hook and admin:repo_hook give progressively more."
+    },
+    {
+      "scope": "security_events",
+      "sensitivity": "sensitive",
+      "triggersReview": false,
+      "note": "Security event data. Sensitivity rating is our judgment."
+    },
+    {
+      "scope": "repo",
+      "sensitivity": "sensitive",
+      "triggersReview": false,
+      "note": "Full read/write on public, internal and private repos, plus some org resources (projects, invitations, team memberships, webhooks). The cost is user and admin trust, not a review. Sensitivity rating is our judgment."
+    },
+    {
+      "scope": "read:user",
+      "sensitivity": "unknown",
+      "triggersReview": false,
+      "note": "Used in our probe request, but not described in the doc excerpts we had. Confirm on the scopes page."
+    },
+    {
+      "scope": "offline_access",
+      "sensitivity": "basic",
+      "triggersReview": false,
+      "note": "Opts a sign-in into expiring tokens with a refresh token."
+    }
+  ],
+  "blockers": [
+    {
+      "title": "Org repos missing after a successful connection",
+      "likelihood": "common",
+      "symptom": "The user connects fine, but the agent can't see their company's private repos, can't write to the org's public repos, and gets no webhooks from private org repos.",
+      "workaround": "Have the user request approval from the authorization flow, or send the org owner your approval instructions. The org owner must approve your OAuth app. This probably applies to Composio's managed app too.",
+      "claimIds": [
+        "c19",
+        "c20",
+        "c21",
+        "c29"
+      ]
+    },
+    {
+      "title": "SAML single sign-on organization",
+      "likelihood": "possible",
+      "symptom": "The token works for personal repos but can't reach an org that enforces SAML SSO.",
+      "workaround": "Ask the user to sign in through the org's SSO, then retry.",
+      "claimIds": [
+        "c22"
+      ]
+    },
+    {
+      "title": "Callback URL or client_id mismatch",
+      "likelihood": "possible",
+      "symptom": "After GitHub sign-in, the user sees an error instead of the consent screen. We couldn't observe the exact message because it appears behind the login wall.",
+      "workaround": "Copy the callback URL from the Composio dashboard into the app's callback URL field exactly, and check that Composio has the right Client ID.",
+      "claimIds": [
+        "c2",
+        "c3"
+      ]
+    },
+    {
+      "title": "Earlier tokens revoked on reconnect",
+      "likelihood": "possible",
+      "symptom": "Older connections for the same user stop working after new connections are made across agents or environments.",
+      "workaround": "Avoid needless re-authorization; reuse one connection per user. The documented cap is 10 tokens per user/app/scope. One community report describes revocation on every login, possibly tied to enterprise-managed accounts.",
+      "claimIds": [
+        "c23",
+        "c27"
+      ]
+    },
+    {
+      "title": "Connections break after about 8 hours",
+      "likelihood": "possible",
+      "symptom": "API calls start failing with authentication errors several hours after the user connected.",
+      "workaround": "Make sure refresh tokens are used, or uncheck 'Expire user access tokens' on the app.",
+      "claimIds": [
+        "c9",
+        "c25"
+      ]
+    },
+    {
+      "title": "Rate limiting for heavy users",
+      "likelihood": "possible",
+      "symptom": "API calls get rate-limited after about 5,000 requests in an hour for a given user.",
+      "workaround": "Batch or cache requests, or request a rate-limit increase for your own OAuth app. That isn't possible on the managed app.",
+      "claimIds": [
+        "c24"
+      ]
+    }
+  ],
+  "nuances": [
+    {
+      "text": "GitHub recommends building a GitHub App instead of an OAuth app, for fine-grained permissions, per-repository user control and short-lived tokens. Consider it if org admins resist granting the broad 'repo' scope.",
+      "claimIds": [
+        "c10"
+      ]
+    },
+    {
+      "text": "GitHub OAuth apps don't use OpenID Connect. There's no discovery document, and the endpoints are fixed at /login/oauth/authorize and /login/oauth/access_token.",
+      "claimIds": [
+        "c5"
+      ]
+    },
+    {
+      "text": "Scopes only restrict a token; they never grant more than the user already has.",
+      "claimIds": [
+        "c11"
+      ]
+    },
+    {
+      "text": "A 2020 forum answer says the token cap is 100. Current docs say 10, so trust the docs.",
+      "claimIds": [
+        "c23",
+        "c31"
+      ]
+    },
+    {
+      "text": "For a basic OAuth app you need no legal entity, payment, demo video or privacy policy. A privacy policy, pricing plan and developer agreement only come in with an optional Marketplace listing.",
+      "claimIds": [
+        "c26",
+        "c17"
+      ]
+    }
+  ],
+  "handoff": {
+    "agentCanDo": [
+      "Draft the app name and description",
+      "Generate the minimal scope list",
+      "Write the org-owner approval instructions for customers",
+      "Draft Marketplace listing text, privacy policy and support info if you choose to list"
+    ],
+    "youMustDo": [
+      "Sign in to GitHub and register the OAuth app",
+      "Enter the callback URL and decide the token-expiry setting",
+      "Generate and store the client secret",
+      "Paste credentials into Composio",
+      "Test connections with your own account",
+      "Ask customers' org owners to approve the app",
+      "Accept the Marketplace agreement and set pricing, if listing"
+    ]
+  },
+  "claims": [
+    {
+      "id": "c1",
+      "statement": "Composio has a managed OAuth app for the GitHub toolkit.",
+      "status": "uncertain",
+      "sources": [],
+      "note": "From a Composio toolkit lookup (managed=true). The dossier gives no URL, so it can't be marked sourced."
+    },
+    {
+      "id": "c2",
+      "statement": "The Composio callback URL to register is https://backend.composio.dev/api/v3.1/toolkits/auth/callback.",
+      "status": "uncertain",
+      "sources": [],
+      "note": "Inferred from the brief. Confirm the exact value on your Composio auth config."
+    },
+    {
+      "id": "c3",
+      "statement": "https://github.com/login/oauth/authorize is live and redirects (HTTP 302) to github.com/login before showing consent, even for an unknown client_id.",
+      "status": "tested",
+      "sources": [
+        {
+          "url": "https://github.com/login/oauth/authorize?client_id=oauth-guide-probe-invalid-client&redirect_uri=https%3A%2F%2Fbackend.composio.dev%2Fapi%2Fv3.1%2Ftoolkits%2Fauth%2Fcallback&response_type=code&state=probe&scope=repo+read%3Auser",
+          "title": "Probe: authorize_endpoint"
+        }
+      ],
+      "note": "Rejection behaviour after login was not observable."
+    },
+    {
+      "id": "c4",
+      "statement": "The OAuth app registration page https://github.com/settings/applications/new requires GitHub sign-in.",
+      "status": "tested",
+      "sources": [
+        {
+          "url": "https://github.com/settings/applications/new",
+          "title": "Probe: page"
+        }
+      ],
+      "note": "Redirected to the GitHub login page."
+    },
+    {
+      "id": "c5",
+      "statement": "GitHub has no OpenID Connect discovery document at /.well-known/openid-configuration.",
+      "status": "tested",
+      "sources": [
+        {
+          "url": "https://github.com/.well-known/openid-configuration",
+          "title": "Probe: discovery"
+        }
+      ],
+      "note": "The fixed endpoints /login/oauth/authorize and /login/oauth/access_token come from the docs."
+    },
+    {
+      "id": "c6",
+      "statement": "OAuth apps can be registered under a personal account or any organization you administer, and the docs mention no paid plan or business account.",
+      "status": "verified",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+          "title": "Creating an OAuth app - GitHub Docs"
+        }
+      ],
+      "note": "Based on a search-result excerpt, not a full page read. [Checker: confirmed in source. The page says \"You can create and register an OAuth app under your personal account or under any organization you have administrative access to.\" It never mentions a paid plan or business account. The only limit it gives is \"A user or organization can own up to 100 OAuth apps.\"]"
+    },
+    {
+      "id": "c7",
+      "statement": "A user or organization can own up to 100 OAuth apps.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+          "title": "Creating an OAuth app - GitHub Docs"
+        }
+      ],
+      "note": ""
+    },
+    {
+      "id": "c8",
+      "statement": "The registration form asks for an application name, a required homepage URL, an optional description, up to 10 callback URLs, and has an optional device-flow toggle.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+          "title": "Creating an OAuth app - GitHub Docs"
+        }
+      ],
+      "note": "Based on a search-result excerpt. [Checker: only partly supported. The page lists \"Application name\", \"Homepage URL\", an optional \"Application description\", the line \"You can enter up to 10 callback URLs\", and an optional \"Enable Device Flow\" checkbox. It does not say the homepage URL is required. The claim also leaves out the \"Expire user access tokens\" checkbox, which the page says \"is enabled by default.\"]"
+    },
+    {
+      "id": "c9",
+      "statement": "'Expire user access tokens' is on by default when creating an OAuth app.",
+      "status": "uncertain",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+          "title": "Creating an OAuth app - GitHub Docs"
+        },
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/differences-between-github-apps-and-oauth-apps",
+          "title": "Differences between GitHub Apps and OAuth apps - GitHub Docs"
+        }
+      ],
+      "note": "The two official pages conflict: the creating doc says on by default, the differences doc says OAuth tokens are long-lived by default. Check the checkbox at registration."
+    },
+    {
+      "id": "c10",
+      "statement": "GitHub recommends building a GitHub App instead of an OAuth app, for fine-grained permissions, per-repo control and short-lived tokens.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+          "title": "Creating an OAuth app - GitHub Docs"
+        }
+      ],
+      "note": ""
+    },
+    {
+      "id": "c11",
+      "statement": "OAuth scopes only limit what a token can do and never grant more than the user already has.",
+      "status": "verified",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/enterprise-cloud@latest/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+          "title": "Scopes for OAuth apps - GitHub Enterprise Cloud Docs"
+        }
+      ],
+      "note": "[Checker: confirmed in source. \"Scopes limit access for OAuth tokens. They do not grant any additional permission beyond that which the user already has.\"]"
+    },
+    {
+      "id": "c12",
+      "statement": "Requesting no scope gives read-only access to public information.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/enterprise-cloud@latest/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+          "title": "Scopes for OAuth apps - GitHub Enterprise Cloud Docs"
+        }
+      ],
+      "note": ""
+    },
+    {
+      "id": "c13",
+      "statement": "The 'repo' scope gives full read/write access to public, internal and private repos, plus some org resources (projects, invitations, team memberships, webhooks).",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/enterprise-cloud@latest/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+          "title": "Scopes for OAuth apps - GitHub Enterprise Cloud Docs"
+        }
+      ],
+      "note": ""
+    },
+    {
+      "id": "c14",
+      "statement": "Narrower scopes exist, including repo:status, security_events, admin:repo_hook, write:repo_hook, read:repo_hook and user:email.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/enterprise-cloud@latest/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+          "title": "Scopes for OAuth apps - GitHub Enterprise Cloud Docs"
+        }
+      ],
+      "note": ""
+    },
+    {
+      "id": "c15",
+      "statement": "No OAuth scope triggers a GitHub review.",
+      "status": "uncertain",
+      "sources": [],
+      "note": "Inference: no review process appears anywhere in the OAuth app doc excerpts."
+    },
+    {
+      "id": "c16",
+      "statement": "A newly registered OAuth app has no dev/test mode or user cap, and any GitHub user can authorize it straight away.",
+      "status": "uncertain",
+      "sources": [],
+      "note": "Inference: the creation and authorization docs describe no review step. Not stated explicitly."
+    },
+    {
+      "id": "c17",
+      "statement": "A GitHub Marketplace listing is optional. It requires accepting the Marketplace Developer Agreement, valid contact info, a description, a pricing plan, a privacy-policy link, and a support link or email. The app must do more than authentication, must be publicly available, and must have webhooks for plan changes. Org-owned apps can only be submitted by org owners.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/github-marketplace/creating-apps-for-github-marketplace/requirements-for-listing-an-app",
+          "title": "Requirements for listing an app - GitHub Docs"
+        }
+      ],
+      "note": ""
+    },
+    {
+      "id": "c18",
+      "statement": "Marketplace listing steps include reviewing the app, adding billing webhooks, drafting a listing, adding pricing, accepting the agreement, submitting, and publisher verification for organizations.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/github-marketplace/github-marketplace-overview/about-github-marketplace-for-apps",
+          "title": "About GitHub Marketplace for apps - GitHub Docs"
+        }
+      ],
+      "note": "No published review times or rejection reasons were found."
+    },
+    {
+      "id": "c19",
+      "statement": "OAuth app access restrictions are enabled by default for new organizations.",
+      "status": "verified",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions",
+          "title": "About OAuth app access restrictions - GitHub Docs"
+        }
+      ],
+      "note": "[Checker: confirmed in source. \"When you create a new organization, OAuth app access restrictions are enabled by default.\"]"
+    },
+    {
+      "id": "c20",
+      "statement": "While restrictions are on, unapproved OAuth apps get no API access to private org resources, cannot create/update/delete public org resources, and get no webhook deliveries from private repos.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions",
+          "title": "About OAuth app access restrictions - GitHub Docs"
+        }
+      ],
+      "note": "[Checker: only partly supported. The page says \"API access to private organization resources is not available for unapproved OAuth apps\" and \"Hook deliveries from private organization repositories will no longer be sent to unapproved OAuth apps.\" On public resources, though, it only rules out \"privileged create, update, or delete actions,\" not all of them. The page also notes that \"Hooks created by users and hooks created before May 2014 will not be affected.\"]"
+    },
+    {
+      "id": "c21",
+      "statement": "Org members can request that the org owner approve an OAuth app, owners are notified, and owners can turn off the ability to make requests.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/organizations/managing-programmatic-access-to-your-organization/limiting-oauth-app-and-github-app-access-requests",
+          "title": "Limiting OAuth app and GitHub App access requests and installations - GitHub Docs"
+        }
+      ],
+      "note": "[Checker: only partly supported. The cited page says \"members and outside collaborators can request organization access for GitHub Apps and OAuth apps.\" It also says owners can control who may make requests (\"By default, app access requests are enabled\"; \"you may want to disable app access requests\"). It does not say owners get notified. That detail is on a different page (the access restrictions page): \"organization owners receive a notification of pending requests.\"]"
+    },
+    {
+      "id": "c22",
+      "statement": "For organizations using SAML SSO, a token can't access the org until the user has signed in through SSO.",
+      "status": "verified",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
+          "title": "Best practices for creating an OAuth app - GitHub Docs"
+        }
+      ],
+      "note": "[Checker: confirmed in source. \"If an organization uses SAML SSO and a user has not performed SAML SSO, the user access token will not have access to that organization.\"]"
+    },
+    {
+      "id": "c23",
+      "statement": "GitHub keeps at most 10 tokens per user/app/scope combination (the oldest is revoked beyond that) and issues at most 10 new tokens per hour.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+          "title": "Authorizing OAuth apps - GitHub Docs"
+        }
+      ],
+      "note": "[Checker: only partly supported. The page says \"There is a limit of ten tokens that are issued per user/application/scope combination, and a rate limit of ten tokens created per hour.\" However, the token revoked past the limit is not simply the oldest one. It is chosen by a priority order that starts with \"The oldest token that has never been used and that was created more than one minute\" ago.]"
+    },
+    {
+      "id": "c24",
+      "statement": "OAuth tokens use the user's limit of 5,000 requests/hour, which doesn't scale up, and rate-limit increases are granted per OAuth app.",
+      "status": "verified",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/differences-between-github-apps-and-oauth-apps",
+          "title": "Differences between GitHub Apps and OAuth apps - GitHub Docs"
+        }
+      ],
+      "note": "[Checker: confirmed in source. The page says \"OAuth tokens use the user's rate limit of 5,000 requests per hour\", \"OAuth apps have lower rate limits and do not scale\", and \"Rate limit increases are granted per OAuth app.\"]"
+    },
+    {
+      "id": "c25",
+      "statement": "Expiring user tokens last 8 hours and are renewed with a refresh token. Expiry can also be opted into per sign-in with the offline_access scope.",
+      "status": "verified",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/differences-between-github-apps-and-oauth-apps",
+          "title": "Differences between GitHub Apps and OAuth apps - GitHub Docs"
+        },
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
+          "title": "Best practices for creating an OAuth app - GitHub Docs"
+        }
+      ],
+      "note": "[Checker: confirmed in source. The differences page says \"user access tokens that expire after eight hours and can be renewed with a refresh token.\" The best-practices page says \"you can opt in to receive expiring tokens for a sign-in by requesting the `offline_access` scope.\"]"
+    },
+    {
+      "id": "c26",
+      "statement": "A basic OAuth app requires no legal entity, payment, demo video or privacy policy, only a homepage URL and callback URLs.",
+      "status": "uncertain",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+          "title": "Creating an OAuth app - GitHub Docs"
+        }
+      ],
+      "note": "Partly inference: these items are absent from the creation form fields in the doc excerpt."
+    },
+    {
+      "id": "c27",
+      "statement": "A June 2026 community report describes the previous OAuth token being revoked with reason 'max_for_app' on every new login, possibly tied to enterprise-managed accounts.",
+      "status": "uncertain",
+      "sources": [
+        {
+          "url": "https://github.com/orgs/community/discussions/198354",
+          "title": "OAuth tokens unexpectedly revoked with max_for_app on every login · community · Discussion #198354 · GitHub"
+        }
+      ],
+      "note": "Single unresolved community report."
+    },
+    {
+      "id": "c28",
+      "statement": "GitHub advises requesting only the scopes your app needs.",
+      "status": "sourced",
+      "sources": [
+        {
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app",
+          "title": "Best practices for creating an OAuth app - GitHub Docs"
+        }
+      ],
+      "note": ""
+    },
+    {
+      "id": "c29",
+      "statement": "Org access restrictions likely also block Composio's managed GitHub app until each org approves it.",
+      "status": "uncertain",
+      "sources": [],
+      "note": "Inference. We don't know whether the managed app is already approved in common orgs, or whether it is an OAuth app or a GitHub App."
+    },
+    {
+      "id": "c30",
+      "statement": "Registering and configuring a GitHub OAuth app takes roughly 15–30 minutes of hands-on time.",
+      "status": "uncertain",
+      "sources": [],
+      "note": "Our estimate based on form complexity. GitHub publishes no figure."
+    },
+    {
+      "id": "c31",
+      "statement": "A 2020 forum answer claimed the per-app token limit was 100.",
+      "status": "uncertain",
+      "sources": [
+        {
+          "url": "https://github.com/orgs/community/discussions/24584",
+          "title": "OAuth App Token Limits · community · Discussion #24584 · GitHub"
+        }
+      ],
+      "note": "Outdated. It conflicts with current docs, which say 10."
+    },
+    {
+      "id": "c32",
+      "statement": "After registering, the app settings page shows a Client ID and lets you generate a client secret.",
+      "status": "uncertain",
+      "sources": [],
+      "note": "Standard OAuth app behaviour, but not present in the doc excerpts we had. Confirm on the app settings page."
+    }
+  ],
+  "openQuestions": [
+    "What error GitHub shows after login for an invalid client_id or a mismatched redirect_uri. The login wall hid it from our probe.",
+    "Whether 'Expire user access tokens' is actually checked by default today. Two official docs conflict.",
+    "Whether Composio's managed GitHub integration is an OAuth app or a GitHub App, and whether it is already approved in commonly used organizations.",
+    "Whether Composio automatically refreshes expiring GitHub user tokens.",
+    "How to request a per-OAuth-app rate-limit increase, and what the criteria are.",
+    "GitHub Marketplace review times and common rejection reasons.",
+    "Whether the 'max_for_app' early revocation affects normal (non-enterprise-managed) accounts.",
+    "The exact current list and meaning of scopes such as read:user. We only had doc excerpts, not full page reads."
+  ],
+  "slug": "github",
+  "origin": "library",
+  "createdAt": "2026-10-28T10:38:25.653Z",
+  "probes": [
+    {
+      "name": "authorize_endpoint",
+      "target": "https://github.com/login/oauth/authorize?client_id=oauth-guide-probe-invalid-client&redirect_uri=https%3A%2F%2Fbackend.composio.dev%2Fapi%2Fv3.1%2Ftoolkits%2Fauth%2Fcallback&response_type=code&state=probe&scope=repo+read%3Auser",
+      "ok": true,
+      "result": "HTTP 302 -> redirect to https://github.com/login?client_id=oauth-guide-probe-invalid-client&return_to=%2Flogin%2Foauth%2Fauthorize%3Fclient_id%3Doauth-guide-probe-invalid-client%26redirect_uri%3Dhttps%253A%252F%252Fbackend.composio.dev%252Fapi%252Fv3.1%252Ftoolkits%252Fauth%252Fcallback%26response_type%3Dcode%26scope%3Drep"
+    },
+    {
+      "name": "page",
+      "target": "https://github.com/settings/applications/new",
+      "ok": true,
+      "result": "HTTP 200, final URL https://github.com/login?return_to=https%3A%2F%2Fgithub.com%2Fsettings%2Fapplications%2Fnew (looks like a login wall) | Sign in to GitHub · GitHub Skip to content You signed in with another tab or window. Reload to refresh your session. You signed out in another tab or window. Reload to refresh your session. You switched accounts on another tab or window. Reload to refresh your session. Dismiss alert Sign in to GitHu"
+    },
+    {
+      "name": "discovery",
+      "target": "https://github.com/.well-known/openid-configuration",
+      "ok": false,
+      "result": "No OpenID/OAuth discovery document found (common for non-OIDC providers; not a problem by itself)."
+    }
+  ],
+  "agentRun": {
+    "model": "claude-opus-5-5",
+    "searches": 6,
+    "fetches": 10,
+    "probes": 3,
+    "durationSec": 191
+  },
+  "verifiedAt": "2026-10-28T10:39:06.685Z"
+}

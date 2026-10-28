@@ -6,9 +6,24 @@
  */
 import { promises as fs } from "fs";
 import path from "path";
-import { generateGuide, verifyGuide, type AgentEvent } from "@/lib/agent/pipeline";
+import { compose, research, verifyGuide, type AgentEvent, type Research } from "@/lib/agent/pipeline";
+import { slugify } from "@/lib/directory";
 
 const DIR = path.join(process.cwd(), "src/data/library");
+// Research is the slow, costly part; cache it so a compose/verify failure doesn't redo it.
+const CACHE = path.join(process.cwd(), ".data", "research");
+
+async function cachedResearch(app: string): Promise<Research> {
+  const file = path.join(CACHE, `${slugify(app)}.json`);
+  try {
+    return JSON.parse(await fs.readFile(file, "utf8"));
+  } catch {
+    const r = await research(app, log);
+    await fs.mkdir(CACHE, { recursive: true });
+    await fs.writeFile(file, JSON.stringify(r, null, 2));
+    return r;
+  }
+}
 
 function log(e: AgentEvent) {
   const line =
@@ -39,7 +54,7 @@ async function reindex() {
 async function main() {
   const args = process.argv.slice(2);
   for (const app of args.filter((a) => a !== "--reindex")) {
-    const guide = await verifyGuide(await generateGuide(app, log, "library"), log);
+    const guide = await verifyGuide(await compose(await cachedResearch(app), log, "library"), log);
     await fs.writeFile(path.join(DIR, `${guide.slug}.json`), JSON.stringify(guide, null, 2));
     const counts = guide.claims.reduce<Record<string, number>>((m, c) => ((m[c.status] = (m[c.status] ?? 0) + 1), m), {});
     console.log(`\nSaved ${guide.slug}.json: ${guide.verdict.tier}, ${guide.claims.length} claims ${JSON.stringify(counts)}, ${guide.agentRun?.durationSec}s`);

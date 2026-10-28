@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { GuideDraft, type Claim, type Guide } from "@/lib/schema";
-import { slugify } from "@/lib/directory";
+import { DIRECTORY, slugify } from "@/lib/directory";
 import { CLIENT_TOOLS, runClientTool, type ProbeResult } from "./probes";
 import { COMPOSE_SYSTEM, RESEARCH_SYSTEM, VERIFY_SYSTEM } from "./prompts";
 
@@ -29,7 +29,21 @@ const client = new Anthropic();
 
 type Tools = Anthropic.Beta.Messages.BetaToolUnion[];
 
-type LoopState = { sources: Map<string, string>; probes: ProbeResult[]; searches: number; fetches: number };
+export type Usage = { input: number; cacheRead: number; cacheWrite: number; output: number };
+type LoopState = { sources: Map<string, string>; probes: ProbeResult[]; searches: number; fetches: number; usage?: Usage };
+
+function addUsage(st: LoopState, u: Anthropic.Beta.Messages.BetaUsage) {
+  st.usage ??= { input: 0, cacheRead: 0, cacheWrite: 0, output: 0 };
+  st.usage.input += u.input_tokens;
+  st.usage.cacheRead += u.cache_read_input_tokens ?? 0;
+  st.usage.cacheWrite += u.cache_creation_input_tokens ?? 0;
+  st.usage.output += u.output_tokens;
+}
+
+/** Opus 5.5 list prices per MTok: input $4, cache write $5 (1.25x), cache read $0.20, output $20. */
+export function usageCost(u: Usage): number {
+  return (u.input * 4 + u.cacheWrite * 5 + u.cacheRead * 0.2 + u.output * 20) / 1e6;
+}
 
 function normUrl(u: string): string {
   try {
@@ -96,6 +110,8 @@ async function runLoop(opts: {
       max_tokens: 64000,
       betas: BETAS,
       fallbacks: "default",
+      // Each turn resends the whole history, fetched pages included; caching makes the repeat ~20x cheaper.
+      cache_control: { type: "ephemeral" },
       thinking: { type: "adaptive", display: "updates" },
       output_config: { effort: opts.effort, ...(opts.format ? { format: opts.format } : {}) },
       system: opts.system,
@@ -104,6 +120,7 @@ async function runLoop(opts: {
     });
     stream.on("contentBlock", (b) => observeBlock(b, emit, st));
     const msg = await stream.finalMessage();
+    addUsage(st, msg.usage);
     messages.push({ role: "assistant", content: msg.content });
 
     if (msg.stop_reason === "refusal") throw new Error(`Model declined: ${msg.stop_details?.explanation ?? "no detail"}`);
@@ -162,43 +179,93 @@ function enforceEvidence(claims: Claim[], st: LoopState): Claim[] {
   });
 }
 
-export async function generateGuide(query: string, emit: Emit, origin: Guide["origin"] = "generated"): Promise<Guide> {
+/** Everything the research phase learned; serializable so the build script can cache it. */
+export type Research = {
+  query: string;
+  dossier: string;
+  sources: [string, string][];
+  probes: ProbeResult[];
+  searches: number;
+  fetches: number;
+  durationSec: number;
+  usage?: Usage;
+};
+
+// Composio facts the agent gets from our tool and prompt, so claims about them can cite these.
+const COMPOSIO_SOURCES: [string, string][] = [
+  [DIRECTORY.source, "Composio: managed OAuth apps directory"],
+  ["https://docs.composio.dev/docs/authentication/white-labeling-authentication", "Composio: white-labeling authentication (callback URL)"],
+  ["https://docs.composio.dev/docs/authentication/custom-app-vs-managed-app", "Composio: managed vs custom auth"],
+];
+
+export async function research(query: string, emit: Emit): Promise<Research> {
   const started = Date.now();
-  const st: LoopState = { sources: new Map(), probes: [], searches: 0, fetches: 0 };
+  const st: LoopState = { sources: new Map(COMPOSIO_SOURCES.map(([u, t]) => [normUrl(u), t])), probes: [], searches: 0, fetches: 0 };
 
   emit({ type: "phase", phase: "research", message: `Investigating ${query}` });
-  const research = await runLoop({
+  const msg = await runLoop({
     system: RESEARCH_SYSTEM,
     messages: [{ role: "user", content: `App to investigate: ${query}\nToday's date: ${new Date().toISOString().slice(0, 10)}` }],
     tools: [
       { type: "web_search_20260209", name: "web_search", max_uses: 8 },
-      { type: "web_fetch_20260209", name: "web_fetch", max_uses: 10, max_content_tokens: 20000 },
+      { type: "web_fetch_20260209", name: "web_fetch", max_uses: 10, max_content_tokens: 12000 },
       ...CLIENT_TOOLS,
     ],
     effort: "medium",
     emit,
     st,
   });
-  const dossier = finalText(research);
+  return {
+    query,
+    dossier: finalText(msg),
+    sources: [...st.sources.entries()],
+    probes: st.probes,
+    searches: st.searches,
+    fetches: st.fetches,
+    durationSec: Math.round((Date.now() - started) / 1000),
+    usage: st.usage,
+  };
+}
+
+function extractJson(text: string): unknown {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start < 0 || end < start) throw new Error("No JSON object in response");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+// The guide schema is too large for constrained decoding, so the schema goes in the
+// prompt and the output is validated here, with one repair round on failure.
+const GUIDE_JSON_SCHEMA = JSON.stringify(z.toJSONSchema(GuideDraft));
+
+export async function compose(r: Research, emit: Emit, origin: Guide["origin"] = "generated"): Promise<Guide> {
+  const started = Date.now();
+  const st: LoopState = { sources: new Map(r.sources), probes: r.probes, searches: r.searches, fetches: r.fetches, usage: r.usage && { ...r.usage } };
 
   emit({ type: "phase", phase: "compose", message: "Writing the guide from what the agent found" });
-  const probeLog = st.probes.map((p) => `- [PROBE] ${p.name} ${p.target}: ${p.result}`).join("\n") || "(none)";
-  const sourceList = [...st.sources.entries()].map(([u, t]) => `- ${u} (${t})`).join("\n");
-  const composed = await runLoop({
-    system: COMPOSE_SYSTEM,
-    messages: [
-      {
-        role: "user",
-        content: `App: ${query}\n\n<dossier>\n${dossier}\n</dossier>\n\n<probe_results>\n${probeLog}\n</probe_results>\n\n<urls_seen_during_research>\n${sourceList}\n</urls_seen_during_research>`,
-      },
-    ],
-    tools: [],
-    effort: "medium",
-    format: zodOutputFormat(GuideDraft),
-    emit: () => {},
-    st,
-  });
-  const draft = GuideDraft.parse(JSON.parse(finalText(composed)));
+  const probeLog = r.probes.map((p) => `- [PROBE] ${p.name} ${p.target}: ${p.result}`).join("\n") || "(none)";
+  const sourceList = r.sources.map(([u, t]) => `- ${u} (${t})`).join("\n");
+  const messages: Anthropic.Beta.Messages.BetaMessageParam[] = [
+    {
+      role: "user",
+      content:
+        `App: ${r.query}\n\n<dossier>\n${r.dossier}\n</dossier>\n\n<probe_results>\n${probeLog}\n</probe_results>\n\n` +
+        `<urls_seen_during_research>\n${sourceList}\n</urls_seen_during_research>\n\n` +
+        `Respond with only a JSON object (no prose, no code fence) matching this JSON Schema:\n${GUIDE_JSON_SCHEMA}`,
+    },
+  ];
+
+  let draft: GuideDraft | null = null;
+  for (let attempt = 0; attempt < 2 && !draft; attempt++) {
+    const msg = await runLoop({ system: COMPOSE_SYSTEM, messages, tools: [], effort: "medium", emit: () => {}, st });
+    try {
+      draft = GuideDraft.parse(extractJson(finalText(msg)));
+    } catch (e) {
+      if (attempt === 1) throw new Error(`Guide output failed validation: ${(e as Error).message.slice(0, 500)}`);
+      messages.push({ role: "user", content: `That JSON failed validation:\n${(e as Error).message.slice(0, 2000)}\nReturn the corrected full JSON object only.` });
+    }
+  }
+  if (!draft) throw new Error("No guide produced");
 
   const slug = origin === "library" ? slugify(draft.appName) : `${slugify(draft.appName)}-${Math.random().toString(36).slice(2, 7)}`;
   return {
@@ -207,9 +274,13 @@ export async function generateGuide(query: string, emit: Emit, origin: Guide["or
     slug,
     origin,
     createdAt: new Date().toISOString(),
-    probes: st.probes,
-    agentRun: { model: MODEL, searches: st.searches, fetches: st.fetches, probes: st.probes.length, durationSec: Math.round((Date.now() - started) / 1000) },
+    probes: r.probes,
+    agentRun: { model: MODEL, searches: r.searches, fetches: r.fetches, probes: r.probes.length, durationSec: r.durationSec + Math.round((Date.now() - started) / 1000), costUsd: st.usage ? Math.round(usageCost(st.usage) * 100) / 100 : undefined },
   };
+}
+
+export async function generateGuide(query: string, emit: Emit, origin: Guide["origin"] = "generated"): Promise<Guide> {
+  return compose(await research(query, emit), emit, origin);
 }
 
 const VerifyResult = z.object({
@@ -247,7 +318,7 @@ export async function verifyGuide(guide: Guide, emit: Emit, max = 10): Promise<G
   const msg = await runLoop({
     system: VERIFY_SYSTEM,
     messages: [{ role: "user", content: `Check these claims about ${guide.appName}:\n\n${list}` }],
-    tools: [{ type: "web_fetch_20260209", name: "web_fetch", max_uses: 12, max_content_tokens: 20000 }],
+    tools: [{ type: "web_fetch_20260209", name: "web_fetch", max_uses: 12, max_content_tokens: 12000 }],
     effort: "low",
     format: zodOutputFormat(VerifyResult),
     emit,
@@ -274,5 +345,6 @@ export async function verifyGuide(guide: Guide, emit: Emit, max = 10): Promise<G
         return { ...c, note: add("couldn't re-open the source to check.") };
     }
   });
-  return { ...guide, claims, verifiedAt: new Date().toISOString() };
+  const run = guide.agentRun && st.usage ? { ...guide.agentRun, costUsd: Math.round(((guide.agentRun.costUsd ?? 0) + usageCost(st.usage)) * 100) / 100 } : guide.agentRun;
+  return { ...guide, claims, agentRun: run, verifiedAt: new Date().toISOString() };
 }

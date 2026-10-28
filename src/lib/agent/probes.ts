@@ -1,4 +1,4 @@
-import { lookupToolkits } from "@/lib/directory";
+import { DIRECTORY, lookupToolkits } from "@/lib/directory";
 
 /**
  * Client-side tools the research agent can call. These are the "attempt the setup"
@@ -150,7 +150,7 @@ export const CLIENT_TOOLS = [
 export async function runClientTool(name: string, input: Record<string, string>): Promise<{ text: string; probe?: ProbeResult }> {
   if (name === "lookup_composio_toolkit") {
     const matches = lookupToolkits(input.query);
-    return { text: matches.length ? JSON.stringify(matches) : "No match in Composio's OAuth directory (the app may be unsupported or listed under another name)." };
+    return { text: matches.length ? JSON.stringify({ source: DIRECTORY.source, checkedAt: DIRECTORY.checkedAt, matches }) : "No match in Composio's OAuth directory (the app may be unsupported or listed under another name)." };
   }
   if (name === "probe_oauth") {
     const probe =

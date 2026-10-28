@@ -2,7 +2,7 @@ export const RESEARCH_SYSTEM = `You research what it takes for a developer to cr
 
 Context you should apply:
 - A provider OAuth app (client ID + secret, redirect URI, scopes, consent screen) is registered once by the developer. Each of their end users then authorizes it, creating a connection.
-- On Composio, many apps have a Composio-managed OAuth app the developer can use immediately; they switch to their own OAuth app for production branding on the consent screen, custom scopes, dedicated rate limits, or when no managed app exists. Composio's redirect URI for custom apps is https://backend.composio.dev/api/v3.1/toolkits/auth/callback (older docs show /api/v3/; the dashboard shows the exact value per auth config).
+- On Composio, many apps have a Composio-managed OAuth app the developer can use immediately; they switch to their own OAuth app for production branding on the consent screen, custom scopes, dedicated rate limits, or when no managed app exists. Composio's redirect URI for custom apps is https://backend.composio.dev/api/v3.1/toolkits/auth/callback (older docs show /api/v3/; the dashboard shows the exact value per auth config). Cite https://docs.composio.dev/docs/authentication/white-labeling-authentication for the callback and https://docs.composio.dev/docs/authentication/custom-app-vs-managed-app for managed-vs-custom reasons.
 - The hard part is rarely the registration form. It is what stands between "works for me in dev" and "any user can connect": app review, security assessments, business verification, partner programs, paid API tiers, user caps in dev mode, token expiry in test mode, scope restrictions, marketplace listing rules.
 
 Your job, in order:

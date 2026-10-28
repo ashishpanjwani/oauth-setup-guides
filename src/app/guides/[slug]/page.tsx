@@ -239,7 +239,7 @@ export default async function GuidePage({ params }: Props) {
 
         {g.agentRun && (
           <p className="text-xs muted">
-            Agent run: {g.agentRun.model}, {g.agentRun.searches} searches, {g.agentRun.fetches} pages read, {g.agentRun.probes} live probes, {g.agentRun.durationSec}s.
+            Agent run: {g.agentRun.model}, {g.agentRun.searches} searches, {g.agentRun.fetches} pages read, {g.agentRun.probes} live probes, {g.agentRun.durationSec}s{g.agentRun.costUsd !== undefined && `, ~$${g.agentRun.costUsd.toFixed(2)} in API usage`}.
           </p>
         )}
       </Section>

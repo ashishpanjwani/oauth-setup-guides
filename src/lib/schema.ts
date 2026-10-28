@@ -125,5 +125,5 @@ export type Guide = GuideDraft & {
   probes: z.infer<typeof Probe>[];
   /** Human review notes on library guides: what the agent got wrong and how we fixed it. */
   corrections?: z.infer<typeof Correction>[];
-  agentRun?: { model: string; searches: number; fetches: number; probes: number; durationSec: number };
+  agentRun?: { model: string; searches: number; fetches: number; probes: number; durationSec: number; costUsd?: number };
 };
