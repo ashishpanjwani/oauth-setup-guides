@@ -60,6 +60,7 @@ export const GuideDraft = z.object({
   steps: z.array(
     z.object({
       text: z.string().describe("One action, imperative"),
+      why: z.string().describe("What this setting or action does, its default and why the default exists, and when to choose otherwise. Empty if obvious."),
       detail: z.string().describe("Exact values or the one gotcha. Empty string if none."),
       who: Who,
       claimIds: z.array(z.string()),

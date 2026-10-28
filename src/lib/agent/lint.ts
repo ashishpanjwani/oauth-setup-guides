@@ -9,10 +9,11 @@ const RULES: { name: string; pattern: RegExp; why: string }[] = [
   { name: "first-person", pattern: /\b(I|I'm|I've|we|we're|our|us)\b/, why: "guides are written to the developer, never as 'I' or 'we'" },
   {
     name: "timing-commentary",
-    pattern: /\b(does not|doesn't|do not|don't|did not)\s+(time|state|publish|give|say|specify|control|set)\b|not (timed|controlled|stated) by|no (published |official )?timing|response time|takes to (approve|respond|review)/i,
+    pattern: /\b(does not|doesn't|do not|don't|did not)\s+(time|state|publish|give|say|specify|control|set|document|list|mention|provide)\b|not (timed|controlled|stated) by|no (published |official )?timing|response time|takes to (approve|respond|review)/i,
     why: "commentary on what the docs don't say or how long someone else takes; delete unless it is about a review the provider itself runs",
   },
-  { name: "hedge", pattern: /\b(was not read|were not read|not used for any claim|I did not)\b/i, why: "notes about the research process, not the developer's task" },
+  { name: "hedge", pattern: /\b(was not read|were not read|not used for any claim|I did not|not checked|was tested|were tested|not researched)\b/i, why: "notes about the research process, not the developer's task" },
+  { name: "non-action", pattern: /^(launch|go live|release)\b/i, why: "a step must be a concrete action the provider has; there is no generic 'launch'" },
 ];
 
 export type Violation = { field: string; text: string; rule: string; why: string };
@@ -30,6 +31,7 @@ function fields(g: GuideDraft): [string, string][] {
   g.requirements.forEach((r, i) => out.push([`requirements[${i}]`, r.text]));
   g.steps.forEach((s, i) => {
     out.push([`steps[${i}].text`, s.text]);
+    out.push([`steps[${i}].why`, s.why ?? ""]);
     out.push([`steps[${i}].detail`, s.detail]);
   });
   g.blockers.forEach((b, i) => {

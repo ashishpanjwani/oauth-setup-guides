@@ -16,7 +16,7 @@ ${GATES}
 Use web search (up to 5 searches) and return:
 - developerConsoleUrl: the page where a developer registers the OAuth app.
 - gates: one finding per gate, each with the official URL it comes from.
-- pages: up to 6 official provider pages (not blogs) to read in full. Together they must cover every gate you found applies, plus the app-registration page.
+- pages: up to 8 official provider pages (not blogs) to read in full. Together they must cover: the app-registration page, the page(s) explaining each setting or option on the registration form (so the guide can say what each one does and why its default is what it is), and every gate you found applies. Skip legal terms and agreements.
 - notes: anything else from search results about wait times, costs, or rejection reasons, each followed by its URL. Community sources are fine here; say they are community sources.`;
 
 export const COMPOSE_SYSTEM = `You write a short OAuth app setup guide for a developer from the provider pages you are given. They should be able to read it in two minutes and know what to do next.
@@ -40,14 +40,19 @@ ${GATES}
 - timeToTest, timeToProduction, effort: short ranges like "~1 hour", "2–4 weeks", "1–2 days of work". If a gate such as admin approval means some users wait longer, say so in timeToProduction.
 - cost: what the developer pays the provider or third parties (paid API tier, security audit). "Free" if nothing.
 - requirements: 2–5 things every developer needs to register and launch (accounts, domain, privacy policy, budget). Nothing conditional: anything that applies only to some users or setups (for example "if your users are in organizations") belongs in its gate.
-- steps: 5–10 single actions, from registering the app until any user can connect. Each action appears once; don't repeat a decision in a later step. Writing or checking integration code (PKCE, state, token refresh handling) is out of scope, so leave it out. Each step has who:
+- steps: 4–10 concrete actions the developer takes, in order, from registering the app until any user can connect.
+  - One action or one decision per step. If a form has two settings that need a decision, make two steps.
+  - Only real actions. No "launch" or "go live" step unless the provider has an explicit publish or submit action. Things other people do (an end user's admin approving the app) are not steps; they are covered by their gate. Add a developer step for them only if there is something concrete to do, like preparing the text that tells users how to request approval.
+  - why: explain what the setting or action does, what the default is and why the provider chose it, and when to choose otherwise, so the developer understands the choice. Back it with a claim (the provider's own reason, quoted, is best). Empty if the action is obvious, like clicking a button.
+  - Each action appears once. Writing or checking integration code (PKCE, state, token refresh code) is out of scope.
+  Each step has who:
   - "agent": an AI agent can do it alone, with no login to the developer's accounts and no decision to make: producing a scope list, drafting text, checking console settings against the docs.
   - "agent_prepares": an agent drafts it, the developer submits, signs in, or signs off.
   - "you": anything inside the provider's console, and any decision.
-  - "waiting": time spent waiting on the provider (review, approval). Put the expected wait in detail.
+  - "waiting": only for waiting on a review or approval the provider itself runs. Put the expected wait in detail.
   detail: exact values or the one gotcha; empty string if none.
-- blockers: 3–5 things that commonly go wrong, each with the fix.
-- couldNotVerify: at most 4 items, only open questions that could change what the developer does or expects. Don't list sources you didn't read or chose not to use.
+- blockers: 3–5 problems developers commonly hit while setting up or launching, each with the fix. Not legal terms or rare edge cases.
+- couldNotVerify: at most 4 items, only open questions that could change what the developer does or expects. Empty is fine. Never list things you chose not to research, sources you didn't read, or how something was tested.
 
 Evidence (strict, checked by code after you answer):
 - Every fact the summary, gates, requirements, steps or blockers rely on is a claim in claims[], referenced by claimIds. At most 15 claims.
@@ -64,8 +69,9 @@ Checklist:
 4. Every step is correct about who does what. End users never handle the client ID or client secret.
 5. No internal terms: gate, claim, dossier, probe. Say "the main thing that can hold up launch" instead of "gate".
 6. No first person (I, we, our). Write to the developer.
-7. No duplicate steps, and no steps about writing or testing integration code.
-8. couldNotVerify: at most 4 items, only open questions that change what the developer does or expects.
+7. Steps: only concrete developer actions, one action or decision each (split a step that holds two decisions). No "launch" step unless the provider has a publish action; no steps for things other people do (an end user's admin approving), and no "waiting" for anything but a review the provider runs. No duplicate steps, and nothing about writing or testing integration code. Keep each step's why if it explains the choice; shorten it if it rambles.
+8. couldNotVerify: at most 4 items, only open questions that change what the developer does or expects. Delete items about things that weren't researched, pages not read, or how testing was done. Empty is fine.
+11. Blockers are problems developers commonly hit during setup or launch. Delete ones drawn from legal terms or rare edge cases.
 9. Requirements contain nothing conditional (things that apply only to some users belong in their gate).
 10. Keep it short. Cut words that don't help the developer act.
 

@@ -30,7 +30,7 @@ export function guideToMarkdown(g: Guide, url?: string): string {
   out.push("## Requirements", "", ...g.requirements.map((r) => `- ${r.text}${refs(r.claimIds)}`), "");
   out.push("## Steps", "");
   g.steps.forEach((s, i) => {
-    out.push(`${i + 1}. **[${WHO[s.who].label}]** ${s.text}${refs(s.claimIds)}${s.detail ? `  \n   ${s.detail}` : ""}`);
+    out.push(`${i + 1}. **[${WHO[s.who].label}]** ${s.text}${refs(s.claimIds)}${s.why ? `  \n   ${s.why}` : ""}${s.detail ? `  \n   _${s.detail}_` : ""}`);
   });
   out.push("", "## Blockers", "", ...g.blockers.map((b) => `- **${b.problem}**: ${b.fix}${refs(b.claimIds)}`), "");
   if (g.couldNotVerify.length) out.push("## Could not verify", "", ...g.couldNotVerify.map((x) => `- ${x}`), "");

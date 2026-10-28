@@ -56,7 +56,7 @@ async function call(
 const Sources = z.object({
   developerConsoleUrl: z.string().describe("Where a developer registers the OAuth app"),
   gates: z.array(z.object({ gate: GateId, finding: z.string(), url: z.string() })).describe("One finding per launch gate"),
-  pages: z.array(z.object({ url: z.string(), title: z.string() })).describe("Up to 6 official pages covering registration and every gate that applies"),
+  pages: z.array(z.object({ url: z.string(), title: z.string() })).describe("Up to 8 official pages: registration, the settings on the registration form, and every gate that applies"),
   notes: z.string().describe("Anything relevant from search results, each fact followed by its URL"),
 });
 
@@ -220,7 +220,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
   // (b) + (c): plain HTTP, no model involved.
   emit({ type: "phase", phase: "fetch", message: "Reading the docs and checking the developer console" });
   const [pages, consoleProbe] = await Promise.all([
-    Promise.all(sources.pages.slice(0, 6).map((p) => fetchPage(p.url, p.title))),
+    Promise.all(sources.pages.slice(0, 8).map((p) => fetchPage(p.url, p.title))),
     probeConsole(sources.developerConsoleUrl),
   ]);
   pages.forEach((p) => emit({ type: "fetch", url: p.url, ok: p.ok, error: p.error }));

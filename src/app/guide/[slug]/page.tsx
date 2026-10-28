@@ -119,6 +119,7 @@ export default async function GuidePage({ params }: Props) {
               <span className="w-5 shrink-0 text-right text-sm muted">{i + 1}.</span>
               <div className="min-w-0 flex-1">
                 <div>{s.text}<Refs ids={s.claimIds} /></div>
+                {s.why && <div className="mt-1 text-sm">{s.why}</div>}
                 {s.detail && <div className="mt-0.5 text-sm muted">{s.detail}</div>}
               </div>
               <span className={`chip h-fit ${WHO[s.who].cls}`}>{WHO[s.who].label}</span>
