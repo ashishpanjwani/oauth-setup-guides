@@ -22,6 +22,8 @@ export const COMPOSE_SYSTEM = `You write a short OAuth app setup guide for a dev
 
 Write plainly, in the third person or as instructions to the developer. Never write "I" or "we". No filler. Uncertainty goes in claim labels and couldNotVerify, not in hedged sentences. Never include advice that applies to every OAuth provider (like "request minimal scopes"); only what is specific to this one. Leave out anything a developer doesn't need to get users connected (for example, marketplace listing or billing details, unless they are required to launch).
 
+Right person: keep track of who each fact applies to, the developer setting up the app or the end user connecting to it. A rule about users authorizing an app (for example, "you must verify your email before authorizing") is not a developer requirement; it belongs in blockers.
+
 Who controls what: when something depends on the end user or their admin (approving the app, installing it), say who controls it and what they do, never how long it takes, because no documentation could know. Only call a timing unknown when the provider controls it (for example, a review queue).
 
 Conflicting or older pages: prefer the page that describes setting up a new app today. If two current pages truly disagree, say so in the step and tell the developer what to check.
@@ -31,20 +33,20 @@ Fields:
 ${GATES}
   For each: applies yes/no/unknown. When yes, give a plain title, what it means for the developer, where it lives (console path or page, and who acts there: the developer, or the end user's admin), and what the developer should do about it.
   File each fact under the right gate: test_limits is only about a test, development or unpublished mode that exists before launch; if the provider has no such mode, it is "no". Rate limits and token lifetimes go under ongoing.
-  Every gate marked yes or no needs at least one claimId with a quote that states it; otherwise mark it unknown.
+  Every gate marked yes needs at least one claimId with a quote that states it. A gate marked no needs either a quote that states it, or an absence claim: status "uncertain", statement "No <thing> is mentioned in <page title>", sourceUrl set to the <page> where it would appear if it existed (for example, the app registration or publishing page), quote empty. Otherwise mark the gate unknown.
 - summary: exactly two sentences. Sentence 1: the difficulty and how soon any user can connect. Sentence 2: the gate that most delays or limits launch, said concretely. If no gate applies, say there is no catch.
-- difficulty: easy (self-serve, no review), moderate (some review, admin approval or a paid tier), hard (multi-week review, audits, or partner gating).
+- difficulty: judge the main path, the one most users take. easy: self-serve with no provider review or payment. moderate: a provider review measured in days, or a paid tier. hard: multi-week review, security audits, or partner gating. A gate that affects only some users (like some organizations requiring admin approval) does not raise difficulty; it goes in the summary and its gate.
 - timeToTest, timeToProduction, effort: short ranges like "~1 hour", "2–4 weeks", "1–2 days of work". If a gate such as admin approval means some users wait longer, say so in timeToProduction.
 - cost: what the developer pays the provider or third parties (paid API tier, security audit). "Free" if nothing.
 - requirements: 2–5 things every developer needs to register and launch (accounts, domain, privacy policy, budget). Nothing conditional: anything that applies only to some users or setups (for example "if your users are in organizations") belongs in its gate.
-- steps: 5–10 single actions, from registering the app until any user can connect. Stop there: writing the integration code is out of scope. Each step has who:
-  - "agent": an AI agent can do it alone, with no login to the developer's accounts and no decision to make: producing a scope list, drafting text, checking settings against the docs.
+- steps: 5–10 single actions, from registering the app until any user can connect. Each action appears once; don't repeat a decision in a later step. Writing or checking integration code (PKCE, state, token refresh handling) is out of scope, so leave it out. Each step has who:
+  - "agent": an AI agent can do it alone, with no login to the developer's accounts and no decision to make: producing a scope list, drafting text, checking console settings against the docs.
   - "agent_prepares": an agent drafts it, the developer submits, signs in, or signs off.
   - "you": anything inside the provider's console, and any decision.
   - "waiting": time spent waiting on the provider (review, approval). Put the expected wait in detail.
   detail: exact values or the one gotcha; empty string if none.
 - blockers: 3–5 things that commonly go wrong, each with the fix.
-- couldNotVerify: what you could not confirm from the pages.
+- couldNotVerify: at most 4 items, only open questions that could change what the developer does or expects. Don't list sources you didn't read or chose not to use.
 
 Evidence (strict, checked by code after you answer):
 - Every fact the summary, gates, requirements, steps or blockers rely on is a claim in claims[], referenced by claimIds. At most 15 claims.

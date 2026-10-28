@@ -149,12 +149,17 @@ function checkClaims(claims: Claim[], pages: Page[], probes: Probe[]): { claims:
  * A gate's yes/no answer must rest on at least one claim that passed the check;
  * otherwise it becomes "unknown" and is listed under could-not-verify.
  */
-function checkGates(gates: Gate[], claims: Claim[]): { gates: Gate[]; unconfirmed: string[] } {
+function checkGates(gates: Gate[], claims: Claim[], pages: Page[]): { gates: Gate[]; unconfirmed: string[] } {
   const confirmed = new Set(claims.filter((c) => c.status !== "uncertain").map((c) => c.id));
+  // "No review" can't be quoted. A "no" may instead rest on an absence claim, but only if it
+  // names a page we actually read, where the thing would have been mentioned.
+  const read = new Set(pages.filter((p) => p.ok).map((p) => p.url.replace(/\/$/, "")));
+  const absence = new Set(claims.filter((c) => c.status === "uncertain" && !c.quote && read.has(c.sourceUrl.replace(/\/$/, ""))).map((c) => c.id));
   const unconfirmed: string[] = [];
   const out = gates.map((g): Gate => {
     if (g.applies === "unknown" || g.claimIds.some((id) => confirmed.has(id))) return g;
-    unconfirmed.push(`Whether this applies: "${g.title}". No quote on the provider's pages confirmed it.`);
+    if (g.applies === "no" && g.claimIds.some((id) => absence.has(id))) return g;
+    unconfirmed.push(`${g.title}: not confirmed on the provider's pages.`);
     return { ...g, applies: "unknown" };
   });
   return { gates: out, unconfirmed };
@@ -183,7 +188,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
 
   emit({ type: "phase", phase: "check", message: "Checking every quote against its page" });
   const checked = checkClaims(draft.claims, pages, probes);
-  const gates = checkGates(draft.gates, checked.claims);
+  const gates = checkGates(draft.gates, checked.claims, pages);
   emit({ type: "check", kept: checked.kept, downgraded: checked.downgraded });
 
   const unreadable = pages.filter((p) => !p.ok).map((p) => `Couldn't read ${p.url} (${p.error}), so nothing from it is confirmed.`);
