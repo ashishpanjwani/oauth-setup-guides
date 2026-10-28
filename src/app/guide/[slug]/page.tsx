@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { getGuide } from "@/lib/store";
 import { DIFFICULTY, EVIDENCE, WHO } from "@/lib/labels";
 import { CopyMarkdown } from "@/components/share-bar";
+import { AppMark } from "@/components/app-mark";
 
 export const dynamic = "force-dynamic";
 
@@ -71,23 +72,18 @@ export default async function GuidePage({ params }: Props) {
 
   return (
     <article className="mx-auto max-w-3xl space-y-14">
-      <header className="fade-up space-y-6">
-        <Link href="/" className="text-sm muted transition hover:text-white">
+      <header className="fade-up">
+        <Link href="/" className="-mt-4 inline-block text-sm muted transition hover:text-white sm:-mt-6">
           ← All guides
         </Link>
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--brand)]/30 to-[var(--cyan)]/10 font-display text-3xl shadow-[0_0_40px_-12px_var(--brand)]">
-              {g.appName.charAt(0)}
-            </span>
-            <div>
-              <p className="eyebrow">OAuth app setup guide</p>
-              <h1 className="font-display text-5xl leading-none tracking-tight">{g.appName}</h1>
-            </div>
+            <AppMark name={g.appName} size="lg" />
+            <h1 className="font-display text-5xl leading-none tracking-tight">{g.appName}</h1>
           </div>
           <CopyMarkdown guide={g} />
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
           {g.reviewed ? (
             <span className="chip bg-emerald-500/10 text-emerald-300 ring-emerald-400/30">✓ Reviewed by a person</span>
           ) : (
@@ -105,13 +101,26 @@ export default async function GuidePage({ params }: Props) {
           {g.summary}
           <Refs ids={g.summaryClaimIds} />
         </p>
-        <dl className="grid grid-cols-2 border-t border-[var(--border)] bg-[var(--surface)]/60 sm:grid-cols-5">
-          {stats.map(([k, v], i) => (
-            <div key={k} className={`p-4 sm:p-5 ${i > 0 ? "sm:border-l" : ""} border-[var(--border)] ${i === 4 ? "col-span-2 sm:col-span-1" : ""}`}>
-              <dt className="eyebrow">{k}</dt>
-              <dd className="mt-1.5 text-sm font-medium leading-snug">{v}</dd>
-            </div>
-          ))}
+        {/* Short values side by side; the two that are usually sentences get full-width rows. */}
+        <dl className="grid grid-cols-3 border-t border-[var(--border)] bg-[var(--surface)]/60">
+          {stats
+            .filter(([k]) => ["Difficulty", "Time to test", "Effort"].includes(k))
+            .map(([k, v], i) => (
+              <div key={k} className={`p-4 sm:p-5 ${i > 0 ? "border-l border-[var(--border)]" : ""}`}>
+                <dt className="eyebrow">{k}</dt>
+                <dd className="mt-1.5 text-sm font-medium leading-snug">{v}</dd>
+              </div>
+            ))}
+        </dl>
+        <dl className="divide-y divide-[var(--border)] border-t border-[var(--border)] bg-[var(--surface)]/60">
+          {stats
+            .filter(([k]) => ["Time to production", "Cost"].includes(k))
+            .map(([k, v]) => (
+              <div key={k} className="grid gap-1 p-4 sm:grid-cols-[10rem_1fr] sm:gap-4 sm:px-5">
+                <dt className="eyebrow pt-0.5">{k}</dt>
+                <dd className="text-sm font-medium leading-snug">{v}</dd>
+              </div>
+            ))}
         </dl>
       </section>
 

@@ -20,7 +20,7 @@ export function Search({ existing }: { existing: { slug: string; appName: string
   return (
     <form
       onSubmit={submit}
-      className="gradient-border mx-auto flex w-full max-w-xl items-center gap-2 rounded-full bg-[var(--card)] p-1.5 pl-5 shadow-[0_0_60px_-20px_var(--brand)] transition focus-within:shadow-[0_0_70px_-12px_var(--brand)]"
+      className="mx-auto flex w-full max-w-xl items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)] p-1.5 pl-5 transition focus-within:border-[var(--brand)]/60 focus-within:shadow-[0_0_0_4px_rgba(81,162,255,0.12)]"
     >
       <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-none stroke-current muted" strokeWidth="2">
         <circle cx="9" cy="9" r="6" />
