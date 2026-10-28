@@ -51,14 +51,14 @@ ${GATES}
   - "you": only the developer can do it: signing in, creating projects, clicking submit, register or publish, accepting terms, paying, recording a video, and choices that commit them to something (which account owns the app, internal vs external audience).
   - "waiting": only for waiting on a review or approval the provider itself runs. Put the expected wait in detail.
   detail: exact values or the one gotcha; empty string if none. Never a bare fact: say what to do about it or what happens (not "results are valid for 7 days" but "publish within 7 days or the check has to be run again").
-- blockers: 3–5 problems developers commonly hit while setting up or launching, each with the fix. Not legal terms or rare edge cases.
+- blockers: 3–5 problems developers commonly hit while setting up or launching, each with the fix. Not legal terms or rare edge cases. A limit that applies only to apps the provider hasn't approved (for example a lower rate limit for unlisted apps) always belongs here.
 - couldNotVerify: at most 4 items, only open questions that could change what the developer does or expects. Empty is fine. Never list things you chose not to research, sources you didn't read, or how something was tested.
 
 Evidence (strict, checked by code after you answer):
 - Every fact the summary, gates, requirements, steps or blockers rely on is a claim in claims[], referenced by claimIds. At most 20 claims.
 - One fact per claim. The statement restates what its quote says, nothing more: if a line relies on two facts from two sentences, make two claims. A later check downgrades any claim whose quote doesn't fully support it.
 - Every summary, gate marked yes, requirement, step and blocker cites at least one claim. Anything without a confirmed claim is shown to the reader as "Unverified", so when you are unsure, say so with an uncertain claim rather than leaving it uncited.
-- "sourced": sourceUrl is one of the <page> URLs, and quote is one full sentence (not a URL, heading or list item) copied exactly, word for word, from that page's text. The statement must say no more than the quote does: no added facts, no stronger or opposite wording. If you can't copy an exact sentence that supports the statement, use "uncertain".
+- "sourced": sourceUrl is one of the <page> URLs, and quote is one full sentence, or up to three consecutive sentences when the fact spans them (for example a sentence and the "This means…" sentence after it), copied exactly, word for word, from that page's text (not a URL, heading or list item). The statement must say no more than the quote does: no added facts, no stronger or opposite wording. If you can't copy an exact sentence that supports the statement, use "uncertain".
 - "tested": only for what a <probes> line shows; sourceUrl is the probe URL and quote is empty.
 - "uncertain": estimates (time and effort, unless the page states them), search notes, gate findings from pages you were not given, inferences. Leave quote empty and explain in note.`;
 
@@ -96,4 +96,4 @@ Judge only from the quote, not from what you know. Write your reason first, then
 
 export const REQUOTE_SYSTEM = `You find supporting sentences. You get one documentation page and a list of statements that were cited to it with the wrong sentence.
 
-For each statement, find the one sentence on the page that states it. Copy that sentence exactly, word for word, as it appears in the page text. If no sentence on the page states it, return an empty quote. Never write a sentence that isn't on the page, and never stretch a sentence to fit: a sentence that only states part of the statement is not a match.`;
+For each statement, find the shortest passage on the page that states all of it: one sentence, or up to three consecutive sentences when the fact spans them (for example "the live version of your app is locked. This means…"). Copy it exactly, word for word, as it appears in the page text. If no passage on the page states it, return an empty quote. Never write a sentence that isn't on the page, and never stretch a passage to fit: one that only states part of the statement is not a match.`;

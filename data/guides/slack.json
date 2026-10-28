@@ -1,0 +1,420 @@
+{
+  "appName": "Slack",
+  "developerPortal": "https://api.slack.com/apps",
+  "summary": "Setup is moderate: any Slack account can create an app and distribute it unlisted to other workspaces right away, but commercial distribution requires Slack Marketplace approval. The Marketplace review is the main thing that can hold up launch, with up to 10 business days for preliminary feedback and up to 10 weeks for the functional review, and it requires 10 active workspaces before submission.",
+  "difficulty": "moderate",
+  "timeToTest": "~1 hour",
+  "timeToProduction": "Unlisted: 1–2 days; Marketplace listing: 2–3 months.",
+  "effort": "2–4 days of work, plus review fixes",
+  "cost": "Free",
+  "summaryClaimIds": [
+    "c1",
+    "c2",
+    "c3",
+    "c4"
+  ],
+  "gates": [
+    {
+      "gate": "register",
+      "applies": "no",
+      "title": "A regular Slack account is enough to create an app",
+      "what": "",
+      "where": "",
+      "todo": "",
+      "claimIds": [
+        "c5"
+      ]
+    },
+    {
+      "gate": "test_limits",
+      "applies": "yes",
+      "title": "New apps install only in their own workspace until public distribution is activated",
+      "what": "A new app can only be installed in the workspace it was created in. Other workspaces cannot install it until distribution is enabled and an OAuth flow is in place.",
+      "where": "App dashboard > Manage Distribution > Share Your App with Other Workspaces (developer)",
+      "todo": "Set up the OAuth flow, complete the checklist, then click Activate Public Distribution.",
+      "claimIds": [
+        "c6",
+        "c7"
+      ]
+    },
+    {
+      "gate": "review",
+      "applies": "yes",
+      "title": "Marketplace review is required for commercial distribution",
+      "what": "Unlisted distribution needs no review, but Slack says commercial distribution belongs in the Marketplace. Unlisted apps are for development and testing. Review takes up to 10 business days for preliminary feedback and up to 10 weeks for the functional review. Apps need 10 active workspaces to submit and must not request restricted scopes.",
+      "where": "App settings > Submit to the Slack Marketplace (developer)",
+      "todo": "Run a pilot on 10+ active workspaces, remove restricted scopes, provide a way to install the app and a demo video, then submit.",
+      "claimIds": [
+        "c3",
+        "c4",
+        "c8",
+        "c9"
+      ]
+    },
+    {
+      "gate": "admin_approval",
+      "applies": "yes",
+      "title": "Workspace admins can block installation or require approval",
+      "what": "Workspace owners can require approval for all apps, and can restrict an app so members cannot install or request it.",
+      "where": "Workspace admin settings, Manage apps (end user's workspace owner or app manager)",
+      "todo": "Request only the scopes the app needs. Tell customers to ask their admin for approval.",
+      "claimIds": [
+        "c10",
+        "c11"
+      ]
+    },
+    {
+      "gate": "paid_access",
+      "applies": "unknown",
+      "title": "No paid API tier found",
+      "what": "",
+      "where": "",
+      "todo": "",
+      "claimIds": []
+    },
+    {
+      "gate": "ongoing",
+      "applies": "yes",
+      "title": "Marketplace apps are locked and changes need re-review",
+      "what": "Once published, scope, endpoint and configuration changes need resubmission and review. Slack also conducts regular audits.",
+      "where": "App settings > Submit to the Slack Marketplace (developer)",
+      "todo": "Use a staging app to test changes, and resubmit before changing scopes. Keep the app compliant and supported.",
+      "claimIds": [
+        "c12",
+        "c13"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "text": "A Slack account and a workspace to own the app",
+      "claimIds": [
+        "c5"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "text": "Create a Slack app in the developer dashboard at api.slack.com/apps.",
+      "why": "",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c5"
+      ]
+    },
+    {
+      "text": "Choose the narrowest bot and user scopes for your features and add them under OAuth & Permissions.",
+      "why": "Bot scopes act with the bot user's own identity and user scopes act on behalf of a user.",
+      "detail": "Avoid restricted scopes such as admin.*, identity.*, search:read; they block Marketplace listing.",
+      "who": "agent",
+      "claimIds": [
+        "c9",
+        "c17"
+      ]
+    },
+    {
+      "text": "Add an HTTPS Redirect URL under OAuth & Permissions.",
+      "why": "",
+      "detail": "The redirect URI must use HTTPS.",
+      "who": "you",
+      "claimIds": [
+        "c14"
+      ]
+    },
+    {
+      "text": "Enable SSL on all request URLs (events, interactivity, slash commands, options load).",
+      "why": "",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c15"
+      ]
+    },
+    {
+      "text": "Go to Manage Distribution, complete the checklist and click Activate Public Distribution.",
+      "why": "Until this is done, the app installs only in its own workspace.",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c7"
+      ]
+    },
+    {
+      "text": "Pilot the app on 10 or more active workspaces.",
+      "why": "Marketplace submission is blocked below this.",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c8"
+      ]
+    },
+    {
+      "text": "Prepare the submission: listing text, privacy policy, support page and a way for Slack to install the app.",
+      "why": "",
+      "detail": "Provide a way to install the app; Slack cannot access your test workspace.",
+      "who": "agent",
+      "claimIds": [
+        "c16",
+        "c19"
+      ]
+    },
+    {
+      "text": "Submit the app from Submit to the Slack Marketplace in app settings.",
+      "why": "",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c20"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "problem": "Admins in some workspaces require approval, so members cannot install the app.",
+      "fix": "Ask the workspace owner or app manager to approve it. Keep the scope list minimal.",
+      "claimIds": [
+        "c10",
+        "c11"
+      ]
+    },
+    {
+      "problem": "Submission is blocked because the app is not on 10 active workspaces.",
+      "fix": "Run a pilot with unlisted distribution until 10 workspaces are using it.",
+      "claimIds": [
+        "c8"
+      ]
+    },
+    {
+      "problem": "Changing scopes after publishing breaks installs.",
+      "fix": "Submit the change through review first before updating the install link.",
+      "claimIds": [
+        "c22"
+      ]
+    }
+  ],
+  "couldNotVerify": [
+    "Whether a paid Slack plan or API tier is needed in production.",
+    "Whether the new rate limits apply to existing non-Marketplace installs."
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "statement": "Unlisted distribution is possible via OAuth and Activate Public Distribution.",
+      "status": "uncertain",
+      "sourceUrl": "https://api.slack.com/start/distributing",
+      "sourceTitle": "App lifecycle & distribution | Slack Developer Docs",
+      "quote": "Installing your app on other workspaces means that you'll need to set up an OAuth 2.0 flow.",
+      "note": "[Check: the quote only partly supports this. The quote only says installing on other workspaces requires an OAuth 2.0 flow. It does not mention Activate Public Distribution or say unlisted distribution is possible via that route.]"
+    },
+    {
+      "id": "c2",
+      "statement": "Unlisted distribution suits pilots, while commercial apps should be Marketplace-listed.",
+      "status": "sourced",
+      "sourceUrl": "https://api.slack.com/start/distributing",
+      "sourceTitle": "App lifecycle & distribution | Slack Developer Docs",
+      "quote": "Distributing your unlisted app is perfect for when you want to test out your app by running a pilot for early customers; however, apps intended for commercial distribution should be submitted and approved for listing in the Slack Marketplace.",
+      "note": ""
+    },
+    {
+      "id": "c3",
+      "statement": "Unlisted apps are for development and testing, not large-scale or commercial distribution.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.slack.dev/changelog/2025/05/29/rate-limit-changes-for-non-marketplace-apps/",
+      "sourceTitle": "Rate limit changes for non-Marketplace apps | Slack Developer Docs",
+      "quote": "Unlisted apps, by contrast, are for development and testing—not large-scale or commercial distribution.",
+      "note": ""
+    },
+    {
+      "id": "c4",
+      "statement": "Preliminary review takes up to 10 business days and functional review up to 10 weeks for new submissions.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.slack.dev/slack-marketplace/slack-marketplace-review-guide/",
+      "sourceTitle": "Slack Marketplace review process | Slack Developer Docs",
+      "quote": "Currently, the preliminary part of the review takes up to 10 business days to receive feedback, while the functional review takes up to 10 weeks for new submissions and 6 weeks for published apps resubmitting changes.",
+      "note": ""
+    },
+    {
+      "id": "c5",
+      "statement": "No business account, paid plan or approval is needed to create an app; a Slack account is enough.",
+      "status": "uncertain",
+      "sourceUrl": "https://api.slack.com/start/distributing",
+      "sourceTitle": "App lifecycle & distribution | Slack Developer Docs",
+      "quote": "",
+      "note": "No registration requirement is mentioned in the distribution page; the developer dashboard responded HTTP 200."
+    },
+    {
+      "id": "c6",
+      "statement": "By default a new app can only be installed in its associated workspace.",
+      "status": "sourced",
+      "sourceUrl": "https://api.slack.com/start/distributing",
+      "sourceTitle": "App lifecycle & distribution | Slack Developer Docs",
+      "quote": "By default, a newly built Slack app can only be installed in its associated workspace as mentioned above.",
+      "note": ""
+    },
+    {
+      "id": "c7",
+      "statement": "Public distribution is enabled via Activate Public Distribution in Manage Distribution.",
+      "status": "uncertain",
+      "sourceUrl": "https://api.slack.com/start/distributing",
+      "sourceTitle": "App lifecycle & distribution | Slack Developer Docs",
+      "quote": "Click Activate Public Distribution .",
+      "note": "Step in the Enabling unlisted distribution list. [Check: quote is too short to support the statement.]"
+    },
+    {
+      "id": "c8",
+      "statement": "Apps must be installed on 10 or more active workspaces or they are blocked from submitting to the Marketplace.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.slack.dev/slack-marketplace/slack-marketplace-review-guide/",
+      "sourceTitle": "Slack Marketplace review process | Slack Developer Docs",
+      "quote": "Your app has been installed on 10 or more active workspaces and the service has been tested on those workspaces in accordance with the above bullet.",
+      "note": "[Check: the quote only partly supports this. The quote says the app has been installed on 10 or more workspaces and tested there. It does not say apps are blocked from submitting without this, so the blocking condition is an added claim.]"
+    },
+    {
+      "id": "c9",
+      "statement": "Apps must not request legacy/restricted scopes such as identity.*, admin.*, search:read to be listed.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.slack.dev/slack-marketplace/slack-marketplace-review-guide/",
+      "sourceTitle": "Slack Marketplace review process | Slack Developer Docs",
+      "quote": "In addition, you’ll also need to ensure that your app does not request legacy/restricted scopes, scopes that provide extensive access to workspace data, or coded workflow scopes (e.g. identity.* , workflow.steps:execute , read , post , client , admin.* , search:read , triggers:* ).",
+      "note": ""
+    },
+    {
+      "id": "c10",
+      "statement": "Workspace owners can require admin approval for all apps.",
+      "status": "sourced",
+      "sourceUrl": "https://slack.com/help/articles/202035138-Add-apps-to-your-Slack-workspace",
+      "sourceTitle": "Add apps to your Slack workspace | Slack",
+      "quote": "Workspace owners can turn on app approval to require admin approval for all apps.",
+      "note": ""
+    },
+    {
+      "id": "c11",
+      "statement": "A restricted app cannot be installed or requested by members.",
+      "status": "sourced",
+      "sourceUrl": "https://slack.com/help/articles/202035138-Add-apps-to-your-Slack-workspace",
+      "sourceTitle": "Add apps to your Slack workspace | Slack",
+      "quote": "If an app has been restricted, members cannot install it or request approval for it.",
+      "note": ""
+    },
+    {
+      "id": "c12",
+      "statement": "Published apps are locked and need resubmission for config, feature or scope changes.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.slack.dev/slack-marketplace/slack-marketplace-review-guide/",
+      "sourceTitle": "Slack Marketplace review process | Slack Developer Docs",
+      "quote": "This means that you will not be able to make any changes to your app’s configuration, features, or scopes without re-submitting the app for review.",
+      "note": "[Check: the quote only partly supports this. The quote says changes to configuration, features, or scopes require resubmission for review. It does not say published apps are locked, so the statement adds stronger wording.]"
+    },
+    {
+      "id": "c13",
+      "statement": "Slack conducts regular audits of Marketplace apps.",
+      "status": "sourced",
+      "sourceUrl": "https://slack.com/blog/developers/slack-marketplace-review-process",
+      "sourceTitle": "FAQ: Slack’s Marketplace review process | Slack",
+      "quote": "In addition to reviewing changes, we also conduct regular audits to ensure that apps remain compliant with our requirements and guidelines.",
+      "note": ""
+    },
+    {
+      "id": "c14",
+      "statement": "The redirect URI must use HTTPS.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.slack.dev/authentication/installing-with-oauth/",
+      "sourceTitle": "Installing via OAuth authorization code flow | Slack Developer Docs",
+      "quote": "The redirect_uri must use HTTPS.",
+      "note": "[Check: quote is too short to support the statement.]"
+    },
+    {
+      "id": "c15",
+      "statement": "Apps open to other workspaces must support SSL on OAuth redirect and request URLs.",
+      "status": "sourced",
+      "sourceUrl": "https://api.slack.com/start/distributing",
+      "sourceTitle": "App lifecycle & distribution | Slack Developer Docs",
+      "quote": "Slack apps open to installation by other workspaces have additional security requirements. Your app must support SSL for all of the following URLs:",
+      "note": "The page lists the URLs that must support SSL. [Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c16",
+      "statement": "Marketplace apps need a privacy policy.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.slack.dev/slack-marketplace/slack-marketplace-app-guidelines-and-requirements/",
+      "sourceTitle": "Submission guidelines and requirements | Slack Developer Docs",
+      "quote": "All Slack Marketplace apps must include a clear privacy policy that details how third-party data is handled and this page should be accessible on your app’s landing page.",
+      "note": ""
+    },
+    {
+      "id": "c17",
+      "statement": "Bot scopes act with the bot user's own identity; user scopes act on behalf of the user.",
+      "status": "uncertain",
+      "sourceUrl": "https://api.slack.com/scopes",
+      "sourceTitle": "Scopes | Slack Developer Docs",
+      "quote": "User scopes let your app act on behalf of the user who installed or authorized it, accessing only what that user can.",
+      "note": "[Check: the quote only partly supports this. The quote says user scopes act on behalf of the user. It does not describe bot scopes or say bot scopes act with the bot user's own identity.]"
+    },
+    {
+      "id": "c18",
+      "statement": "The temporary authorization code expires after ten minutes.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.slack.dev/authentication/installing-with-oauth/",
+      "sourceTitle": "Installing via OAuth authorization code flow | Slack Developer Docs",
+      "quote": "That's your temporary authorization code, which expires after ten minutes.",
+      "note": ""
+    },
+    {
+      "id": "c19",
+      "statement": "Slack needs a way to install the app itself because it cannot access test workspaces.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.slack.dev/slack-marketplace/slack-marketplace-review-guide/",
+      "sourceTitle": "Slack Marketplace review process | Slack Developer Docs",
+      "quote": "We cannot access any Slack workspaces (even created for testing), so please make sure to provide us with a way to install the app ourselves, rather than your test Slack workspace credentials.",
+      "note": ""
+    },
+    {
+      "id": "c20",
+      "statement": "Submission happens from the Submit to the Slack Marketplace section of app configuration.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.slack.dev/slack-marketplace/slack-marketplace-review-guide/",
+      "sourceTitle": "Slack Marketplace review process | Slack Developer Docs",
+      "quote": "Your app submission (and subsequent updates to your app) happens from the Submit to the Slack Marketplace section of your app's configuration page.",
+      "note": ""
+    },
+    {
+      "id": "c21",
+      "statement": "New non-Marketplace commercially distributed apps get a 1 request per minute limit on conversations.history and conversations.replies.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.slack.dev/changelog/2025/05/29/rate-limit-changes-for-non-marketplace-apps/",
+      "sourceTitle": "Rate limit changes for non-Marketplace apps | Slack Developer Docs",
+      "quote": "The new rate limits will be updated to allow 1 request per minute and will return a maximum of 15 objects per request.",
+      "note": "[Check: the quote only partly supports this. The quote mentions new rate limits of 1 request per minute and 15 objects per request, but does not name conversations.history or conversations.replies or say they apply to non-Marketplace commercial apps.]"
+    },
+    {
+      "id": "c22",
+      "statement": "Adding unreviewed scopes to a live app's install link makes installs error out.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.slack.dev/slack-marketplace/slack-marketplace-review-guide/",
+      "sourceTitle": "Slack Marketplace review process | Slack Developer Docs",
+      "quote": "If you try to make changes to your live app, it can break your app's experience for users; e.g., if you update your app’s install link to add new scopes that were not previously reviewed, your app will show customers an error and they will not be able to install it.",
+      "note": ""
+    }
+  ],
+  "slug": "slack",
+  "reviewed": false,
+  "createdAt": "2026-10-28T19:57:22.963Z",
+  "checkedAt": "2026-10-28T19:57:22.963Z",
+  "probes": [
+    {
+      "name": "console",
+      "target": "https://api.slack.com/apps",
+      "ok": true,
+      "result": "HTTP 200"
+    }
+  ],
+  "agentRun": {
+    "model": "claude-haiku-5-5 + claude-sonnet-5-5",
+    "searches": 5,
+    "fetches": 8,
+    "probes": 1,
+    "durationSec": 118,
+    "costUsd": 0.286
+  }
+}

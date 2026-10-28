@@ -185,10 +185,8 @@ function checkClaims(claims: Claim[], pages: Page[], probes: Probe[]): { claims:
     if (c.status === "tested" && !probed.has(url)) reason = "marked tested, but that URL wasn't probed";
     if (c.status === "sourced") {
       const page = byUrl.get(url);
-      // A URL or a fragment can be "on the page" without supporting anything.
-      const words = c.quote.replace(/https?:\/\/\S+/g, "").trim().split(/\s+/).filter(Boolean).length;
       if (!page) reason = "cited page wasn't one we could fetch and read";
-      else if (words < 6) reason = "quote is too short to support the statement";
+      else if (tooShort(c.quote)) reason = "quote is too short to support the statement";
       else if (!quoteOnPage(c.quote, page.text)) reason = "quoted sentence not found on the cited page";
     }
     if (!reason) {
@@ -246,6 +244,16 @@ const RequoteResult = z.object({ results: z.array(z.object({ id: z.string(), quo
  * if code finds it on the page word for word and the support check agrees. Anything else
  * stays uncertain.
  */
+/**
+ * A URL or a fragment can be "on the page" without supporting anything. Six words is enough;
+ * a shorter quote passes only as a complete sentence ("The redirect_uri must use HTTPS.").
+ */
+function tooShort(quote: string): boolean {
+  const q = quote.replace(/https?:\/\/\S+/g, "").trim();
+  const words = q.split(/\s+/).filter(Boolean).length;
+  return words < 4 || (words < 6 && !/[.!?]$/.test(q));
+}
+
 async function requoteClaims(draft: Claim[], checked: Claim[], pages: Page[], usage: Usage, emit: Emit): Promise<Claim[]> {
   const norm = (u: string) => u.replace(/\/$/, "");
   const byUrl = new Map(pages.filter((p) => p.ok).map((p) => [norm(p.url), p]));
@@ -274,8 +282,7 @@ async function requoteClaims(draft: Claim[], checked: Claim[], pages: Page[], us
     );
     for (const r of RequoteResult.parse(JSON.parse(text)).results) {
       const c = claims.find((x) => x.id === r.id);
-      const words = r.quote.replace(/https?:\/\/\S+/g, "").trim().split(/\s+/).filter(Boolean).length;
-      if (c && words >= 6 && quoteOnPage(r.quote, page.text)) candidates.push({ ...c, status: "sourced", quote: r.quote });
+      if (c && !tooShort(r.quote) && quoteOnPage(r.quote, page.text)) candidates.push({ ...c, status: "sourced", quote: r.quote });
     }
   }
   // The new quotes go through the same support check; only claims that pass are restored.
