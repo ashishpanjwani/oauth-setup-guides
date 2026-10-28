@@ -382,7 +382,7 @@
     }
   ],
   "slug": "github",
-  "reviewed": false,
+  "reviewed": true,
   "createdAt": "2026-10-28T17:04:33.753Z",
   "checkedAt": "2026-10-28T17:04:33.753Z",
   "probes": [
@@ -401,5 +401,5 @@
     "durationSec": 77,
     "costUsd": 0.211
   },
-  "reviewNote": "Corrected by hand on 2026-10-28: explained the device flow and token expiry settings from GitHub's docs, removed a false 'docs conflict' note, fixed one step's who label, removed an edge-case blocker. Shortened the two settings explanations, removed a non-setup step, and relabelled the name/description step. Steps checked against the live registration form on 2026-10-28; GitHub renamed the callback field to Redirect URIs."
+  "reviewNote": "Reviewed by a person on 2026-10-28: every step checked against the live registration form (steps 1–5) or GitHub's docs (step 6). Corrections: device flow and token expiry explained from GitHub's docs, false 'docs conflict' note removed, non-setup step removed, callback field renamed to Redirect URIs to match the live form."
 }
