@@ -113,9 +113,9 @@
     },
     {
       "text": "Enter the application name, homepage URL and optional description.",
-      "why": "These are shown to users on the authorization screen.",
+      "why": "Users see these on the authorization screen.",
       "detail": "",
-      "who": "you",
+      "who": "agent_prepares",
       "claimIds": [
         "c9"
       ]
@@ -132,7 +132,7 @@
     },
     {
       "text": "Leave Enable Device Flow unchecked unless your app has no browser (a CLI, IoT device or headless tool).",
-      "why": "It's off by default. Turning it on lets users sign in by typing a code your app shows them, for apps that can't open a browser. But device flow skips redirect URIs, so attackers can use it to impersonate your app in phishing attacks, which is why GitHub advises enabling it only when you need it.",
+      "why": "Off by default. It skips redirect URIs, so it can be abused to impersonate your app in phishing attacks.",
       "detail": "",
       "who": "you",
       "claimIds": [
@@ -142,7 +142,7 @@
     },
     {
       "text": "Keep Expire user access tokens checked.",
-      "why": "It's on by default so tokens rotate regularly and a leaked token stops working quickly: access tokens last 8 hours, and your app uses a refresh token (valid for 6 months if unused) to get new ones. If you turn it off, tokens stay valid until revoked, and GitHub only revokes ones unused for a year. Turn it off only if your app can't handle refresh tokens yet.",
+      "why": "On by default so a leaked token dies within 8 hours; your app renews tokens with a refresh token. Turn it off only if your app can't handle refresh yet.",
       "detail": "",
       "who": "you",
       "claimIds": [
@@ -159,16 +159,6 @@
       "who": "you",
       "claimIds": [
         "c13"
-      ]
-    },
-    {
-      "text": "Draft the text that tells users in restricted organizations how to request owner approval for your app.",
-      "why": "Members of organizations with restrictions cannot authorize your app for organization resources.",
-      "detail": "",
-      "who": "agent_prepares",
-      "claimIds": [
-        "c5",
-        "c6"
       ]
     }
   ],
@@ -381,5 +371,5 @@
     "durationSec": 77,
     "costUsd": 0.211
   },
-  "reviewNote": "Corrected by hand on 2026-10-28: explained the device flow and token expiry settings from GitHub's docs, removed a false 'docs conflict' note, fixed one step's who label, removed an edge-case blocker."
+  "reviewNote": "Corrected by hand on 2026-10-28: explained the device flow and token expiry settings from GitHub's docs, removed a false 'docs conflict' note, fixed one step's who label, removed an edge-case blocker. Shortened the two settings explanations, removed a non-setup step, and relabelled the name/description step."
 }
