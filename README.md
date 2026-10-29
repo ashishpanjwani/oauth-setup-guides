@@ -22,14 +22,14 @@ Building guides for real providers showed what the scattered docs hide:
 
 - **Library:** six guides chosen for different challenges.
 
-  | App | Difficulty | What a developer needs to know |
+  | App | Difficulty | Main challenge |
   |---|---|---|
-  | GitHub | Easy | No review or fee. Users can always connect their personal account, but an organization that restricts OAuth apps (on by default for new ones) blocks access to its own repos and data until an owner approves |
-  | Slack | Easy | No review, but other workspaces can install only after you turn on distribution. Workspace owners can require approval, and unlisted apps get 1 request per minute on message history |
-  | X | Moderate | API use is pay-per-use credits. X reviews your stated use case, and AI-generated replies need prior approval |
-  | Shopify | Moderate | Pick the standalone path, not embedded. Public apps need an App Store registration fee and review, and customer data needs separate approval |
-  | Instagram | Moderate | Only people with a role on your app can connect until App Review (a screen recording per permission) and Business Verification are done |
-  | Gmail | Hard | Review takes 2–3 business days to about 6 weeks depending on scopes. Restricted scopes (reading mail) also need an annual paid security assessment |
+  | GitHub | Easy | Organization owner approval |
+  | Slack | Easy | Distribution and workspace approval |
+  | X | Moderate | Pay-per-use API and use-case review |
+  | Shopify | Moderate | Choosing the right app path, plus App Store review |
+  | Instagram | Moderate | App Review and Business Verification |
+  | Gmail | Hard | Scope verification and a security assessment |
 - **Live generation:** type any app name or website, e.g. Notion, Pipedrive or xero.com. Progress shows each stage, and the finished guide opens on its own.
 - **Sharing:** Copy link, Copy as Markdown (a checklist with numbered sources) and Save as PDF.
 
