@@ -106,11 +106,6 @@ export const GuideDraft = z.object({
       detail: z.string().describe("One short line: an exact value or the one gotcha. Empty string if none."),
       who: Who,
       claimIds: z.array(z.string()),
-      /** What an agent got when it actually tried this step: done (with its output) or stopped (and where). */
-      attempt: z
-        .object({ outcome: z.enum(["done", "stopped"]), text: z.string(), output: z.string().optional(), claimIds: z.array(z.string()) })
-        .optional()
-        .describe("Never fill this in; it is set only from a real attempt."),
     }),
   ),
   blockers: z.array(z.object({ problem: z.string(), fix: z.string(), claimIds: z.array(z.string()) })),

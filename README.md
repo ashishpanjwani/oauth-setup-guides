@@ -47,20 +47,7 @@ query ─► Research agent ──► Compose ──► Fact-check agent ──�
 
 ## What we tested, verified, and couldn't verify
 
-### X: one hands-on run through the setup (2026-10-29)
-
-We tried each setup step without an X account, to see where an agent can do the work and where a person has to take over. The guide shows only what the reader can use: the agent's outputs, and the step where you take over. The raw results are here.
-
-| Step | What we tried | What happened | Result |
-|---|---|---|---|
-| Decide scopes | Picked scopes for "read and post as the user" from X's scope list | `tweet.read users.read tweet.write offline.access` | Agent did it |
-| Create the app | Opened `developer.x.com/en/portal/dashboard` and `console.x.com`; searched X's OpenAPI spec (`docs.x.com/openapi.json`, 200 endpoints) for app or credential creation | Portal: HTTP 307 to `twitter.com/login`. Console: a sign-in-gated JavaScript app. No endpoint creates an app or credentials; `POST /2/bots` creates a bot inside an existing app and needs that app's Bearer Token | Needs a person (X login) |
-| App type, callback URL, credentials | Same console | Behind the same sign-in | Needs a person |
-| Build the authorize link | Built it with a fresh PKCE pair (S256) and opened it | HTTP 200, page titled "Authorize app / X", asking a signed-out visitor to log in | Agent did it |
-| Approve | Opened the link signed out | Login required | Needs a person |
-| Exchange the code | `POST https://api.x.com/2/oauth2/token` without `code_verifier`, then with it and a placeholder client ID | `invalid_request: Missing required parameter [code_verifier]`, then `invalid_client: Value passed for the client id was invalid` | Works from a server; needs the real code and the client secret |
-
-What we found that the docs alone didn't make clear: X checks for PKCE before anything else at the token URL, and there is no API route around the console for creating an app. Everything behind a login stays *sourced* from X's docs, not *tested*.
+_See below; filled in after review._
 
 ## Setup
 

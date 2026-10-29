@@ -7,7 +7,7 @@
   "timeToProduction": "~1 hour to a few days, plus any X use-case review",
   "effort": "2–4 hours",
   "cost": "Pay-per-usage credits, for example $0.005 per Post read and $0.015 per Post created; no subscription",
-  "handoff": "An agent can choose the scopes and build the authorize link with PKCE; you sign in to X, create the app, copy the secret into your server, approve the test login and run the code exchange on your server.",
+  "handoff": "An agent can pick the scopes and build the authorize link with PKCE; you sign in, accept the agreement, create the app, choose its settings, copy the secrets and connect a test account.",
   "summaryClaimIds": [
     "c1",
     "c2",
@@ -118,16 +118,7 @@
       "claimIds": [
         "c14",
         "c15"
-      ],
-      "attempt": {
-        "outcome": "done",
-        "text": "Picked the scopes for an agent that reads and posts as the user.",
-        "output": "tweet.read users.read tweet.write offline.access",
-        "claimIds": [
-          "c14",
-          "c15"
-        ]
-      }
+      ]
     },
     {
       "slot": "create_app",
@@ -139,14 +130,7 @@
       "claimIds": [
         "c4",
         "c16"
-      ],
-      "attempt": {
-        "outcome": "stopped",
-        "text": "This needs your X login, and X has no way to create an app outside its console.",
-        "claimIds": [
-          "a2"
-        ]
-      }
+      ]
     },
     {
       "slot": "oauth_settings",
@@ -192,41 +176,18 @@
       "detail": "Base URL: https://x.com/i/oauth2/authorize. The code_challenge is a fresh random secret for each login; code_challenge_method is S256 or plain.",
       "claimIds": [
         "c21",
-        "c23",
-        "t1"
-      ],
-      "attempt": {
-        "outcome": "done",
-        "text": "Built the link with a fresh PKCE pair. It opens X's Authorize app page. Swap in your Client ID and callback URL.",
-        "output": "https://x.com/i/oauth2/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=https%3A%2F%2Fyour-app.example.com%2Fcallback&scope=tweet.read%20users.read%20tweet.write%20offline.access&state=0a0542b7be34ada0dc21c616942dc223&code_challenge=BOv729H3bzTzNm8kt2p89Rzs_rmmtsAHxK9-605697Y&code_challenge_method=S256",
-        "claimIds": [
-          "t1",
-          "c21",
-          "c23"
-        ]
-      }
-    },
-    {
-      "slot": "test_connection",
-      "phase": "setup",
-      "text": "Browser: open the authorize link, log in to X and approve the app.",
-      "why": "",
-      "detail": "",
-      "who": "you",
-      "claimIds": [
-        "t1",
-        "c21"
+        "c23"
       ]
     },
     {
       "slot": "test_connection",
       "phase": "setup",
-      "who": "you",
-      "text": "Your server: exchange the code at https://api.x.com/2/oauth2/token with the code_verifier, within 30 seconds.",
+      "text": "Browser: open the authorize link, approve with your own X account, then exchange the code for an access token.",
       "why": "",
-      "detail": "X requires the code_verifier that matches the link's code_challenge.",
+      "detail": "Exchange the code within 30 seconds.",
+      "who": "you",
       "claimIds": [
-        "t2",
+        "c21",
         "c22"
       ]
     }
@@ -490,33 +451,6 @@
       "sourceTitle": "X API pay-per-usage pricing and credits - X",
       "note": "Quoted from the pricing tables. Checked by hand on 2026-10-29.",
       "quote": "Resource Unit cost Posts: Read $0.005 per resource … Action Unit cost Post: Create $0.015 per request"
-    },
-    {
-      "id": "t1",
-      "statement": "The agent-built authorize link opens X's Authorize app page.",
-      "status": "tested",
-      "sourceUrl": "https://x.com/i/oauth2/authorize",
-      "sourceTitle": "Tested against X",
-      "quote": "",
-      "note": "Tested 2026-10-29."
-    },
-    {
-      "id": "t2",
-      "statement": "The code exchange fails without the PKCE code_verifier: X replies “Missing required parameter [code_verifier]”.",
-      "status": "tested",
-      "sourceUrl": "https://api.x.com/2/oauth2/token",
-      "sourceTitle": "Tested against X",
-      "quote": "",
-      "note": "Tested 2026-10-29."
-    },
-    {
-      "id": "a2",
-      "statement": "X has no API for creating apps: none of the 200 endpoints it publishes creates an app or its Client ID and secret.",
-      "status": "tested",
-      "sourceUrl": "https://docs.x.com/openapi.json",
-      "sourceTitle": "Tested against X's API list",
-      "quote": "",
-      "note": "Tested 2026-10-29."
     }
   ],
   "slug": "x",
@@ -529,24 +463,6 @@
       "target": "https://developer.x.com",
       "ok": true,
       "result": "HTTP 200, redirected to https://developer.x.com/"
-    },
-    {
-      "name": "authorize",
-      "target": "https://x.com/i/oauth2/authorize",
-      "ok": true,
-      "result": "GET with a fake client_id, redirect_uri, scope, state and code_challenge → HTTP 200, page titled “Authorize app / X”"
-    },
-    {
-      "name": "token_no_verifier",
-      "target": "https://api.x.com/2/oauth2/token",
-      "ok": true,
-      "result": "POST grant_type=authorization_code with a fake code and no code_verifier → HTTP 400 {\"error\":\"invalid_request\",\"error_description\":\"Missing required parameter [code_verifier].\"}"
-    },
-    {
-      "name": "openapi",
-      "target": "https://docs.x.com/openapi.json",
-      "ok": true,
-      "result": "200 endpoints; none creates an app or credentials (POST /2/bots needs an existing app's Bearer Token)"
     }
   ],
   "agentRun": {
