@@ -219,8 +219,9 @@ function checkClaims(claims: Claim[], pages: Page[], probes: Probe[]): { claims:
     if (c.status === "sourced") {
       const page = byUrl.get(url);
       if (!page) reason = "cited page wasn't one we could fetch and read";
-      else if (tooShort(c.quote)) reason = "quote is too short to support the statement";
-      else if (!quoteOnPage(c.quote, page.text)) reason = "quoted sentence not found on the cited page";
+      else if (passages(c.quote).length > 3) reason = "quote joins more than three passages";
+      else if (!passages(c.quote).length || passages(c.quote).some(tooShort)) reason = "quote is too short to support the statement";
+      else if (!passages(c.quote).every((p) => quoteOnPage(p, page.text))) reason = "quoted sentence not found on the cited page";
     }
     if (!reason) {
       if (c.status !== "uncertain") kept++;
@@ -287,7 +288,12 @@ function tooShort(quote: string): boolean {
   return words < 4 || (words < 6 && !/[.!?]$/.test(q));
 }
 
-async function requoteClaims(draft: Claim[], checked: Claim[], pages: Page[], usage: Usage, emit: Emit): Promise<Claim[]> {
+/** A quote may join up to three passages from the same page with " … "; each is checked on its own. */
+function passages(quote: string): string[] {
+  return quote.split(/\s*…\s+/).filter(Boolean);
+}
+
+export async function requoteClaims(draft: Claim[], checked: Claim[], pages: Page[], usage: Usage, emit: Emit): Promise<Claim[]> {
   const norm = (u: string) => u.replace(/\/$/, "");
   const byUrl = new Map(pages.filter((p) => p.ok).map((p) => [norm(p.url), p]));
   const wasSourced = new Set(draft.filter((c) => c.status === "sourced").map((c) => c.id));
@@ -315,7 +321,8 @@ async function requoteClaims(draft: Claim[], checked: Claim[], pages: Page[], us
     );
     for (const r of RequoteResult.parse(JSON.parse(text)).results) {
       const c = claims.find((x) => x.id === r.id);
-      if (c && !tooShort(r.quote) && quoteOnPage(r.quote, page.text)) candidates.push({ ...c, status: "sourced", quote: r.quote });
+      const parts = passages(r.quote);
+      if (c && parts.length >= 1 && parts.length <= 3 && !parts.some(tooShort) && parts.every((p) => quoteOnPage(p, page.text))) candidates.push({ ...c, status: "sourced", quote: r.quote });
     }
   }
   // The new quotes go through the same support check; only claims that pass are restored.
