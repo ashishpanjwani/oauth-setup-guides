@@ -9,6 +9,8 @@ import { slotPhase, type Difficulty, type GuideDraft } from "./schema";
 type G = Pick<GuideDraft, "gates" | "steps" | "claims" | "cost" | "statClaimIds" | "appName">;
 
 const applies = (g: G, gate: string) => g.gates.some((x) => x.gate === gate && x.applies === "yes");
+/** The docs didn't settle whether users can connect before a review, so no stat may claim there is none. */
+const reviewUnknown = (g: G) => g.gates.some((x) => x.gate === "review" && x.applies === "unknown");
 const waitStep = (g: G) => g.steps.find((s) => s.slot === "wait_review");
 const backed = (g: G, ids: string[]) =>
   ids.some((id) => {
@@ -40,7 +42,8 @@ export function difficulty(g: G): { level: Difficulty; reason: string } {
   if (applies(g, "register")) why.push("registration or verification");
   if (applies(g, "paid_access")) why.push("paid API");
   const level: Difficulty = assessment || (weeks !== null && weeks >= 2) ? "hard" : why.length ? "moderate" : "easy";
-  return { level, reason: why.length ? why.join(", ") : "self-serve, no review or payment" };
+  const none = reviewUnknown(g) ? "self-serve, no payment; review not confirmed" : "self-serve, no review or payment";
+  return { level, reason: why.length ? why.join(", ") : none };
 }
 
 export function timeToTest(g: G): { value: string; basis: string } {
@@ -50,6 +53,8 @@ export function timeToTest(g: G): { value: string; basis: string } {
 
 export function timeToProduction(g: G): { value: string; basis: string; claimIds: string[] } {
   const launch = g.steps.filter((s) => (s.phase ?? slotPhase(s.slot)) === "launch");
+  if (!launch.length && reviewUnknown(g))
+    return { value: "Review not confirmed", basis: `${g.appName}'s docs don't say whether users can connect before a review`, claimIds: [] };
   if (!launch.length) return { value: "Right after setup", basis: "no review or publish step", claimIds: [] };
   const w = waitStep(g);
   if (!w) return { value: "No review wait", basis: `${launch.length} go-live ${launch.length === 1 ? "step" : "steps"}, none waiting on the provider`, claimIds: [] };

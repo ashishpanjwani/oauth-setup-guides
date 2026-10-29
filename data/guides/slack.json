@@ -108,7 +108,11 @@
       "claimIds": [
         "c1"
       ],
-      "slot": "create_app"
+      "slot": "create_app",
+      "link": {
+        "label": "Your Apps",
+        "url": "https://api.slack.com/apps"
+      }
     },
     {
       "phase": "setup",

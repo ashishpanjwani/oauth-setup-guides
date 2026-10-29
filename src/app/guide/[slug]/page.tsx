@@ -49,7 +49,6 @@ export default async function GuidePage({ params }: Props) {
 
   // Claims render as footnote numbers in reading order. A line with no tested or sourced
   // claim behind it is marked Unverified, so nothing unconfirmed reads as fact.
-  const num = new Map(g.claims.map((c, i) => [c.id, i + 1]));
   const status = new Map(g.claims.map((c) => [c.id, c.status]));
   const Refs = ({ ids }: { ids: string[] }) => {
     const n = ids.filter((id) => num.has(id));
@@ -82,6 +81,18 @@ export default async function GuidePage({ params }: Props) {
   const price = cost(g);
 
   const gates = (g.gates ?? []).filter((x) => x.applies === "yes");
+  // Evidence lists only the claims the page cites, numbered in the order a reader meets them.
+  const citedIds = [
+    ...g.summaryClaimIds,
+    ...prod.claimIds,
+    ...price.claimIds,
+    ...gates.flatMap((x) => x.claimIds),
+    ...g.requirements.flatMap((r) => r.claimIds),
+    ...g.steps.flatMap((s) => s.claimIds),
+    ...g.blockers.flatMap((b) => b.claimIds),
+  ];
+  const cited = [...new Set(citedIds)].map((id) => g.claims.find((c) => c.id === id)).filter((c) => c !== undefined);
+  const num = new Map(cited.map((c, i) => [c.id, i + 1]));
   // Phase comes from the step's slot; older guides store it directly.
   const steps = g.steps.map((s, i) => ({ ...s, n: i + 1, phase: s.phase ?? slotPhase(s.slot) }));
   const parts = [
@@ -243,6 +254,11 @@ export default async function GuidePage({ params }: Props) {
                     </div>
                     <span className={`chip ${WHO[s.who].cls}`}>{WHO[s.who].label}</span>
                   </div>
+                  {s.link && (
+                    <a href={s.link.url} target="_blank" rel="noreferrer" className="mt-1.5 inline-block text-sm text-[#8fc2ff] transition hover:text-[var(--cyan)]">
+                      Open {s.link.label} ↗
+                    </a>
+                  )}
                   {s.why && <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.why}</p>}
                   {s.detail && (
                     <p className="mt-2 border-l-2 border-[var(--border-strong)] pl-3 text-sm leading-relaxed muted">
@@ -292,12 +308,12 @@ export default async function GuidePage({ params }: Props) {
       )}
 
       <section className="border-t border-[var(--border)] pt-12">
-        <SectionTitle eyebrow={`${g.claims.length} claims`}>Evidence</SectionTitle>
+        <SectionTitle eyebrow={`${cited.length} claims`}>Evidence</SectionTitle>
         <p className="-mt-2 mb-5 text-sm muted">
           Every numbered reference above points here. Sourced quotes were checked word for word against the page they cite.
         </p>
         <ol className="space-y-2.5 text-sm">
-          {g.claims.map((c, i) => (
+          {cited.map((c, i) => (
             <li
               key={c.id}
               id={c.id}

@@ -106,6 +106,11 @@ export const GuideDraft = z.object({
       detail: z.string().describe("One short line: an exact value or the one gotcha. Empty string if none."),
       who: Who,
       claimIds: z.array(z.string()),
+      /** Kept only when the URL is the developer portal or a page that was read (checked in code). */
+      link: z
+        .object({ label: z.string(), url: z.string() })
+        .optional()
+        .describe("Where the reader goes to do this step, e.g. { label: 'Developer portal', url: <the developer portal URL> }. Omit on steps that stay on the same page."),
     }),
   ),
   blockers: z.array(z.object({ problem: z.string(), fix: z.string(), claimIds: z.array(z.string()) })),

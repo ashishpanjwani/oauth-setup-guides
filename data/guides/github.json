@@ -111,7 +111,11 @@
         "c1"
       ],
       "phase": "setup",
-      "slot": "create_app"
+      "slot": "create_app",
+      "link": {
+        "label": "Developer settings",
+        "url": "https://github.com/settings/developers"
+      }
     },
     {
       "text": "New OAuth App form: fill in Application name, Homepage URL and Application description.",

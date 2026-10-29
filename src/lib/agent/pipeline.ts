@@ -147,6 +147,13 @@ function orderSteps(g: GuideDraft): GuideDraft {
   return { ...g, steps: steps.map(({ s }) => ({ ...s, phase: slotPhase(s.slot) })) };
 }
 
+/** A step link survives only if it points at the console we probed or a page we read, so no URL is invented. */
+function checkLinks(g: GuideDraft, pages: Page[], probes: Probe[]): GuideDraft {
+  const norm = (u: string) => u.trim().replace(/#.*$/, "").replace(/\/$/, "");
+  const known = new Set([...probes.map((p) => p.target), ...pages.filter((p) => p.ok).map((p) => p.url)].map(norm));
+  return { ...g, steps: g.steps.map(({ link, ...s }) => (link && known.has(norm(link.url)) ? { ...s, link } : s)) };
+}
+
 /** Required slots the writer left empty, checked in code. */
 function setupGaps(g: GuideDraft): string[] {
   // A provider with a test mode always has a step that leaves it.
@@ -487,6 +494,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
     emit({ type: "skipped", step: "The editing pass", reason: "the run is close to its time limit" });
   }
   // Gates are checked after editing, since the editor may change what applies.
+  edited = checkLinks(edited, pages, probes);
   const gates = checkGates(edited.gates, checked.claims, pages);
 
   const unreadable = pages.filter((p) => !p.ok).map((p) => `Couldn't read ${p.url} (${p.error}), so nothing from it is confirmed.`);

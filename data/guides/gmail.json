@@ -125,7 +125,11 @@
       "who": "you",
       "claimIds": [
         "c17"
-      ]
+      ],
+      "link": {
+        "label": "Google Cloud console",
+        "url": "https://console.cloud.google.com/"
+      }
     },
     {
       "slot": "enable_api",

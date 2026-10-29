@@ -143,7 +143,11 @@
       "who": "you",
       "claimIds": [
         "c19"
-      ]
+      ],
+      "link": {
+        "label": "App Dashboard",
+        "url": "https://developers.facebook.com/apps"
+      }
     },
     {
       "slot": "enable_api",

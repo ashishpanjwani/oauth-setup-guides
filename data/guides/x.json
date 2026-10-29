@@ -130,7 +130,11 @@
       "claimIds": [
         "c4",
         "c16"
-      ]
+      ],
+      "link": {
+        "label": "X Developer Console",
+        "url": "https://console.x.com"
+      }
     },
     {
       "slot": "oauth_settings",

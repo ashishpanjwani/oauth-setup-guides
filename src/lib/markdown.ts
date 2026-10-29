@@ -73,7 +73,8 @@ export function guideToMarkdown(g: Guide, url?: string): string {
     out.push(`## ${title}${time ? ` · ${time.toLowerCase()}` : ""}`, "");
     steps.forEach((s) => {
       // Two trailing spaces are a line break, so why and detail sit under the step, not after it.
-      const lines = [`- [ ] **${s.n}.** ${s.text} _(${WHO[s.who].label})_${refs(s.claimIds)}`, s.why, s.detail && `_${s.detail}_`].filter(Boolean);
+      const open = s.link && `[Open ${s.link.label}](${s.link.url})`;
+      const lines = [`- [ ] **${s.n}.** ${s.text} _(${WHO[s.who].label})_${refs(s.claimIds)}`, open, s.why, s.detail && `_${s.detail}_`].filter(Boolean);
       out.push(lines.join("  \n  "));
     });
     out.push("");
