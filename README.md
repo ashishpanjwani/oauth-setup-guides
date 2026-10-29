@@ -2,7 +2,7 @@
 
 Guides for creating a provider's OAuth app and getting it approved, so an AI agent's users can connect that provider. Each guide answers four questions up front: how hard it is, how long it takes (including the approval wait), what can block launch, and which steps an agent can do versus which need the developer. For an app with no guide yet, an agent researches it live and writes one in about 2–5 minutes.
 
-**Live:** _add link after deploy_ · **Repo:** https://github.com/ashishpanjwani/oauth-setup-guides
+**Live:** https://oauth-setup-guides-nu.vercel.app · **Repo:** https://github.com/ashishpanjwani/oauth-setup-guides
 
 ## The problem
 
