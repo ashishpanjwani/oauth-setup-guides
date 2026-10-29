@@ -20,9 +20,9 @@ const LONG_PROMPT_TOKENS = 100_000;
 const WEB_SEARCH_USD = 0.01; // $10 per 1,000 searches; fetches cost only the tokens they add
 
 /** Hard ceiling per guide run (research + compose, or verify). The loop aborts past it. */
-export const RUN_CAP_USD = Number(process.env.RUN_CAP_USD ?? 0.6);
+export const RUN_CAP_USD = Number(process.env.RUN_CAP_USD ?? 0.8);
 /** Ceiling on what the public demo can spend per UTC day across all visitors. */
-export const DAILY_CAP_USD = Number(process.env.DAILY_CAP_USD ?? 2);
+export const DAILY_CAP_USD = Number(process.env.DAILY_CAP_USD ?? 10);
 
 export type Usage = { input: number; cacheRead: number; cacheWrite: number; output: number; searches: number; usd: number };
 
