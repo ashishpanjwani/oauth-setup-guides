@@ -3,6 +3,7 @@ import { Search } from "@/components/search";
 import { AppMark } from "@/components/app-mark";
 import { allGuides } from "@/lib/store";
 import { DIFFICULTY } from "@/lib/labels";
+import { cost, difficulty, timeToProduction, timeToTest } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -41,8 +42,8 @@ export default async function Home() {
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[17px] font-semibold">{g.appName}</div>
                   <div className="mt-0.5 flex items-center gap-1.5 text-xs">
-                    <span className={`h-1.5 w-1.5 rounded-full ${DIFFICULTY[g.difficulty].dot}`} />
-                    <span className={DIFFICULTY[g.difficulty].cls}>{DIFFICULTY[g.difficulty].label}</span>
+                    <span className={`h-1.5 w-1.5 rounded-full ${DIFFICULTY[difficulty(g).level].dot}`} />
+                    <span className={DIFFICULTY[difficulty(g).level].cls}>{DIFFICULTY[difficulty(g).level].label}</span>
                     <span className="muted">·</span>
                     <span className={g.reviewed ? "text-emerald-300" : "muted"}>{g.reviewed ? "Reviewed" : "Not reviewed"}</span>
                   </div>
@@ -51,9 +52,9 @@ export default async function Home() {
               </div>
               <dl className="mt-5 space-y-3 border-t border-[var(--border)] pt-4 text-sm">
                 {[
-                  ["Time to test", g.timeToTest],
-                  ["To production", g.timeToProduction],
-                  ["Cost", g.cost],
+                  ["Time to test", timeToTest(g).value],
+                  ["To production", timeToProduction(g).value],
+                  ["Cost", cost(g).value],
                 ].map(([k, v]) => (
                   <div key={k} className="grid grid-cols-[7.5rem_1fr] gap-3">
                     <dt className="eyebrow pt-0.5">{k}</dt>

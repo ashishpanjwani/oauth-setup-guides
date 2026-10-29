@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getGuide } from "@/lib/store";
-import { slotPhase, type Stat as StatKey } from "@/lib/schema";
+import { slotPhase } from "@/lib/schema";
+import { cost, difficulty, stepCounts, timeToProduction, timeToTest } from "@/lib/stats";
 import { DIFFICULTY, EVIDENCE, WHO } from "@/lib/labels";
 import { CopyMarkdown } from "@/components/share-bar";
 import { AppMark } from "@/components/app-mark";
@@ -73,53 +74,56 @@ export default async function GuidePage({ params }: Props) {
     );
   };
 
-  // A time, effort or cost value with no confirmed claim behind it is the writer's estimate, and says so.
-  const Stat = ({ k }: { k: StatKey }) => {
-    const ids = (g.statClaimIds?.[k] ?? []).filter((id) => num.has(id));
-    const backed = ids.some((id) => status.get(id) !== "uncertain");
-    return (
-      <>
-        {g[k]}
-        {backed ? (
-          <Refs ids={ids} />
-        ) : (
-          <span className="ml-1.5 align-middle text-[11px] font-normal italic muted" title="No cited page states this value; it is estimated from the steps and waits in this guide">
-            estimate
-          </span>
-        )}
-      </>
-    );
-  };
+  // Computed from the guide's checked facts (see lib/stats), each with what it's based on.
+  const basis = (text: string) => <span className="mt-1 block text-xs font-normal muted">{text}</span>;
+  const diff = difficulty(g);
+  const test = timeToTest(g);
+  const prod = timeToProduction(g);
+  const price = cost(g);
 
   const gates = (g.gates ?? []).filter((x) => x.applies === "yes");
   // Phase comes from the step's slot; older guides store it directly.
   const steps = g.steps.map((s, i) => ({ ...s, n: i + 1, phase: s.phase ?? slotPhase(s.slot) }));
-  const agentSteps = steps.filter((s) => s.who === "agent").length;
   const parts = [
-    { title: "Set up and test", time: g.timeToTest, steps: steps.filter((s) => s.phase === "setup") },
-    { title: "Go live", time: g.timeToProduction, steps: steps.filter((s) => s.phase === "launch") },
+    { title: "Set up and test", time: test.value, steps: steps.filter((s) => s.phase === "setup") },
+    { title: "Go live", time: prod.claimIds.length ? "" : prod.value, steps: steps.filter((s) => s.phase === "launch") },
   ].filter((p) => p.steps.length > 0);
-  const stats: [string, React.ReactNode][] = [
+  const short: [string, React.ReactNode][] = [
     [
       "Difficulty",
-      <span key="d" className={`inline-flex items-center gap-2 font-semibold ${DIFFICULTY[g.difficulty].cls}`}>
-        <span className={`h-2 w-2 rounded-full ${DIFFICULTY[g.difficulty].dot}`} />
-        {DIFFICULTY[g.difficulty].label}
+      <span key="d">
+        <span className={`inline-flex items-center gap-2 font-semibold ${DIFFICULTY[diff.level].cls}`}>
+          <span className={`h-2 w-2 rounded-full ${DIFFICULTY[diff.level].dot}`} />
+          {DIFFICULTY[diff.level].label}
+        </span>
+        {basis(diff.reason)}
       </span>,
     ],
-    ["Time to test", <Stat key="t" k="timeToTest" />],
-    ["Time to production", <Stat key="p" k="timeToProduction" />],
-    ["Effort", <Stat key="e" k="effort" />],
-    ["Cost", <Stat key="c" k="cost" />],
     [
-      "Agent and you",
-      <span key="h">
-        <span className="text-violet-300">
-          An agent can do {agentSteps} of {steps.length} steps.
-        </span>{" "}
-        {g.handoff}
+      "Time to test",
+      <span key="t">
+        {test.value}
+        {basis(test.basis)}
       </span>,
     ],
+  ];
+  const full: [string, React.ReactNode][] = [
+    [
+      "Time to production",
+      <span key="p">
+        {prod.value}
+        {prod.claimIds.length ? <Refs ids={prod.claimIds} /> : basis(prod.basis)}
+      </span>,
+    ],
+    [
+      "Cost",
+      <span key="c">
+        {price.value}
+        {price.claimIds.length > 0 && <Refs ids={price.claimIds} />}
+      </span>,
+    ],
+    ["Steps", stepCounts(g)],
+    ["Agent and you", g.handoff],
   ];
 
   return (
@@ -159,10 +163,8 @@ export default async function GuidePage({ params }: Props) {
           </p>
         )}
         {/* Short values side by side; the two that are usually sentences get full-width rows. */}
-        <dl className="grid grid-cols-3 border-t border-[var(--border)] bg-[var(--surface)]/60">
-          {stats
-            .filter(([k]) => ["Difficulty", "Time to test", "Effort"].includes(k))
-            .map(([k, v], i) => (
+        <dl className="grid grid-cols-2 border-t border-[var(--border)] bg-[var(--surface)]/60">
+          {short.map(([k, v], i) => (
               <div key={k} className={`p-4 sm:p-5 ${i > 0 ? "border-l border-[var(--border)]" : ""}`}>
                 <dt className="eyebrow">{k}</dt>
                 <dd className="mt-1.5 text-sm font-medium leading-snug">{v}</dd>
@@ -170,9 +172,7 @@ export default async function GuidePage({ params }: Props) {
             ))}
         </dl>
         <dl className="divide-y divide-[var(--border)] border-t border-[var(--border)] bg-[var(--surface)]/60">
-          {stats
-            .filter(([k]) => ["Time to production", "Cost", "Agent and you"].includes(k))
-            .map(([k, v]) => (
+          {full.map(([k, v]) => (
               <div key={k} className="grid gap-1 p-4 sm:grid-cols-[10rem_1fr] sm:gap-4 sm:px-5">
                 <dt className="eyebrow pt-0.5">{k}</dt>
                 <dd className="text-sm font-medium leading-snug">{v}</dd>
@@ -232,7 +232,7 @@ export default async function GuidePage({ params }: Props) {
 
       {parts.map((part) => (
         <section key={part.title}>
-          <SectionTitle eyebrow={`Steps ${part.steps[0].n}–${part.steps[part.steps.length - 1].n} · ${part.time}`}>{part.title}</SectionTitle>
+          <SectionTitle eyebrow={`Steps ${part.steps[0].n}–${part.steps[part.steps.length - 1].n}${part.time ? ` · ${part.time}` : ""}`}>{part.title}</SectionTitle>
           <ol className="relative space-y-3">
             <span aria-hidden className="absolute bottom-6 left-[19px] top-6 w-px bg-gradient-to-b from-[var(--brand)]/60 via-[var(--border)] to-transparent" />
             {part.steps.map((s) => (

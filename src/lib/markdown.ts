@@ -1,4 +1,5 @@
-import { slotPhase, type Guide, type Stat } from "./schema";
+import { slotPhase, type Guide } from "./schema";
+import { cost, difficulty, stepCounts, timeToProduction, timeToTest } from "./stats";
 import { DIFFICULTY, EVIDENCE, WHO } from "./labels";
 
 /** Plain Markdown so a guide can be pasted into a ticket, PR, or doc. Claims become footnotes. */
@@ -11,11 +12,12 @@ export function guideToMarkdown(g: Guide, url?: string): string {
     const backed = n.some((id) => status.get(id) !== "uncertain");
     return n.map((id) => `[^${num.get(id)}]`).join("") + (backed ? "" : " _(unverified)_");
   };
-  // Same rule as the page: a time, effort or cost value without a confirmed claim is an estimate.
-  const stat = (k: Stat) => {
-    const ids = (g.statClaimIds?.[k] ?? []).filter((id) => num.has(id));
-    return ids.some((id) => status.get(id) !== "uncertain") ? `${g[k]}${ids.map((id) => `[^${num.get(id)}]`).join("")}` : `${g[k]} _(estimate)_`;
-  };
+  const notes = (ids: string[]) => ids.filter((id) => num.has(id)).map((id) => `[^${num.get(id)}]`).join("");
+  // The same computed stats as the page (lib/stats), each with what it's based on.
+  const diff = difficulty(g);
+  const test = timeToTest(g);
+  const prod = timeToProduction(g);
+  const price = cost(g);
   const out: string[] = [];
 
   out.push(`# ${g.appName}: OAuth app setup guide`, "");
@@ -23,15 +25,14 @@ export function guideToMarkdown(g: Guide, url?: string): string {
   out.push(`${g.summary}${refs(g.summaryClaimIds)}`, "");
   if (g.appType) out.push(`_This guide covers: ${g.appType}_`, "");
   out.push(
-    "| Difficulty | Time to test | Time to production | Effort | Cost |",
-    "|---|---|---|---|---|",
-    `| ${DIFFICULTY[g.difficulty].label} | ${stat("timeToTest")} | ${stat("timeToProduction")} | ${stat("effort")} | ${stat("cost")} |`,
+    `- **Difficulty:** ${DIFFICULTY[diff.level].label} (${diff.reason})`,
+    `- **Time to test:** ${test.value} (${test.basis})`,
+    `- **Time to production:** ${prod.value}${prod.claimIds.length ? notes(prod.claimIds) : ` (${prod.basis})`}`,
+    `- **Cost:** ${price.value}${notes(price.claimIds)}`,
+    `- **Steps:** ${stepCounts(g)}`,
+    ...(g.handoff ? [`- **Agent and you:** ${g.handoff}`] : []),
     "",
   );
-  if (g.handoff) {
-    const agent = g.steps.filter((s) => s.who === "agent").length;
-    out.push(`**Agent and you:** an agent can do ${agent} of ${g.steps.length} steps. ${g.handoff}`, "");
-  }
   const gates = (g.gates ?? []).filter((x) => x.applies === "yes");
   if (gates.length) {
     out.push("## What can stop you from launching", "");
@@ -45,10 +46,10 @@ export function guideToMarkdown(g: Guide, url?: string): string {
   }
   out.push("## Requirements", "", ...g.requirements.map((r) => `- ${r.text}${refs(r.claimIds)}`), "");
   // Same two parts as the page; older guides without a phase are all setup.
-  for (const [phase, title, time] of [["setup", "Set up and test", g.timeToTest], ["launch", "Go live", g.timeToProduction]] as const) {
+  for (const [phase, title, time] of [["setup", "Set up and test", test.value], ["launch", "Go live", prod.claimIds.length ? "" : prod.value]] as const) {
     const steps = g.steps.map((s, i) => ({ ...s, n: i + 1 })).filter((s) => (s.phase ?? slotPhase(s.slot)) === phase);
     if (!steps.length) continue;
-    out.push(`## ${title} (${time})`, "");
+    out.push(`## ${title}${time ? ` (${time})` : ""}`, "");
     steps.forEach((s) => {
       out.push(`${s.n}. **[${WHO[s.who].label}]** ${s.text}${refs(s.claimIds)}${s.why ? `  \n   ${s.why}` : ""}${s.detail ? `  \n   _${s.detail}_` : ""}`);
     });

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { difficulty } from "@/lib/stats";
 import { GateId, GuideDraft, SLOTS, STATS, slotPhase, type Claim, type Gate, type Guide } from "@/lib/schema";
 import { slugify } from "@/lib/text";
 import { COMPOSE_SYSTEM, EDITOR_SYSTEM, REQUOTE_SYSTEM, RESEARCH_SYSTEM, SUPPORT_SYSTEM } from "./prompts";
@@ -449,7 +450,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
 
   const unreadable = pages.filter((p) => !p.ok).map((p) => `Couldn't read ${p.url} (${p.error}), so nothing from it is confirmed.`);
   const now = new Date().toISOString();
-  return {
+  const guide: Guide = {
     ...edited,
     claims: checked.claims,
     gates: gates.gates,
@@ -468,4 +469,6 @@ export async function generateGuide(query: string, emit: Emit, library = false):
       costUsd: Math.round(usage.usd * 1000) / 1000,
     },
   };
+  // Difficulty is computed from the checked gates and steps, not taken from the writer.
+  return { ...guide, difficulty: difficulty(guide).level };
 }
