@@ -10,7 +10,7 @@ To let users connect an app like Gmail or Slack, a developer has to register the
 
 Building guides for real providers showed what the scattered docs hide:
 
-- **Registration is quick; launch is not.** Verification, security assessments, app reviews (Pipedrive's can take up to 21 business days) and paid tiers are what decide the timeline. They're usually on different pages from the setup steps.
+- **Registration is quick; launch is not.** Verification, security assessments, app reviews (Pipedrive's can take up to 21 business days) and usage-based API pricing are what decide the timeline. They're usually on different pages from the setup steps.
 - **Requirements surface late:** a privacy policy on the same domain, a demo video for reviewers, a sandbox account before the console is even visible, test-user caps.
 - **Some blockers aren't the developer's to clear.** An end user's admin may have to approve the app (GitHub organizations, Google Workspace, Notion Enterprise).
 - **The path depends on the app type.** Shopify has three ways to get a token. A guide for the wrong one wastes the setup.
@@ -22,14 +22,14 @@ Building guides for real providers showed what the scattered docs hide:
 
 - **Library:** six guides chosen for different challenges.
 
-  | App | What makes it different |
-  |---|---|
-  | GitHub | Easy, but an organization owner must approve each app |
-  | Slack | Easy. Unlisted apps have tight rate limits |
-  | X | Paid API tiers and PKCE |
-  | Shopify | Embedded vs standalone app paths, a one-time fee and an App Store review |
-  | Instagram | App Review per permission plus Business Verification |
-  | Gmail | Restricted scopes, a security assessment, and a review of up to 6 weeks |
+  | App | Difficulty | What a developer needs to know |
+  |---|---|---|
+  | GitHub | Easy | No review or fee. Organizations that restrict OAuth apps (on by default for new ones) block your app until an owner approves it |
+  | Slack | Easy | No review, but other workspaces can install only after you turn on distribution. Workspace owners can require approval, and unlisted apps get 1 request per minute on message history |
+  | X | Moderate | API use is pay-per-use credits. X reviews your stated use case, and AI-generated replies need prior approval |
+  | Shopify | Moderate | Pick the standalone path, not embedded. Public apps need an App Store registration fee and review, and customer data needs separate approval |
+  | Instagram | Moderate | Only people with a role on your app can connect until App Review (a screen recording per permission) and Business Verification are done |
+  | Gmail | Hard | Review takes 2–3 business days to about 6 weeks depending on scopes. Restricted scopes (reading mail) also need an annual paid security assessment |
 - **Live generation:** type any app name or website, e.g. Notion, Pipedrive or xero.com. Progress shows each stage, and the finished guide opens on its own.
 - **Sharing:** Copy link, Copy as Markdown (a checklist with numbered sources) and Save as PDF.
 
