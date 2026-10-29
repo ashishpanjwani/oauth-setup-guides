@@ -16,7 +16,7 @@ Creating an OAuth app is rarely the hard part: the form takes minutes on almost 
 
 The right path also depends on the app type. Shopify has three ways to get a token and Notion has three kinds of connection. Picking the wrong one wastes the whole setup.
 
-Plain AI answers (ChatGPT, Google AI Mode) read well, but when compared line by line they used outdated names, invented options and missed key nuances. **The product's bet is a followable walkthrough where every line is backed by the provider's own docs, and anything unconfirmed says so.**
+Plain AI answers read well, but in a side-by-side check on Notion, ChatGPT used Notion's outdated names, listed a capability Notion doesn't have, and missed that the installation scope can't be changed later. **The product's bet is a followable walkthrough where every line is backed by the provider's own docs, and anything unconfirmed says so.**
 
 ## What it does
 
@@ -27,7 +27,7 @@ Plain AI answers (ChatGPT, Google AI Mode) read well, but when compared line by 
   | GitHub | Easy, but an organization owner must approve each app |
   | Slack | Easy. Unlisted apps have tight rate limits |
   | X | Paid API tiers and PKCE |
-  | Shopify | Three token methods, a one-time fee and an App Store review |
+  | Shopify | Embedded vs standalone app paths, a one-time fee and an App Store review |
   | Instagram | App Review per permission plus Business Verification |
   | Gmail | Restricted scopes, a security assessment, and a review of up to 6 weeks |
 - **Live generation:** type any app name or website, e.g. Notion, Pipedrive or xero.com. Progress shows each stage, and the finished guide opens on its own.
@@ -86,17 +86,17 @@ Each decision came from a problem seen in a real guide.
   - The create-app step links straight to the developer portal.
 
 **Evidence and trust**
-- **Tested / Sourced / Uncertain on every claim.** Sourced quotes are checked in code, which replaced a second agent re-reading the sources: a code check can't be argued with, and it's faster and cheaper.
+- **Tested / Sourced / Uncertain on every claim.** Sourced quotes are checked in code, which replaced a second agent re-reading the sources. A code check gives the same answer every time.
 - **An Unverified tag on any line with no confirmed claim.** A check found 10 of Gmail's 19 claims citing the wrong sentence, mostly for true facts. The fixes:
   - one fact per claim
   - automatic re-quoting
   - a downgrade-only support check
 - **Fix the guide, not the label.** Fifteen orange tags made a guide more confusing, not more honest. A library guide isn't published with more than 2–3 Unverified lines.
-- **Tested means a person observed it.** GitHub's live form says "Redirect URIs", while its docs still say "Authorization callback URL". An agent that only reads docs can't see that.
+- **Tested means observed on the live product,** not read in docs. So far that's only a person's check of GitHub's live form, which says "Redirect URIs" while the docs still say "Authorization callback URL". An agent that only reads docs can't see that.
 - **Step links must be URLs the agent actually opened.** A looser "same site" rule was rejected. The create-app link is the address the console probe landed on.
 
 **Agents and the "attempt the setup" requirement**
-- **The agent doesn't create apps.** That needs the developer's login, most providers have no API for it, and the client secret should never pass through an agent.
+- **The agent doesn't create apps.** That needs the developer's login, providers like GitHub and X have no API for it, and the client secret should never pass through an agent.
 - **A trial on X was reverted.** The agent tested endpoints with fake values and kept a per-step attempt record. The result was HTTP errors that meant nothing to a reader.
 - **What remains:** automated attempts are limited to the console probe. Hands-on evidence comes from a person, and the handoff is shown through the step labels.
 
@@ -109,22 +109,22 @@ Each decision came from a problem seen in a real guide.
 - **Visible progress and safe limits:** each stage shows rows as it works, so a 2–5 minute wait never looks stuck. A time guard skips the last polishing steps near Vercel's 300-second limit. Every run is recorded for free replay.
 
 **Cost**
-- **Haiku researches and checks; Sonnet writes and edits.** Haiku alone dropped a few of about 25 writing rules on every run, and each prompt fix shifted attention elsewhere. Sonnet had zero rule violations on its first test, at about 4× the cost of the writing step.
+- **Haiku researches and checks; Sonnet writes and edits.** Haiku alone dropped a few of about 25 writing rules on every run, and each prompt fix shifted attention elsewhere. Sonnet had zero rule violations on its first test. That raised a guide's cost from about $0.06 to about $0.25.
 - **Hard limits:** $0.80 per run, $10 per day across visitors, and 6 runs an hour per visitor. These followed an early batch of six parallel runs on the top model that used up a $6 credit. Since then, every change was tested on one app before running more.
-- **Mechanical rules live in code, not prompts:** a phrase checker, a page-coverage check and a known-facts check for library guides. Prompt-only fixes kept regressing.
+- **Mechanical rules live in code, not prompts:** a phrase checker, a page-coverage check, and a known-facts check (recorded so far for GitHub and Gmail). Prompt-only fixes kept regressing.
 
 ## What was checked
 
 - **All 6 library guides, re-checked on 2026-10-29:** 143 of 143 quotes are on their live pages, and 0 of 128 lines are Unverified.
 - **Gmail, line by line against Google's pages:** this found a missing step ("Publish app"), an unsourced recommendation and missing review timings. All were fixed, and 8 of 8 known facts are present.
-- **Shopify:** corrected from the embedded-app path to the authorization code grant. It also found that new public apps must use expiring offline tokens.
-- **Notion, three live runs compared with its docs and ChatGPT:**
+- **Shopify:** corrected by hand from the embedded-app path to the authorization code grant. The manual check also added that new public apps must use expiring offline tokens.
+- **Notion, three live runs, each checked against its docs (the first also against ChatGPT):**
   - Fixed the stats contradictions.
   - Added the step link.
   - Stopped the summary from naming its own difficulty level.
 - **Pipedrive (live):** 23 of 23 quotes on their pages, including the sandbox-account requirement and the 21-business-day review.
 
-Total API spend for the build was about $13.
+Total API spend for the build was about $13, estimated from the app's own cost tracking.
 
 ## Limitations
 
@@ -136,6 +136,7 @@ Total API spend for the build was about $13.
   - Go-live steps are thin when the docs don't say how to submit a review.
   - An Agent/You label is occasionally wrong.
   - Nothing yet checks that a claim supports the specific line citing it.
+  - The app check's rejections and typo suggestions haven't been tested on real bad inputs yet.
 - **Demo-grade protection.** The rate limit is per server instance, and the daily budget is best-effort under concurrent runs. The real backstop is the spend limit on the API key.
 
 ## Setup
