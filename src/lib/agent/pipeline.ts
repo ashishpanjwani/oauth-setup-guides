@@ -58,7 +58,7 @@ async function call(
 }
 
 // (a) Research: find the official pages worth reading and the developer console URL.
-const PageKind = z.enum(["registration", "credentials", "settings", "scopes", "review", "admin", "limits", "pricing", "other"]);
+const PageKind = z.enum(["setup", "registration", "credentials", "settings", "scopes", "review", "admin", "limits", "pricing", "other"]);
 type PageKind = z.infer<typeof PageKind>;
 const SourcePage = z.object({ url: z.string(), title: z.string(), kind: PageKind });
 
@@ -69,10 +69,10 @@ const Sources = z.object({
   notes: z.string().describe("Anything relevant from search results, each fact followed by its URL"),
 });
 
-/** Page kinds a guide can't be right without: always registration and scopes, plus one per gate that applies. */
+/** Page kinds a guide can't be right without: always the setup walkthrough, registration and scopes, plus one per gate that applies. */
 function requiredKinds(gates: z.infer<typeof Sources>["gates"]): PageKind[] {
   const applies = (id: string) => gates.some((g) => g.gate === id && g.applies === "yes");
-  const kinds: PageKind[] = ["registration", "scopes"];
+  const kinds: PageKind[] = ["setup", "registration", "scopes"];
   if (applies("review")) kinds.push("review");
   if (applies("admin_approval")) kinds.push("admin");
   if (applies("test_limits")) kinds.push("limits");
@@ -89,7 +89,7 @@ async function findMissing(query: string, missing: PageKind[], usage: Usage, emi
       messages: [
         {
           role: "user",
-          content: `App: ${query}\nOnly find the official documentation page for each of these, about ${query} itself: ${missing.join(", ")}. "scopes" means the scopes or permissions reference for this specific product's API. Return them as pages, each labelled with its kind; return empty gates and notes.`,
+          content: `App: ${query}\nOnly find the official documentation page for each of these, about ${query} itself: ${missing.join(", ")}. "setup" means the provider's own step-by-step guide or quickstart that walks through creating the app in the console. "scopes" means the scopes or permissions reference for this specific product's API. Return them as pages, each labelled with its kind; return empty gates and notes.`,
         },
       ],
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 }],

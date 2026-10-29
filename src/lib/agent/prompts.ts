@@ -16,7 +16,7 @@ ${GATES}
 Use web search (up to 5 searches) and return:
 - developerConsoleUrl: the page where a developer registers the OAuth app.
 - gates: one finding per gate (applies yes, no or unknown), each with the official URL it comes from.
-- pages: up to 8 official provider documentation pages (not blogs, not the developer console itself) to read in full, each labelled with its kind: registration, credentials (how to create the OAuth client ID and secret, when that is a separate page from registration), settings (explains the options on the registration form), scopes (the scopes or permissions reference for this specific product's API), review, admin, limits, pricing, or other. You must include a registration page and this product's scopes page, the credentials page if it is separate, plus a page for every gate that applies. Skip legal terms and agreements.
+- pages: up to 8 official provider documentation pages (not blogs, not the developer console itself) to read in full, each labelled with its kind: setup (the provider's own step-by-step guide or quickstart that walks through creating the app in the console, clicking through each screen), registration, credentials (how to create the OAuth client ID and secret, when that is a separate page from registration), settings (explains the options on the registration form), scopes (the scopes or permissions reference for this specific product's API), review, admin, limits, pricing, or other. You must include the setup walkthrough, a registration page and this product's scopes page, the credentials page if it is separate, plus a page for every gate that applies. Skip legal terms and agreements.
   Every page must be about this product, or be the provider's general OAuth/app-review documentation that applies to it. Never use pages about the provider's other products (for Gmail, not Google Health or Classroom pages).
 - notes: anything else from search results about wait times, costs, or rejection reasons, each followed by its URL. Community sources are fine here; say they are community sources.`;
 
@@ -41,16 +41,20 @@ ${GATES}
 - timeToTest, timeToProduction, effort: short ranges like "~1 hour", "2–4 weeks", "1–2 days of work". If a gate such as admin approval means some users wait longer, say so in timeToProduction.
 - cost: what the developer pays the provider or third parties (paid API tier, security audit). "Free" if nothing.
 - requirements: 2–5 things every developer needs before starting (accounts, domain, privacy policy, budget). Anything produced during setup (a client ID, a demo video, a scope justification) is a step, not a requirement. Nothing conditional: anything that applies only to some users or setups (for example "if your users are in organizations") belongs in its gate.
-- steps: 4–10 concrete actions the developer takes, in order, from registering the app until any user can connect.
+- handoff: one sentence on what an agent can do (the steps marked "agent") and what the developer has to do themselves, e.g. "An agent can pick the scopes and write the listing and review text; you create the app, click through the console, record the demo video and submit."
+- steps: a walkthrough the developer can follow with the console open, in the order they do it. Two phases:
+  - phase "setup" (4–8 steps): from opening the developer console to the developer's own account connecting in test. Follow the console's own order. Cover each of these the provider has: creating the app or project, enabling the API if that is separate, the settings the form asks for, scopes, the redirect URI, copying the client ID and client secret, and connecting a test account through the app. The last setup step is that test connection.
+  - phase "launch" (0–5 steps): only what takes the app from test to any user: a publish or go-to-production button, submitting for review, waiting for the review, a required audit. Empty if any user can connect as soon as setup is done.
+  - text: start with where it happens (the console page or menu path, then a colon), then the action and the button to click, e.g. "APIs & Services → Library: search for Gmail API and click Enable". Each step should lead into the next: say what gets created, saved or copied.
   - One action or one decision per step. If a form has two settings that need a decision, make two steps.
-  - Only real actions. No "launch" or "go live" step unless the provider has an explicit publish or submit action. If the provider has a test, development or unpublished mode, include the step that takes the app out of it (for example a Publish app or Go to production button), in the right place in the order. Things other people do (an end user's admin approving the app) are not steps; they are covered by their gate.
-  - why: explain what the setting or action does, what the default is and why the provider chose it, and when to choose otherwise, so the developer understands the choice. When the step is a choice between options, name each option and what it means, then say which one an app for outside users needs. Every reason in why must come from one of the step's own cited claims; never add a reason no claim states. If no claim gives a reason, leave why empty. Empty also if the action is obvious, like clicking a button.
-  - Each action appears once. Writing or checking integration code (PKCE, state, token refresh code) is out of scope.
+  - Only real actions. Things other people do (an end user's admin approving the app) are not steps; they are covered by their gate. Writing integration code is out of scope; connecting a test account is a step.
+  - why: at most one short sentence, only when it changes what the developer does (which option to pick and why). It must come from one of the step's own cited claims. Empty otherwise.
+  - detail: one short line: an exact value or the one gotcha at this step, said as what to do or what happens (not "results are valid for 7 days" but "publish within 7 days or run the check again"). Empty string if none.
+  - Policy belongs in gates and blockers, not in steps: review requirements, restricted scopes, audit cycles, user caps. A step only points to them in a few words when the developer must act on them right there.
   Each step has who:
-  - "agent": an AI agent can work it out or write it: picking the narrowest scopes for the features, writing the app name, description and privacy policy text, preparing form values, checking settings against the docs. Phrase the step as that work (for example "Fill in the branding fields").
-  - "you": only the developer can do it: signing in, creating projects, clicking submit, register or publish, accepting terms, paying, recording a video, and choices that commit them to something (which account owns the app, internal vs external audience).
+  - "agent": an AI agent can work it out or write it: picking the narrowest scopes for the features, writing the app name, description and privacy policy text, preparing form values and review justifications. Phrase the step as that work (for example "Branding: fill in the app name, support email and links").
+  - "you": only the developer can do it: signing in, creating projects, clicking through the console, copying secrets, clicking submit, register or publish, accepting terms, paying, recording a video, connecting a test account, and choices that commit them to something (which account owns the app, internal vs external audience).
   - "waiting": only for waiting on a review or approval the provider itself runs. Put the expected wait in detail.
-  detail: exact values or the one gotcha; empty string if none. Never a bare fact: say what to do about it or what happens (not "results are valid for 7 days" but "publish within 7 days or the check has to be run again").
 - blockers: 3–5 problems developers commonly hit while setting up or launching, each with the fix. Not legal terms or rare edge cases. A limit that applies only to apps the provider hasn't approved (for example a lower rate limit for unlisted apps) always belongs here.
 - couldNotVerify: at most 4 items, only open questions that could change what the developer does or expects. Empty is fine. Never list things you chose not to research, sources you didn't read, or how something was tested.
 
@@ -71,15 +75,17 @@ Checklist:
 4. Every step is correct about who does what. "agent" is work an agent can figure out or write (scopes, names, descriptions, form values, policy text); "you" is signing in, creating, clicking submit/register/publish, paying, recording, and committing choices. End users never handle the client ID or client secret.
 5. No internal terms: gate, claim, dossier, probe. Say "the main thing that can hold up launch" instead of "gate".
 6. No first person (I, we, our). Write to the developer.
-7. Steps: only concrete developer actions, one action or decision each (split a step that holds two decisions). No "launch" step unless the provider has a publish action; no steps for things other people do (an end user's admin approving), and no "waiting" for anything but a review the provider runs. No duplicate steps, and nothing about writing or testing integration code. Keep each step's why if it explains the choice; shorten it if it rambles.
+7. Steps: only concrete developer actions, one action or decision each (split a step that holds two decisions). No "launch" step unless the provider has a publish action; no steps for things other people do (an end user's admin approving), and no "waiting" for anything but a review the provider runs. No duplicate steps, and nothing about writing integration code.
 8. couldNotVerify: at most 4 items, only open questions that change what the developer does or expects. Delete items about things that weren't researched, pages not read, or how testing was done. Empty is fine.
-11. Blockers are problems developers commonly hit during setup or launch. Delete ones drawn from legal terms or rare edge cases.
-9. Requirements contain nothing conditional (things that apply only to some users belong in their gate).
-10. Keep it short. Cut words that don't help the developer act.
+9. Blockers are problems developers commonly hit during setup or launch. Delete ones drawn from legal terms or rare edge cases.
+10. Requirements contain nothing conditional (things that apply only to some users belong in their gate).
+11. Keep it short. Cut words that don't help the developer act.
 12. A step that is a choice names the options and what each means. A detail is never a bare fact; it says what to do or what happens.
-13. If the provider has a test or unpublished mode, a step takes the app out of it (Publish app, go to production). Don't invent one if the provider has no such mode.
-14. Requirements are only what's needed before starting. Move anything produced during setup (client ID, demo video, justification) to a step.
-15. A step's why may only state reasons found in that step's cited claims. Delete any other reason.
+13. Steps read as a walkthrough: every step text starts with where it happens (console page or menu path, then a colon). Setup steps end with connecting a test account; launch steps only take the app from test to any user. why is at most one short sentence; delete policy explanations from steps (they belong in the gates and blockers) and keep detail to one line.
+14. handoff matches the steps: what it says an agent does are the steps marked "agent".
+15. If the provider has a test or unpublished mode, a step takes the app out of it (Publish app, go to production). Don't invent one if the provider has no such mode.
+16. Requirements are only what's needed before starting. Move anything produced during setup (client ID, demo video, justification) to a step.
+17. A step's why may only state reasons found in that step's cited claims. Delete any other reason.
 
 Also fix every item in <violations>, which an automated check found.
 

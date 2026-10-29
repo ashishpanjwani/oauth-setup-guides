@@ -103,25 +103,27 @@
   ],
   "steps": [
     {
-      "text": "Open Settings > Developer settings > OAuth apps and click New OAuth App.",
+      "text": "Settings → Developer settings → OAuth apps: click New OAuth App.",
       "why": "",
       "detail": "To own the app under an organization, start from that organization's settings instead of your personal ones.",
       "who": "you",
       "claimIds": [
         "c1"
-      ]
+      ],
+      "phase": "setup"
     },
     {
-      "text": "Fill in Application name, Homepage URL and Application description.",
+      "text": "New OAuth App form: fill in Application name, Homepage URL and Application description.",
       "why": "Users see these when they authorize your app. Name and homepage are required; the description is optional.",
       "detail": "",
       "who": "agent",
       "claimIds": [
         "c23"
-      ]
+      ],
+      "phase": "setup"
     },
     {
-      "text": "Under Redirect URIs, enter the URL GitHub should send users back to after they authorize.",
+      "text": "Redirect URIs: enter the URL GitHub should send users back to after they authorize.",
       "why": "The redirect_uri your app sends must match one of these, or authorization fails.",
       "detail": "Up to 10, via Add redirect URI. Leave Allow wildcard matching off unless you control every subdomain and path. GitHub's docs still call this field \"Authorization callback URL\".",
       "who": "you",
@@ -129,10 +131,11 @@
         "c20",
         "c21",
         "c10"
-      ]
+      ],
+      "phase": "setup"
     },
     {
-      "text": "Leave Enable Device Flow unchecked unless your app has no browser (a CLI, IoT device or headless tool).",
+      "text": "Enable Device Flow: leave it unchecked unless your app has no browser (a CLI, IoT device or headless tool).",
       "why": "Off by default. It skips redirect URIs, so it can be abused to impersonate your app in phishing attacks.",
       "detail": "",
       "who": "you",
@@ -141,10 +144,11 @@
         "c18",
         "c22",
         "c24"
-      ]
+      ],
+      "phase": "setup"
     },
     {
-      "text": "Keep Expire user access tokens checked.",
+      "text": "Expire user access tokens: keep it checked.",
       "why": "On by default so a leaked token dies within 8 hours; your app renews tokens with a refresh token. Turn it off only if your app can't handle refresh yet.",
       "detail": "",
       "who": "you",
@@ -154,15 +158,27 @@
         "c16",
         "c19",
         "c22"
-      ]
+      ],
+      "phase": "setup"
     },
     {
-      "text": "Click Register application, then copy the client ID and generate a client secret.",
+      "text": "Click Register application, then on the app page copy the client ID and click Generate a new client secret.",
       "why": "",
       "detail": "Keep the client secret out of client-side code.",
       "who": "you",
       "claimIds": [
         "c13"
+      ],
+      "phase": "setup"
+    },
+    {
+      "phase": "setup",
+      "text": "Your app: sign in with your own GitHub account through https://github.com/login/oauth/authorize to check the connection.",
+      "why": "",
+      "detail": "GitHub sends you back to your redirect URI with a code that expires after 10 minutes; your app exchanges it for a token.",
+      "who": "you",
+      "claimIds": [
+        "c26"
       ]
     }
   ],
@@ -407,6 +423,15 @@
       "sourceTitle": "Creating an OAuth app - GitHub Docs",
       "quote": "",
       "note": "Absence claim: the page that would state a paid requirement doesn't mention one."
+    },
+    {
+      "id": "c26",
+      "statement": "After the user accepts, GitHub redirects back with a temporary code that expires after 10 minutes.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+      "sourceTitle": "Authorizing OAuth apps - GitHub Docs",
+      "quote": "If the user accepts your request, GitHub redirects back to your site with a temporary code in a code parameter as well as the state you provided in the previous step in a state parameter. The temporary code will expire after 10 minutes.",
+      "note": "Checked by hand on 2026-10-29."
     }
   ],
   "slug": "github",
@@ -429,5 +454,6 @@
     "durationSec": 77,
     "costUsd": 0.211
   },
-  "reviewNote": "Reviewed by a person on 2026-10-28: every step checked against the live registration form (steps 1–5) or GitHub's docs (step 6). Corrections: device flow and token expiry explained from GitHub's docs, false 'docs conflict' note removed, non-setup step removed, callback field renamed to Redirect URIs to match the live form. On 2026-10-29 the new support check flagged claims that combined two facts under one quote; each was split or re-quoted so every claim states exactly what its quote says."
+  "reviewNote": "Reviewed by a person on 2026-10-28: every step checked against the live registration form (steps 1–5) or GitHub's docs (step 6). Corrections: device flow and token expiry explained from GitHub's docs, false 'docs conflict' note removed, non-setup step removed, callback field renamed to Redirect URIs to match the live form. On 2026-10-29 the new support check flagged claims that combined two facts under one quote; each was split or re-quoted so every claim states exactly what its quote says.",
+  "handoff": "An agent can write the app name, homepage and description; you create the app, choose its settings, copy the credentials and test the sign-in."
 }

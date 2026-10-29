@@ -22,6 +22,10 @@ export function guideToMarkdown(g: Guide, url?: string): string {
     `| ${DIFFICULTY[g.difficulty].label} | ${g.timeToTest} | ${g.timeToProduction} | ${g.effort} | ${g.cost} |`,
     "",
   );
+  if (g.handoff) {
+    const agent = g.steps.filter((s) => s.who === "agent").length;
+    out.push(`**Agent and you:** an agent can do ${agent} of ${g.steps.length} steps. ${g.handoff}`, "");
+  }
   const gates = (g.gates ?? []).filter((x) => x.applies === "yes");
   if (gates.length) {
     out.push("## What can stop you from launching", "");
@@ -34,11 +38,17 @@ export function guideToMarkdown(g: Guide, url?: string): string {
     });
   }
   out.push("## Requirements", "", ...g.requirements.map((r) => `- ${r.text}${refs(r.claimIds)}`), "");
-  out.push("## Steps", "");
-  g.steps.forEach((s, i) => {
-    out.push(`${i + 1}. **[${WHO[s.who].label}]** ${s.text}${refs(s.claimIds)}${s.why ? `  \n   ${s.why}` : ""}${s.detail ? `  \n   _${s.detail}_` : ""}`);
-  });
-  out.push("", "## Blockers", "", ...g.blockers.map((b) => `- **${b.problem}**: ${b.fix}${refs(b.claimIds)}`), "");
+  // Same two parts as the page; older guides without a phase are all setup.
+  for (const [phase, title, time] of [["setup", "Set up and test", g.timeToTest], ["launch", "Go live", g.timeToProduction]] as const) {
+    const steps = g.steps.map((s, i) => ({ ...s, n: i + 1 })).filter((s) => (s.phase ?? "setup") === phase);
+    if (!steps.length) continue;
+    out.push(`## ${title} (${time})`, "");
+    steps.forEach((s) => {
+      out.push(`${s.n}. **[${WHO[s.who].label}]** ${s.text}${refs(s.claimIds)}${s.why ? `  \n   ${s.why}` : ""}${s.detail ? `  \n   _${s.detail}_` : ""}`);
+    });
+    out.push("");
+  }
+  out.push("## Blockers", "", ...g.blockers.map((b) => `- **${b.problem}**: ${b.fix}${refs(b.claimIds)}`), "");
   if (g.couldNotVerify.length) out.push("## Could not verify", "", ...g.couldNotVerify.map((x) => `- ${x}`), "");
   g.claims.forEach((c, i) => {
     out.push(`[^${i + 1}]: **${EVIDENCE[c.status].label}.** ${c.statement}${c.quote ? ` "${c.quote}"` : ""}${c.sourceUrl ? ` ${c.sourceUrl}` : ""}${c.note ? ` (${c.note})` : ""}`);

@@ -13,6 +13,10 @@ export type EvidenceStatus = z.infer<typeof EvidenceStatus>;
 export const Who = z.enum(["agent", "you", "waiting"]);
 export type Who = z.infer<typeof Who>;
 
+/** Steps come in two parts: getting your own account connected, then opening the app to everyone. */
+export const Phase = z.enum(["setup", "launch"]);
+export type Phase = z.infer<typeof Phase>;
+
 export const Difficulty = z.enum(["easy", "moderate", "hard"]);
 export type Difficulty = z.infer<typeof Difficulty>;
 
@@ -54,14 +58,16 @@ export const GuideDraft = z.object({
   timeToProduction: z.string().describe("Until any user can connect, including approval waits, e.g. '6–10 weeks'"),
   effort: z.string().describe("Total hands-on work, excluding waiting, e.g. '1–2 days'"),
   cost: z.string().describe("What the developer pays the provider or third parties, e.g. 'Free' or '$500–4,500 security audit'"),
+  handoff: z.string().describe("One sentence: what an agent can do here and what the developer has to do themselves"),
   summaryClaimIds: z.array(z.string()),
   gates: z.array(Gate).describe("Exactly one entry for each of the six gates, in order"),
   requirements: z.array(z.object({ text: z.string(), claimIds: z.array(z.string()) })),
   steps: z.array(
     z.object({
-      text: z.string().describe("One action, imperative"),
-      why: z.string().describe("What this setting or action does, its default and why the default exists, and when to choose otherwise. Empty if obvious."),
-      detail: z.string().describe("Exact values or the one gotcha. Empty string if none."),
+      phase: Phase,
+      text: z.string().describe("Where it happens, then the action, e.g. 'OAuth & Permissions → Redirect URLs: add your callback URL and click Save URLs'"),
+      why: z.string().describe("At most one short sentence, only when it changes what the developer does. Empty otherwise."),
+      detail: z.string().describe("One short line: an exact value or the one gotcha. Empty string if none."),
       who: Who,
       claimIds: z.array(z.string()),
     }),

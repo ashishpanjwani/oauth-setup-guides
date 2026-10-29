@@ -56,6 +56,13 @@ export default async function GuidePage({ params }: Props) {
   };
 
   const gates = (g.gates ?? []).filter((x) => x.applies === "yes");
+  // Older guides have no phase; their steps all count as setup.
+  const steps = g.steps.map((s, i) => ({ ...s, n: i + 1, phase: s.phase ?? "setup" }));
+  const agentSteps = steps.filter((s) => s.who === "agent").length;
+  const parts = [
+    { title: "Set up and test", time: g.timeToTest, steps: steps.filter((s) => s.phase === "setup") },
+    { title: "Go live", time: g.timeToProduction, steps: steps.filter((s) => s.phase === "launch") },
+  ].filter((p) => p.steps.length > 0);
   const stats: [string, React.ReactNode][] = [
     [
       "Difficulty",
@@ -68,6 +75,15 @@ export default async function GuidePage({ params }: Props) {
     ["Time to production", g.timeToProduction],
     ["Effort", g.effort],
     ["Cost", g.cost],
+    [
+      "Agent and you",
+      <span key="h">
+        <span className="text-violet-300">
+          An agent can do {agentSteps} of {steps.length} steps.
+        </span>{" "}
+        {g.handoff}
+      </span>,
+    ],
   ];
 
   return (
@@ -114,7 +130,7 @@ export default async function GuidePage({ params }: Props) {
         </dl>
         <dl className="divide-y divide-[var(--border)] border-t border-[var(--border)] bg-[var(--surface)]/60">
           {stats
-            .filter(([k]) => ["Time to production", "Cost"].includes(k))
+            .filter(([k]) => ["Time to production", "Cost", "Agent and you"].includes(k))
             .map(([k, v]) => (
               <div key={k} className="grid gap-1 p-4 sm:grid-cols-[10rem_1fr] sm:gap-4 sm:px-5">
                 <dt className="eyebrow pt-0.5">{k}</dt>
@@ -173,30 +189,32 @@ export default async function GuidePage({ params }: Props) {
         </ul>
       </section>
 
-      <section>
-        <SectionTitle eyebrow={`${g.steps.length} steps`}>Steps</SectionTitle>
-        <ol className="relative space-y-3">
-          <span aria-hidden className="absolute bottom-6 left-[19px] top-6 w-px bg-gradient-to-b from-[var(--brand)]/60 via-[var(--border)] to-transparent" />
-          {g.steps.map((s, i) => (
-            <li key={i} className="relative flex gap-4">
-              <span className="z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--border)] bg-[var(--card)] font-mono text-sm text-[#8fc2ff]">
-                {i + 1}
-              </span>
-              <div className="card min-w-0 flex-1 p-4">
-                <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-                  <div className="min-w-0 flex-1 font-medium leading-snug">
-                    {s.text}
-                    <Refs ids={s.claimIds} />
+      {parts.map((part) => (
+        <section key={part.title}>
+          <SectionTitle eyebrow={`Steps ${part.steps[0].n}–${part.steps[part.steps.length - 1].n} · ${part.time}`}>{part.title}</SectionTitle>
+          <ol className="relative space-y-3">
+            <span aria-hidden className="absolute bottom-6 left-[19px] top-6 w-px bg-gradient-to-b from-[var(--brand)]/60 via-[var(--border)] to-transparent" />
+            {part.steps.map((s) => (
+              <li key={s.n} className="relative flex gap-4">
+                <span className="z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--border)] bg-[var(--card)] font-mono text-sm text-[#8fc2ff]">
+                  {s.n}
+                </span>
+                <div className="card min-w-0 flex-1 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+                    <div className="min-w-0 flex-1 font-medium leading-snug">
+                      {s.text}
+                      <Refs ids={s.claimIds} />
+                    </div>
+                    <span className={`chip ${WHO[s.who].cls}`}>{WHO[s.who].label}</span>
                   </div>
-                  <span className={`chip ${WHO[s.who].cls}`}>{WHO[s.who].label}</span>
+                  {s.why && <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.why}</p>}
+                  {s.detail && <p className="mt-2 border-l-2 border-[var(--border-strong)] pl-3 text-sm leading-relaxed muted">{s.detail}</p>}
                 </div>
-                {s.why && <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.why}</p>}
-                {s.detail && <p className="mt-2 border-l-2 border-[var(--border-strong)] pl-3 text-sm leading-relaxed muted">{s.detail}</p>}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
 
       <section>
         <SectionTitle eyebrow="If something goes wrong">Blockers</SectionTitle>
