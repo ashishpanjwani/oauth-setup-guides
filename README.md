@@ -24,7 +24,7 @@ Building guides for real providers showed what the scattered docs hide:
 
   | App | Difficulty | What a developer needs to know |
   |---|---|---|
-  | GitHub | Easy | No review or fee. Organizations that restrict OAuth apps (on by default for new ones) block your app until an owner approves it |
+  | GitHub | Easy | No review or fee. Users can always connect their personal account, but an organization that restricts OAuth apps (on by default for new ones) blocks access to its own repos and data until an owner approves |
   | Slack | Easy | No review, but other workspaces can install only after you turn on distribution. Workspace owners can require approval, and unlisted apps get 1 request per minute on message history |
   | X | Moderate | API use is pay-per-use credits. X reviews your stated use case, and AI-generated replies need prior approval |
   | Shopify | Moderate | Pick the standalone path, not embedded. Public apps need an App Store registration fee and review, and customer data needs separate approval |
