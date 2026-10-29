@@ -65,53 +65,64 @@ A live run costs $0.21–0.46 and takes 1.3–4.6 minutes, based on recorded run
 
 Each decision came from a problem seen in a real guide.
 
-**Scope**
-- **Two pages: search and guide.** The first build had a 382-app directory, four evidence tiers and a second fact-checking agent. It proved rigor but was hard to read, so it was cut back to what a developer uses.
-- **Covers one path: an outside, server-side app that many users connect to.** This is the AI-agent case. Shopify's first guide followed the embedded-app path, so every guide now names its path and the alternatives.
-- **OAuth setup only.** Slack's guide drifted into building a bot, and app-store listings kept appearing. A listing is a step only when users can't connect without it.
+### Scope
 
-**What a guide shows**
-- **Six launch gates, checked for every app:** who can register, test-mode limits, provider review, end users' admin approval, paid access, and ongoing obligations. Early summaries were vague ("no review step found") and missed GitHub's real catch, organization approval. A fixed set of questions means the one that matters can't be skipped. Only gates that apply are shown.
-- **Stats computed in code, with their basis.** The writer's estimates were guesses; "Free" was once labelled an estimate. Difficulty comes from the gates. Time to production is the provider's stated review time in its own words ("up to 21 business days"). Effort became a step count. Stats never claim more than the evidence: "review not confirmed" and "Review time not published" exist because early stats said "no review" when the docs suggested one.
-- **Agent / You / Waiting on every step.** This answers "what can an agent do for me". **Agent** means work an agent can actually do: pick scopes, build the authorize URL, write descriptions and review justifications. An earlier label, "agent prepares, you click", confused readers.
+| Decision | Why |
+|---|---|
+| Two pages: search and guide | The first build (a 382-app directory, four evidence tiers, a second fact-checking agent) was hard to read |
+| One path per guide: an outside, server-side app many users connect to | Shopify's first guide followed the embedded-app path, which is the wrong one for an AI agent |
+| OAuth setup only | Guides drifted into building bots and optional app-store listings |
 
-**Step structure: Architect and Builder**
-- Steps read like facts in a list. Gmail's once started with "create a brand" before the project existed, and prompt fixes didn't stick.
-- **The fix splits the work: code is the Architect and the model is the Builder.**
-  - A fixed skeleton of slots sets the order: decide scopes → create app → enable API → … → redirect URI → credentials → test users → test connection → publish → review → go live.
-  - Code checks that the required slots are filled, and the model writes each slot for the provider.
-- **Steps form a walkthrough:**
-  - Each starts with where it happens, then what to click.
-  - A step that produces something says which later step uses it. Example: the Gmail demo video link goes into the review form.
-  - The create-app step links straight to the developer portal.
+### What a guide shows
 
-**Evidence and trust**
-- **Tested / Sourced / Uncertain on every claim.** Sourced quotes are checked in code, which replaced a second agent re-reading the sources. A code check gives the same answer every time.
-- **An Unverified tag on any line with no confirmed claim.** A check found 10 of Gmail's 19 claims citing the wrong sentence, mostly for true facts. The fixes:
-  - one fact per claim
-  - automatic re-quoting
-  - a downgrade-only support check
-- **Fix the guide, not the label.** Fifteen orange tags made a guide more confusing, not more honest. A library guide isn't published with more than 2–3 Unverified lines.
-- **Tested means observed on the live product,** not read in docs. So far that's only a person's check of GitHub's live form, which says "Redirect URIs" while the docs still say "Authorization callback URL". An agent that only reads docs can't see that.
-- **Step links must be URLs the agent actually opened.** A looser "same site" rule was rejected. The create-app link is the address the console probe landed on.
+| Decision | Why |
+|---|---|
+| Six launch gates checked for every app | Early summaries were vague and missed GitHub's real catch, organization approval |
+| Stats computed in code, each with its basis | The model's time and effort figures were guesses |
+| Stats never claim more than the evidence | An early guide said "no review" when the docs mentioned one |
+| Agent / You / Waiting on every step | Answers "what can an agent do for me", and "agent prepares, you click" confused readers |
 
-**Agents and the "attempt the setup" requirement**
-- **The agent doesn't create apps.** That needs the developer's login, providers like GitHub and X have no API for it, and the client secret should never pass through an agent.
-- **A trial on X was reverted.** The agent tested endpoints with fake values and kept a per-step attempt record. The result was HTTP errors that meant nothing to a reader.
-- **What remains:** automated attempts are limited to the console probe. Hands-on evidence comes from a person, and the handoff is shown through the step labels.
+### Step structure: Architect and Builder
 
-**Live search**
-- **Cheapest path first:**
-  1. A library match opens instantly.
-  2. Bad input (an email, a sentence, symbols) is caught in the browser and again on the server.
-  3. A ~1¢ check rejects names that aren't apps.
-  4. Only then does the full run start.
-- **Visible progress and safe limits:** each stage shows rows as it works, so a 2–5 minute wait never looks stuck. A time guard skips the last polishing steps near Vercel's 300-second limit. Every run is recorded for free replay.
+Steps read like a list of facts. Gmail's once started with "create a brand" before the project existed, and prompt fixes didn't stick. So the work is split:
 
-**Cost**
-- **Haiku researches and checks; Sonnet writes and edits.** Haiku alone dropped a few of about 25 writing rules on every run, and each prompt fix shifted attention elsewhere. Sonnet had zero rule violations on its first test. That raised a guide's cost from about $0.06 to about $0.25.
-- **Hard limits:** $0.80 per run, $10 per day across visitors, and 6 runs an hour per visitor. These followed an early batch of six parallel runs on the top model that used up a $6 credit. Since then, every change was tested on one app before running more.
-- **Mechanical rules live in code, not prompts:** a phrase checker, a page-coverage check, and a known-facts check (recorded so far for GitHub and Gmail). Prompt-only fixes kept regressing.
+- **Architect (code):** a fixed order of step slots, from decide scopes → create app → … → test connection → publish → review → go live. Code also checks that the required slots are filled.
+- **Builder (model):** writes each slot for the provider. Each step starts with where it happens, says which later step uses what it produces, and the create-app step links to the portal.
+
+### Evidence and trust
+
+| Decision | Why |
+|---|---|
+| Quotes checked word for word in code | Same answer every time; replaced a second agent re-reading sources |
+| Unverified tag on unconfirmed lines | 10 of Gmail's 19 claims cited the wrong sentence |
+| One fact per claim, auto re-quote, downgrade-only support check | Fixes the wrong-sentence problem at its source |
+| Fix the guide, not the label (library guides allow at most 2–3 Unverified lines) | Fifteen orange tags made a guide more confusing, not more honest |
+| Tested = observed on the live product | Docs lag the UI: GitHub's form says "Redirect URIs", its docs don't |
+| Step links only to URLs the agent opened | A looser "same site" rule could link to made-up pages |
+
+### Agents and "attempt the setup"
+
+| Decision | Why |
+|---|---|
+| The agent doesn't create apps | It needs the developer's login, GitHub and X have no API for it, and secrets shouldn't pass through an agent |
+| Endpoint testing on X was reverted | It produced HTTP errors that meant nothing to a reader |
+| The handoff is shown through step labels; hands-on evidence comes from a person | That's what a reader can act on |
+
+### Live search
+
+| Decision | Why |
+|---|---|
+| Cheapest path first: library match → input checks → ~1¢ app check → full run | Bad input shouldn't cost a full run |
+| Progress rows for every stage | A 2–5 minute wait shouldn't look stuck |
+| Time guard and free replays | Runs must fit Vercel's 300-second limit; demos shouldn't cost money |
+
+### Cost
+
+| Decision | Why |
+|---|---|
+| Haiku researches and checks; Sonnet writes and edits | Haiku dropped writing rules on every run. Sonnet raised a guide from ~$0.06 to ~$0.25 with zero violations |
+| $0.80 per run, $10 per day, 6 runs an hour per visitor | An early batch of parallel runs on the top model used up a $6 credit |
+| Mechanical rules in code, not prompts | Prompt-only fixes kept regressing |
 
 ## What was checked
 
