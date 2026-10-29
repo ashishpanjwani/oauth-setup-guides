@@ -1,0 +1,500 @@
+{
+  "appName": "Shopify",
+  "developerPortal": "https://dev.shopify.com",
+  "summary": "Setup is moderate: a development store can be connected within hours, but a public app must pass Shopify App Store review before merchants can install it. Custom distribution skips app review, but works only for a single store or stores in one Plus organization.",
+  "difficulty": "moderate",
+  "timeToTest": "~2 hours",
+  "timeToProduction": "Unknown review time for public apps; custom distribution can be live as soon as the install link is sent",
+  "effort": "1–3 days of work",
+  "cost": "Free",
+  "handoff": "An agent can pick the scopes and prepare the review submission materials; you create the app, declare scopes, set URLs, copy credentials, install on a dev store, select the distribution method, and submit for review.",
+  "summaryClaimIds": [
+    "c1",
+    "c2",
+    "c3"
+  ],
+  "statClaimIds": {
+    "timeToTest": [],
+    "timeToProduction": [],
+    "effort": [],
+    "cost": []
+  },
+  "gates": [
+    {
+      "gate": "register",
+      "applies": "unknown",
+      "title": "Registration account requirements are not confirmed on an official page",
+      "what": "Staff need the Build and manage apps permission to create apps in the Dev Dashboard. Whether a Partner account is required or has a cost is not confirmed.",
+      "where": "Dev Dashboard (dev.shopify.com); the developer acts.",
+      "todo": "Sign in to the Dev Dashboard and confirm the account can create apps.",
+      "claimIds": []
+    },
+    {
+      "gate": "test_limits",
+      "applies": "yes",
+      "title": "Protected customer data is withheld on non-development stores until approval",
+      "what": "You test on development stores. The API does not return protected customer data from non-development stores until the app is configured and approved for it.",
+      "where": "Dev Dashboard → Apps → your app → Install app (developer); protected data requests in Partner Dashboard → API access.",
+      "todo": "Test on a development store, and apply for protected customer data access before launch if the app reads customer personal data.",
+      "claimIds": [
+        "c4"
+      ]
+    },
+    {
+      "gate": "review",
+      "applies": "yes",
+      "title": "Public apps need Shopify App Store review",
+      "what": "Only production-ready apps are reviewed, and incomplete apps are not approved. Some scopes also need Shopify's approval before they can be declared.",
+      "where": "Dev Dashboard → Distribution card → Select distribution method; Shopify review team acts.",
+      "todo": "Choose public distribution, test the install flow, submit the app, and request approval for any restricted scopes.",
+      "claimIds": [
+        "c5",
+        "c6",
+        "c7"
+      ]
+    },
+    {
+      "gate": "admin_approval",
+      "applies": "no",
+      "title": "No store-admin approval requirement is described",
+      "what": "",
+      "where": "",
+      "todo": "",
+      "claimIds": [
+        "c8"
+      ]
+    },
+    {
+      "gate": "paid_access",
+      "applies": "no",
+      "title": "No paid API tier is mentioned",
+      "what": "",
+      "where": "",
+      "todo": "",
+      "claimIds": [
+        "c9"
+      ]
+    },
+    {
+      "gate": "ongoing",
+      "applies": "yes",
+      "title": "Apps can be audited after launch",
+      "what": "Shopify may select a live app for an audit.",
+      "where": "Email to the app submission contact address in the app listing; the developer acts.",
+      "todo": "Keep the submission contact email monitored and keep the app compliant with the App Store requirements.",
+      "claimIds": [
+        "c10"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "text": "A Dev Dashboard account with the Build and manage apps permission, plus the Development stores permission to create a dev store.",
+      "claimIds": [
+        "c11"
+      ]
+    },
+    {
+      "text": "A development store to install and test the app.",
+      "claimIds": [
+        "c12"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "slot": "choose_scopes",
+      "phase": "setup",
+      "text": "Your notes: decide on access scopes, for example read_products or write_products for catalog access, read_orders or write_orders for orders. Avoid scopes labeled Shopify approval required unless needed.",
+      "why": "Scopes labeled Shopify approval required can't be declared until Shopify approves the app.",
+      "detail": "read_orders covers only the last 60 days; older orders need read_all_orders, which needs approval.",
+      "who": "agent",
+      "claimIds": [
+        "c7",
+        "c14"
+      ]
+    },
+    {
+      "slot": "create_app",
+      "phase": "setup",
+      "text": "Dev Dashboard: create the app, using Shopify CLI (recommended) or directly in the Dev Dashboard for API-only integrations.",
+      "why": "",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c15"
+      ]
+    },
+    {
+      "slot": "add_scopes",
+      "phase": "setup",
+      "text": "App configuration file (shopify.app.toml), [access_scopes] section: declare the chosen scopes, then deploy to create an app version.",
+      "why": "",
+      "detail": "Declaring an unapproved restricted scope makes app version creation fail with an app_access validation error.",
+      "who": "you",
+      "claimIds": [
+        "c16",
+        "c7"
+      ]
+    },
+    {
+      "slot": "redirect_uri",
+      "phase": "setup",
+      "text": "Dev Dashboard → Apps → your app → Versions → active version: set the App URL and allowed redirection URLs.",
+      "why": "",
+      "detail": "Apps built with Shopify CLI use Shopify managed installation and can skip manual OAuth redirect setup.",
+      "who": "you",
+      "claimIds": [
+        "c17"
+      ]
+    },
+    {
+      "slot": "credentials",
+      "phase": "setup",
+      "text": "Dev Dashboard → Apps → your app: copy the client ID and client secret issued when the app was created.",
+      "why": "",
+      "detail": "Keep the client secret server-side and never ship it in client code.",
+      "who": "you",
+      "claimIds": [
+        "c23",
+        "c24"
+      ]
+    },
+    {
+      "slot": "test_connection",
+      "phase": "setup",
+      "text": "Dev Dashboard → Apps → your app → Installs: click Install app and select your development store.",
+      "why": "",
+      "detail": "The app should redirect to the OAuth grant screen or install automatically; if not, check the app URLs and redirects.",
+      "who": "you",
+      "claimIds": [
+        "c18"
+      ]
+    },
+    {
+      "slot": "prepare_review",
+      "phase": "launch",
+      "text": "Submission form materials: prepare testing information, test credentials and a short screencast of how the app works.",
+      "why": "",
+      "detail": "You enter these in the submission form in the submit step.",
+      "who": "agent",
+      "claimIds": [
+        "c19"
+      ]
+    },
+    {
+      "slot": "publish",
+      "phase": "launch",
+      "text": "Dev Dashboard → app Home → Distribution card: click Select distribution method, choose Public (App Store listing and review) or Custom (install link sent to the store owner), and confirm.",
+      "why": "",
+      "detail": "The choice can't be changed afterward.",
+      "who": "you",
+      "claimIds": [
+        "c13",
+        "c20",
+        "c2",
+        "c3"
+      ]
+    },
+    {
+      "slot": "submit_review",
+      "phase": "launch",
+      "text": "Dev Dashboard → Distribution: create the App Store listing and submit the app for review, adding the testing information, credentials and screencast to the form (public distribution only).",
+      "why": "",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c20",
+        "c19"
+      ]
+    },
+    {
+      "slot": "wait_review",
+      "phase": "launch",
+      "text": "Dev Dashboard: wait for Shopify's app review team to review the submission.",
+      "why": "",
+      "detail": "",
+      "who": "waiting",
+      "claimIds": [
+        "c5"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "problem": "The app doesn't immediately redirect to the OAuth grant screen after install, so review fails.",
+      "fix": "Test the App URL and allowed redirection URL, or use Shopify managed installation.",
+      "claimIds": [
+        "c18",
+        "c21"
+      ]
+    },
+    {
+      "problem": "Creating an app version fails with an app_access validation error on scopes.",
+      "fix": "Remove the restricted scope until Shopify approves it, then declare it in a later deployment.",
+      "claimIds": [
+        "c7"
+      ]
+    },
+    {
+      "problem": "Customer personal data is not returned from non-development stores.",
+      "fix": "Meet the protected customer data requirements and apply under API Access → Protected customer data access in the Partner Dashboard.",
+      "claimIds": [
+        "c4",
+        "c22"
+      ]
+    },
+    {
+      "problem": "Submission is rejected for incomplete testing information or an unstable app.",
+      "fix": "Include test credentials and a screencast, and fix errors before submitting.",
+      "claimIds": [
+        "c19",
+        "c5"
+      ]
+    }
+  ],
+  "couldNotVerify": [
+    "Whether a Partner account is required to create apps in the Dev Dashboard, and any cost.",
+    "Couldn't read https://help.shopify.com/en/manual/apps/install-setup-apps (HTTP 403), so nothing from it is confirmed.",
+    "Couldn't read https://help.shopify.com/en/manual/your-account/users/roles/permissions/settings-permissions (HTTP 403), so nothing from it is confirmed.",
+    "Couldn't read https://help.shopify.com/en/partners/dashboard/managing-stores/development-stores (HTTP 403), so nothing from it is confirmed."
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "statement": "Only production-ready apps are reviewed; incomplete apps are not approved.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review",
+      "sourceTitle": "Pass app review",
+      "quote": "The app review team will only review production-ready apps. If you submit an app that is incomplete or has errors that prevent us from reviewing its features, then it won't be approved.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c2",
+      "statement": "Public distribution allows submitting the app for review once the listing is ready.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/distribution/select-distribution-method",
+      "sourceTitle": "Select a distribution method",
+      "quote": "If you selected Public distribution , then you can start creating your Shopify App Store listing, and submit your app for review when it's ready.",
+      "note": ""
+    },
+    {
+      "id": "c3",
+      "statement": "Custom distribution uses an install link sent to the store owner.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/distribution/select-distribution-method",
+      "sourceTitle": "Select a distribution method",
+      "quote": "If you selected Custom distribution , then generate an install link and send it to the store owner.",
+      "note": ""
+    },
+    {
+      "id": "c4",
+      "statement": "The API won't return protected customer data from non-development stores until the app is approved.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/api/usage/access-scopes",
+      "sourceTitle": "Shopify API access scopes",
+      "quote": "You can add the relevant scopes to your app, but the API won't return data from non-development stores until your app is configured and approved for protected customer data use.",
+      "note": ""
+    },
+    {
+      "id": "c5",
+      "statement": "Incomplete apps or apps with errors preventing review are not approved.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review",
+      "sourceTitle": "Pass app review",
+      "quote": "If you submit an app that is incomplete or has errors that prevent us from reviewing its features, then it won't be approved.",
+      "note": ""
+    },
+    {
+      "id": "c6",
+      "statement": "Shopify reviews public apps for the App Store.",
+      "status": "uncertain",
+      "sourceUrl": "https://help.shopify.com/en/partners/build-integrate/making-apps",
+      "sourceTitle": "Shopify Help Center | Building and monetizing apps with Shopify's APIs",
+      "quote": "Your app must meet Shopify App Store requirements before you can sell it in the Shopify App Store.",
+      "note": "[Check: the quote only partly supports this. Quote says apps must meet App Store requirements before selling in the App Store, but does not state that Shopify reviews public apps.]"
+    },
+    {
+      "id": "c7",
+      "statement": "Some scopes can't be declared until Shopify approves the app; declaring early fails app version creation.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/api/usage/access-scopes",
+      "sourceTitle": "Shopify API access scopes",
+      "quote": "You can't add one to your app configuration until Shopify approves your app for it. If you declare one before approval, then creating an app version fails with an app_access validation error on scopes .",
+      "note": ""
+    },
+    {
+      "id": "c8",
+      "statement": "No admin allow-listing gate is mentioned in the app authentication page.",
+      "status": "uncertain",
+      "sourceUrl": "https://shopify.dev/docs/apps/build/authentication-authorization",
+      "sourceTitle": "About app authentication",
+      "quote": "",
+      "note": "No admin approval or allow-list requirement is mentioned in About app authentication; merchants approve scopes on install."
+    },
+    {
+      "id": "c9",
+      "statement": "No paid API tier is mentioned in the registration and distribution page.",
+      "status": "uncertain",
+      "sourceUrl": "https://help.shopify.com/en/partners/build-integrate/making-apps",
+      "sourceTitle": "Shopify Help Center | Building and monetizing apps with Shopify's APIs",
+      "quote": "",
+      "note": "No paid API tier is mentioned in this page."
+    },
+    {
+      "id": "c10",
+      "statement": "An app might be selected for an audit.",
+      "status": "sourced",
+      "sourceUrl": "https://help.shopify.com/en/partners/build-integrate/making-apps",
+      "sourceTitle": "Shopify Help Center | Building and monetizing apps with Shopify's APIs",
+      "quote": "Your app might be selected for an audit.",
+      "note": ""
+    },
+    {
+      "id": "c11",
+      "statement": "Staff need the Build and manage apps permission to create apps and the Development stores permission to create dev stores.",
+      "status": "sourced",
+      "sourceUrl": "https://help.shopify.com/en/partners/build-integrate/making-apps",
+      "sourceTitle": "Shopify Help Center | Building and monetizing apps with Shopify's APIs",
+      "quote": "Partner staff members need the Build and manage apps permission to create apps, and the Development stores permission to create dev stores.",
+      "note": ""
+    },
+    {
+      "id": "c12",
+      "statement": "Dev stores are created from the Dev Dashboard to install and test apps.",
+      "status": "sourced",
+      "sourceUrl": "https://help.shopify.com/en/partners/build-integrate/making-apps",
+      "sourceTitle": "Shopify Help Center | Building and monetizing apps with Shopify's APIs",
+      "quote": "Dev stores are dedicated testing environments that you create from the Dev Dashboard .",
+      "note": ""
+    },
+    {
+      "id": "c13",
+      "statement": "The distribution method can't be changed after selection.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/distribution/select-distribution-method",
+      "sourceTitle": "Select a distribution method",
+      "quote": "You can't change the method after you select it, so review the capabilities and requirements before continuing.",
+      "note": ""
+    },
+    {
+      "id": "c14",
+      "statement": "read_orders covers orders from the last 60 days; read_all_orders extends it.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/api/usage/access-scopes",
+      "sourceTitle": "Shopify API access scopes",
+      "quote": "By default, read_orders provides read access and write_orders provides read and write access to orders created within the last 60 days. read_all_orders doesn't grant access on its own. Declare it alongside read_orders or write_orders to extend that scope's access to older orders:",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c15",
+      "statement": "Apps can be created with Shopify CLI (recommended) or directly in the Dev Dashboard.",
+      "status": "sourced",
+      "sourceUrl": "https://help.shopify.com/en/partners/build-integrate/making-apps",
+      "sourceTitle": "Shopify Help Center | Building and monetizing apps with Shopify's APIs",
+      "quote": "You can create apps in the following ways: … Shopify CLI (recommended) : Use Shopify CLI to scaffold a complete project with built-in local development and deployment workflows. … Dev Dashboard : For backend automation, data sync, or API-only integrations that don't need an interface in the Shopify admin, you can create and configure an app directly in the Dev Dashboard .",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c16",
+      "statement": "Scopes are declared in the [access_scopes] section of the app configuration file.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/api/usage/access-scopes",
+      "sourceTitle": "Shopify API access scopes",
+      "quote": "You declare all three types in the same scopes field, in the [access_scopes] section of your app's configuration file.",
+      "note": ""
+    },
+    {
+      "id": "c17",
+      "statement": "Apps configured with Shopify CLI use Shopify managed installation.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review",
+      "sourceTitle": "Pass app review",
+      "quote": "Tip: If you configure your app using Shopify CLI , then your app will automatically use Shopify managed installation .",
+      "note": ""
+    },
+    {
+      "id": "c18",
+      "statement": "Installing from the Dev Dashboard Installs section installs on a development store; otherwise check URLs and redirects.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review",
+      "sourceTitle": "Pass app review",
+      "quote": "On the app overview page, in the Installs section, click Install app . … The app should be automatically installed to your dev store. … If the app doesn't get automatically installed, or you don't see the OAuth grant screen, then you might need to double check your app’s code, as well as the app URLs and redirects .",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c19",
+      "statement": "The submission form needs testing information, credentials and a screencast.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review",
+      "sourceTitle": "Pass app review",
+      "quote": "Ensure that you include testing information and test credentials in the app submission form. Include a short screencast of how your app should work.",
+      "note": ""
+    },
+    {
+      "id": "c20",
+      "statement": "The Distribution card appears in the app's Home and links to listing management.",
+      "status": "uncertain",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/distribution/select-distribution-method",
+      "sourceTitle": "Select a distribution method",
+      "quote": "On the app's Home , find the Distribution card and click Select distribution method .",
+      "note": "[Check: the quote only partly supports this. Quote says find the Distribution card on the app's Home and click Select distribution method; it does not say the card links to listing management.]"
+    },
+    {
+      "id": "c21",
+      "statement": "If the App URL and redirect don't send merchants to the OAuth grant screen, the app won't be approved.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review",
+      "sourceTitle": "Pass app review",
+      "quote": "If they don't redirect merchants to the OAuth grant screen, then your app won't be approved.",
+      "note": ""
+    },
+    {
+      "id": "c22",
+      "statement": "Apply for protected customer data access in the Partner Dashboard's API Access section.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/launch/app-store-review/pass-app-review",
+      "sourceTitle": "Pass app review",
+      "quote": "If your app uses customer data, then you need to meet the protected customer data requirements and then apply for access to this data in the API Access > Protected customer data access section of your Partner Dashboard.",
+      "note": ""
+    },
+    {
+      "id": "c23",
+      "statement": "The client ID and client secret are issued when the app is created.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/build/authentication-authorization",
+      "sourceTitle": "About app authentication",
+      "quote": "Client ID and client secret The credentials that identify your app, issued when you create it.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c24",
+      "statement": "The client secret must be kept server-side and never shipped in client code.",
+      "status": "sourced",
+      "sourceUrl": "https://shopify.dev/docs/apps/build/authentication-authorization",
+      "sourceTitle": "About app authentication",
+      "quote": "The client secret isn't: it proves a request comes from your app, so keep it server-side and never ship it in client code.",
+      "note": ""
+    }
+  ],
+  "slug": "shopify",
+  "reviewed": false,
+  "createdAt": "2026-10-29T07:13:04.968Z",
+  "checkedAt": "2026-10-29T07:13:04.968Z",
+  "probes": [
+    {
+      "name": "console",
+      "target": "https://partners.shopify.com",
+      "ok": true,
+      "result": "HTTP 200, redirected to https://www.shopify.com/partners"
+    }
+  ],
+  "agentRun": {
+    "model": "claude-haiku-5-5 + claude-sonnet-5-5",
+    "searches": 6,
+    "fetches": 8,
+    "probes": 1,
+    "durationSec": 164,
+    "costUsd": 0.4
+  }
+}
