@@ -21,7 +21,7 @@ Building guides for real providers showed where the difficulty actually is:
    - a demo video for reviewers (Google, Meta, Pipedrive)
    - a developer sandbox account before the console is even visible (Pipedrive)
    - a cap of 100 test users (Google)
-   - tight rate limits until an app is approved (Slack)
+   - tight rate limits for apps not listed in its directory (Slack)
 3. **Some blockers sit outside the developer's control.** An end user's admin can block or have to approve the app: GitHub organization owners, Google Workspace admins, Notion Enterprise owners. A guide can't put a time on that. It can say who controls it and what to tell users.
 4. **The right path depends on the app type.**
    - Shopify has three ways to get a token, and Notion has three kinds of connection.
