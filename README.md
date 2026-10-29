@@ -6,34 +6,17 @@ Guides for creating a provider's OAuth app and getting it approved, so an AI age
 
 ## The problem
 
-A developer building an AI agent wants its users to connect an app, such as Gmail or Slack. To do that, the developer usually registers their own OAuth app with the provider and gets it approved. Every user's connection then goes through that app. Today they piece this together from scattered docs, unfamiliar consoles and emails to the provider, without knowing whether it will take an hour or several weeks.
+To let users connect an app like Gmail or Slack, a developer has to register their own OAuth app with that provider and often get it approved. The information they need exists, but it's scattered. It's spread across setup pages, scope references, review policies, help-center articles and forum threads, and it has to be pieced together by hand. Even then, the developer can't tell whether launch is an hour away or weeks away.
 
-Building guides for real providers showed where the difficulty actually is:
+Building guides for real providers showed what the scattered docs hide:
 
-1. **Registration is quick; launch is not.** The form takes minutes almost everywhere. The unpredictable part is the gap between "works for me in dev" and "any user can connect":
-   - Google's verification and security assessment
-   - Meta's App Review plus Business Verification
-   - Shopify's App Store review and protected-data approval
-   - Pipedrive's review of up to 21 business days
-   - X's paid API tiers
-2. **Requirements surface late.** Many only appear midway through setup:
-   - a privacy policy on the same domain as the app (Google)
-   - a demo video for reviewers (Google, Meta, Pipedrive)
-   - a developer sandbox account before the console is even visible (Pipedrive)
-   - a cap of 100 test users (Google)
-   - tight rate limits for apps not listed in its directory (Slack)
-3. **Some blockers sit outside the developer's control.** An end user's admin can block or have to approve the app: GitHub organization owners, Google Workspace admins, Notion Enterprise owners. A guide can't put a time on that. It can say who controls it and what to tell users.
-4. **The right path depends on the app type.**
-   - Shopify has three ways to get a token, and Notion has three kinds of connection.
-   - An AI agent is an outside, server-side app that many users connect to. Follow a guide for an embedded or single-workspace app and the setup is wasted.
-5. **Who can do each step matters.** Some steps need the developer's own account, payment or judgment. Others an agent can do for them: pick the narrowest scopes, build the authorize URL, write review justifications. Docs never draw that line.
-6. **The docs themselves are unreliable guides.**
-   - They're split across many pages, and they often don't publish review times.
-   - They lag the live UI. GitHub's form says "Redirect URIs" while its docs say "Authorization callback URL".
-   - Sometimes they mention a step without explaining it. Notion's docs say a review exists but not how to submit one.
-7. **Plain AI answers read well but can't be trusted line by line.** In a side-by-side check on Notion, ChatGPT used Notion's outdated names, listed a capability Notion doesn't have, and missed that the installation scope can't be changed later.
+- **Registration is quick; launch is not.** Verification, security assessments, app reviews (Pipedrive's can take up to 21 business days) and paid tiers are what decide the timeline. They're usually on different pages from the setup steps.
+- **Requirements surface late:** a privacy policy on the same domain, a demo video for reviewers, a sandbox account before the console is even visible, test-user caps.
+- **Some blockers aren't the developer's to clear.** An end user's admin may have to approve the app (GitHub organizations, Google Workspace, Notion Enterprise).
+- **The path depends on the app type.** Shopify has three ways to get a token. A guide for the wrong one wastes the setup.
+- **The docs aren't always right.** They lag the live UI, and they don't always say how long a review takes or how to submit one.
 
-**The product's response:** a guide that answers difficulty, time, blockers and the agent/developer split up front, then walks through the real console flow. Every line is backed by the provider's own docs, and anything unconfirmed is labelled as such.
+**The product's response:** one guide per app that puts these pieces together in order. It answers difficulty, time, blockers and what an agent can do up front, then walks through the real console flow, with every line backed by the provider's docs and anything unconfirmed labelled as such.
 
 ## What it does
 
