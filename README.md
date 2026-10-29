@@ -6,17 +6,34 @@ Guides for creating a provider's OAuth app and getting it approved, so an AI age
 
 ## The problem
 
-Creating an OAuth app is rarely the hard part: the form takes minutes on almost every provider. What developers can't predict is the gap between "works in dev" and "any user can connect":
+A developer building an AI agent wants its users to connect an app, such as Gmail or Slack. To do that, the developer usually registers their own OAuth app with the provider and gets it approved. Every user's connection then goes through that app. Today they piece this together from scattered docs, unfamiliar consoles and emails to the provider, without knowing whether it will take an hour or several weeks.
 
-- Google's verification and security assessment
-- Meta's App Review plus Business Verification
-- Shopify's protected-data approval
-- X's paid tiers
-- a GitHub organization owner approving each app
+Building guides for real providers showed where the difficulty actually is:
 
-The right path also depends on the app type. Shopify has three ways to get a token and Notion has three kinds of connection. Picking the wrong one wastes the whole setup.
+1. **Registration is quick; launch is not.** The form takes minutes almost everywhere. The unpredictable part is the gap between "works for me in dev" and "any user can connect":
+   - Google's verification and security assessment
+   - Meta's App Review plus Business Verification
+   - Shopify's App Store review and protected-data approval
+   - Pipedrive's review of up to 21 business days
+   - X's paid API tiers
+2. **Requirements surface late.** Many only appear midway through setup:
+   - a privacy policy on the same domain as the app (Google)
+   - a demo video for reviewers (Google, Meta, Pipedrive)
+   - a developer sandbox account before the console is even visible (Pipedrive)
+   - a cap of 100 test users (Google)
+   - tight rate limits until an app is approved (Slack)
+3. **Some blockers sit outside the developer's control.** An end user's admin can block or have to approve the app: GitHub organization owners, Google Workspace admins, Notion Enterprise owners. A guide can't put a time on that. It can say who controls it and what to tell users.
+4. **The right path depends on the app type.**
+   - Shopify has three ways to get a token, and Notion has three kinds of connection.
+   - An AI agent is an outside, server-side app that many users connect to. Follow a guide for an embedded or single-workspace app and the setup is wasted.
+5. **Who can do each step matters.** Some steps need the developer's own account, payment or judgment. Others an agent can do for them: pick the narrowest scopes, build the authorize URL, write review justifications. Docs never draw that line.
+6. **The docs themselves are unreliable guides.**
+   - They're split across many pages, and they often don't publish review times.
+   - They lag the live UI. GitHub's form says "Redirect URIs" while its docs say "Authorization callback URL".
+   - Sometimes they mention a step without explaining it. Notion's docs say a review exists but not how to submit one.
+7. **Plain AI answers read well but can't be trusted line by line.** In a side-by-side check on Notion, ChatGPT used Notion's outdated names, listed a capability Notion doesn't have, and missed that the installation scope can't be changed later.
 
-Plain AI answers read well, but in a side-by-side check on Notion, ChatGPT used Notion's outdated names, listed a capability Notion doesn't have, and missed that the installation scope can't be changed later. **The product's bet is a followable walkthrough where every line is backed by the provider's own docs, and anything unconfirmed says so.**
+**The product's response:** a guide that answers difficulty, time, blockers and the agent/developer split up front, then walks through the real console flow. Every line is backed by the provider's own docs, and anything unconfirmed is labelled as such.
 
 ## What it does
 
