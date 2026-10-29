@@ -1,4 +1,4 @@
-import type { Guide } from "./schema";
+import { slotPhase, type Guide } from "./schema";
 import { DIFFICULTY, EVIDENCE, WHO } from "./labels";
 
 /** Plain Markdown so a guide can be pasted into a ticket, PR, or doc. Claims become footnotes. */
@@ -40,7 +40,7 @@ export function guideToMarkdown(g: Guide, url?: string): string {
   out.push("## Requirements", "", ...g.requirements.map((r) => `- ${r.text}${refs(r.claimIds)}`), "");
   // Same two parts as the page; older guides without a phase are all setup.
   for (const [phase, title, time] of [["setup", "Set up and test", g.timeToTest], ["launch", "Go live", g.timeToProduction]] as const) {
-    const steps = g.steps.map((s, i) => ({ ...s, n: i + 1 })).filter((s) => (s.phase ?? "setup") === phase);
+    const steps = g.steps.map((s, i) => ({ ...s, n: i + 1 })).filter((s) => (s.phase ?? slotPhase(s.slot)) === phase);
     if (!steps.length) continue;
     out.push(`## ${title} (${time})`, "");
     steps.forEach((s) => {

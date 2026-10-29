@@ -17,6 +17,31 @@ export type Who = z.infer<typeof Who>;
 export const Phase = z.enum(["setup", "launch"]);
 export type Phase = z.infer<typeof Phase>;
 
+/**
+ * The skeleton every OAuth app follows, in order. Code owns the order and the required
+ * slots; the model only fills each slot for the provider (or leaves it out if it has none).
+ */
+export const SLOTS = [
+  { id: "choose_scopes", phase: "setup", required: true, what: "Decide which scopes the app needs, and what each one triggers (review, assessment). Comes first because it decides how hard the rest is." },
+  { id: "create_app", phase: "setup", required: true, what: "Create the project or app in the developer console." },
+  { id: "enable_api", phase: "setup", required: false, what: "Enable the API, if the provider has a separate switch for it." },
+  { id: "app_details", phase: "setup", required: false, what: "App details or consent screen: name, support email, audience or user type, logo, links." },
+  { id: "add_scopes", phase: "setup", required: false, what: "Add the chosen scopes in the console, if the console asks for them." },
+  { id: "redirect_uri", phase: "setup", required: true, what: "Add the redirect URI (callback URL)." },
+  { id: "other_settings", phase: "setup", required: false, what: "Other settings on the registration form that need a decision." },
+  { id: "credentials", phase: "setup", required: true, what: "Create or copy the client ID and client secret, saying where the console shows them." },
+  { id: "test_users", phase: "setup", required: false, what: "Add test users, if test mode only lets listed accounts connect." },
+  { id: "test_connection", phase: "setup", required: true, what: "Connect the developer's own account through the OAuth authorize URL, the same flow users will see." },
+  { id: "prepare_review", phase: "launch", required: false, what: "Prepare what the review asks for (domain, privacy policy, scope justification, demo video)." },
+  { id: "publish", phase: "launch", required: false, what: "Leave test mode or open the app to other accounts (a Publish, Go to production or Activate distribution button)." },
+  { id: "submit_review", phase: "launch", required: false, what: "Submit the app for the provider's review." },
+  { id: "wait_review", phase: "launch", required: false, what: "Wait for the provider's review." },
+  { id: "security_assessment", phase: "launch", required: false, what: "A required security assessment or audit, and how often it repeats." },
+] as const;
+export const Slot = z.enum(SLOTS.map((x) => x.id) as [(typeof SLOTS)[number]["id"], ...(typeof SLOTS)[number]["id"][]]);
+export type Slot = z.infer<typeof Slot>;
+export const slotPhase = (slot: Slot | undefined): Phase => SLOTS.find((x) => x.id === slot)?.phase ?? "setup";
+
 export const Difficulty = z.enum(["easy", "moderate", "hard"]);
 export type Difficulty = z.infer<typeof Difficulty>;
 
@@ -64,7 +89,9 @@ export const GuideDraft = z.object({
   requirements: z.array(z.object({ text: z.string(), claimIds: z.array(z.string()) })),
   steps: z.array(
     z.object({
-      phase: Phase,
+      slot: Slot,
+      /** Set by code from the slot; older guides store it directly. */
+      phase: Phase.optional(),
       text: z.string().describe("Where it happens, then the action, e.g. 'OAuth & Permissions → Redirect URLs: add your callback URL and click Save URLs'"),
       why: z.string().describe("At most one short sentence, only when it changes what the developer does. Empty otherwise."),
       detail: z.string().describe("One short line: an exact value or the one gotcha. Empty string if none."),

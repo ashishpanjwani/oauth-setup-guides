@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getGuide } from "@/lib/store";
+import { slotPhase } from "@/lib/schema";
 import { DIFFICULTY, EVIDENCE, WHO } from "@/lib/labels";
 import { CopyMarkdown } from "@/components/share-bar";
 import { AppMark } from "@/components/app-mark";
@@ -73,8 +74,8 @@ export default async function GuidePage({ params }: Props) {
   };
 
   const gates = (g.gates ?? []).filter((x) => x.applies === "yes");
-  // Older guides have no phase; their steps all count as setup.
-  const steps = g.steps.map((s, i) => ({ ...s, n: i + 1, phase: s.phase ?? "setup" }));
+  // Phase comes from the step's slot; older guides store it directly.
+  const steps = g.steps.map((s, i) => ({ ...s, n: i + 1, phase: s.phase ?? slotPhase(s.slot) }));
   const agentSteps = steps.filter((s) => s.who === "agent").length;
   const parts = [
     { title: "Set up and test", time: g.timeToTest, steps: steps.filter((s) => s.phase === "setup") },

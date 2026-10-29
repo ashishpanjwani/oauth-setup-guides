@@ -107,7 +107,8 @@
       "who": "you",
       "claimIds": [
         "c1"
-      ]
+      ],
+      "slot": "create_app"
     },
     {
       "phase": "setup",
@@ -117,7 +118,8 @@
       "who": "agent",
       "claimIds": [
         "c8"
-      ]
+      ],
+      "slot": "add_scopes"
     },
     {
       "phase": "setup",
@@ -128,17 +130,8 @@
       "claimIds": [
         "c6",
         "c9"
-      ]
-    },
-    {
-      "phase": "setup",
-      "text": "Settings → Manage Distribution: follow the instructions to enable App Distribution",
-      "why": "Without it the app installs only in the development workspace.",
-      "detail": "",
-      "who": "you",
-      "claimIds": [
-        "c1"
-      ]
+      ],
+      "slot": "redirect_uri"
     },
     {
       "phase": "setup",
@@ -148,7 +141,8 @@
       "who": "you",
       "claimIds": [
         "c12"
-      ]
+      ],
+      "slot": "credentials"
     },
     {
       "phase": "setup",
@@ -159,7 +153,8 @@
       "claimIds": [
         "c13",
         "c8"
-      ]
+      ],
+      "slot": "test_connection"
     },
     {
       "phase": "setup",
@@ -169,7 +164,8 @@
       "who": "you",
       "claimIds": [
         "c13"
-      ]
+      ],
+      "slot": "test_connection"
     },
     {
       "phase": "setup",
@@ -180,7 +176,20 @@
       "claimIds": [
         "c7",
         "c15"
-      ]
+      ],
+      "slot": "test_connection"
+    },
+    {
+      "phase": "launch",
+      "text": "Settings → Manage Distribution: complete the checklist and click Activate Public Distribution so other workspaces can install the app",
+      "why": "Without it the app installs only in the development workspace.",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c1",
+        "c17"
+      ],
+      "slot": "publish"
     }
   ],
   "blockers": [
@@ -362,6 +371,15 @@
       "sourceTitle": "Installing via OAuth authorization code flow | Slack Developer Docs",
       "quote": "invalid_team_for_non_distributed_app : Occurs when attempting to install/authorize an undistributed Slack API app on a team where the app was not created.",
       "note": ""
+    },
+    {
+      "id": "c17",
+      "statement": "To distribute the app, complete the checklist under Manage Distribution and click Activate Public Distribution.",
+      "status": "sourced",
+      "sourceUrl": "https://api.slack.com/start/distributing",
+      "sourceTitle": "Distributing your app | Slack",
+      "quote": "Ensure all items in the supplied checklist are completed. Click Activate Public Distribution .",
+      "note": "Checked by hand on 2026-10-29."
     }
   ],
   "slug": "slack",

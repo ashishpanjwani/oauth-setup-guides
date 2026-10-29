@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { GateId, GuideDraft, type Claim, type Gate, type Guide } from "@/lib/schema";
+import { GateId, GuideDraft, SLOTS, slotPhase, type Claim, type Gate, type Guide } from "@/lib/schema";
 import { slugify } from "@/lib/text";
 import { COMPOSE_SYSTEM, EDITOR_SYSTEM, REQUOTE_SYSTEM, RESEARCH_SYSTEM, SUPPORT_SYSTEM } from "./prompts";
 import { lintGuide, type Violation } from "./lint";
@@ -137,19 +137,16 @@ function extractJson(text: string): unknown {
 // the output is validated here, with one repair round on failure.
 const GUIDE_JSON_SCHEMA = JSON.stringify(z.toJSONSchema(GuideDraft));
 
-/**
- * What every OAuth setup needs, checked in code: where the redirect URI goes, where the
- * client ID and secret are, and a test connection through OAuth at the end.
- */
+/** The skeleton decides the order: steps are sorted by slot (stable within a slot) and get their phase from it. */
+function orderSteps(g: GuideDraft): GuideDraft {
+  const rank = (slot: string) => SLOTS.findIndex((x) => x.id === slot);
+  const steps = g.steps.map((s, i) => ({ s, i })).sort((a, b) => rank(a.s.slot) - rank(b.s.slot) || a.i - b.i);
+  return { ...g, steps: steps.map(({ s }) => ({ ...s, phase: slotPhase(s.slot) })) };
+}
+
+/** Required slots the writer left empty, checked in code. */
 function setupGaps(g: GuideDraft): string[] {
-  const setup = g.steps.filter((s) => s.phase === "setup");
-  const text = (s: GuideDraft["steps"][number]) => `${s.text} ${s.detail}`;
-  const gaps: string[] = [];
-  if (!setup.some((s) => /redirect|callback/i.test(text(s)))) gaps.push("a step that adds the redirect URI");
-  if (!setup.some((s) => /client (id|secret)/i.test(text(s)))) gaps.push("a step that copies the client ID and client secret, saying where the console shows them");
-  const last = setup.at(-1);
-  if (!last || !/authori[sz]|oauth|connect|sign in/i.test(text(last))) gaps.push("a last setup step that connects the developer's own account through the OAuth authorize URL");
-  return gaps;
+  return SLOTS.filter((x) => x.required && !g.steps.some((s) => s.slot === x.id)).map((x) => `${x.id}: ${x.what}`);
 }
 
 // (d) Write the guide from the fetched pages and probe results.
@@ -186,6 +183,7 @@ async function writeGuide(query: string, pages: Page[], probes: Probe[], researc
       messages.push({ role: "user", content: `That JSON failed validation:\n${(e as Error).message.slice(0, 2000)}\nReturn the corrected full JSON object only.` });
       continue;
     }
+    draft = orderSteps(draft);
     const gaps = setupGaps(draft);
     if (!gaps.length || fixedSetup) {
       if (gaps.length) emit({ type: "setup", missing: gaps, retrying: false });
@@ -196,7 +194,7 @@ async function writeGuide(query: string, pages: Page[], probes: Probe[], researc
     messages.push({ role: "assistant", content: text });
     messages.push({
       role: "user",
-      content: `The setup steps are missing:\n${gaps.map((x) => `- ${x}`).join("\n")}\nAdd them in the right place, citing claims from the pages (uncertain if no page states it), and drop any step that builds app features instead of setting up OAuth. Return the corrected full JSON object only.`,
+      content: `These required step slots are empty:\n${gaps.map((x) => `- ${x}`).join("\n")}\nAdd a step for each, citing claims from the pages (uncertain if no page states it), and drop any step that builds app features instead of setting up OAuth. Return the corrected full JSON object only.`,
     });
   }
 }
@@ -437,7 +435,7 @@ export async function generateGuide(query: string, emit: Emit, library = false):
 
   emit({ type: "phase", phase: "edit", message: "Editing against the checklist" });
   const before = lintGuide(draft);
-  const edited = await editGuide({ ...draft, claims: checked.claims }, before, usage, emit);
+  const edited = orderSteps(await editGuide({ ...draft, claims: checked.claims }, before, usage, emit));
   const after = lintGuide(edited);
   emit({ type: "edit", before: before.length, after: after.length });
   // Gates are checked after editing, since the editor may change what applies.

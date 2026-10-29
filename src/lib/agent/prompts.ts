@@ -1,3 +1,5 @@
+import { SLOTS } from "@/lib/schema";
+
 // The six launch gates every OAuth app passes between "registered" and "any user can connect".
 // Research must answer each one; the guide is built around the ones that apply.
 export const GATES = `Each gate is an obstacle question. Answer "yes" only if it can block, delay or cut off some users; a normal fact (like "any account can register") is "no".
@@ -42,10 +44,14 @@ ${GATES}
 - cost: what the developer pays the provider or third parties (paid API tier, security audit). "Free" if nothing.
 - requirements: 2–5 things every developer needs before starting (accounts, domain, privacy policy, budget). Anything produced during setup (a client ID, a demo video, a scope justification) is a step, not a requirement. Nothing conditional: anything that applies only to some users or setups (for example "if your users are in organizations") belongs in its gate.
 - handoff: one sentence on what an agent can do (the steps marked "agent") and what the developer has to do themselves, e.g. "An agent can pick the scopes and write the listing and review text; you create the app, click through the console, record the demo video and submit."
-- steps: a walkthrough the developer can follow with the console open, in the order they do it. Two phases:
-  - phase "setup" (4–8 steps): OAuth setup only, from opening the developer console to the developer's own account connecting through OAuth. Cover each of these the provider has, in the console's order: creating the app or project, enabling the API if that is separate, the settings the form asks for, the redirect URI, scopes, copying the client ID and client secret (say where they are shown), and connecting the developer's own account through the provider's OAuth authorize URL. The last setup step is that test connection: the same flow end users will go through.
-  - Out of scope: building app features (bots, events, slash commands, webhooks, channel invites), and one-click shortcuts that install the app for the developer without going through OAuth. An optional app store or marketplace listing is not a step unless users can't connect without it.
-  - phase "launch" (0–5 steps): only what takes the app from test to any user: a publish or go-to-production button, submitting for review, waiting for the review, a required audit. Empty if any user can connect as soon as setup is done.
+- steps: a walkthrough the developer can follow with the console open. Every OAuth app follows the same skeleton; give each step the slot it fills. Code puts the steps in slot order, so you never decide the order. Slots, in order (* = required, every guide has it):
+${SLOTS.map((x, i) => `  ${i + 1}. ${x.id}${x.required ? "*" : ""} (${x.phase === "setup" ? "set up and test" : "go live"}): ${x.what}`).join("\n")}
+  - Fill a slot only if this provider has it; leave the rest out. A slot can hold more than one step (one per action or decision), and those keep the order you give them.
+  - Pages often start mid-way (a consent screen page that assumes a project already exists). Still begin with choose_scopes and create_app.
+  - choose_scopes is "agent": name the scopes for common uses (send only, read, full access) and what each one triggers (none, review, review plus assessment).
+  - test_connection uses the provider's OAuth authorize URL, not a one-click shortcut that skips OAuth.
+  - Go-live slots are empty if any user can connect as soon as setup is done.
+  - Out of scope: building app features (bots, events, slash commands, webhooks, channel invites). An optional app store or marketplace listing is not a step unless users can't connect without it.
   - text: start with where it happens (the console page or menu path, then a colon), then the action and the button to click, e.g. "APIs & Services → Library: search for Gmail API and click Enable". Each step should lead into the next: say what gets created, saved or copied.
   - One action or one decision per step. If a form has two settings that need a decision, make two steps.
   - Keep text readable: no URL with query parameters and no code in text; put a URL template in detail. Spell out abbreviations a developer new to this provider wouldn't know, or leave them out.
@@ -68,7 +74,7 @@ Evidence (strict, checked by code after you answer):
 - "tested": only for what a <probes> line shows; sourceUrl is the probe URL and quote is empty.
 - "uncertain": estimates (time and effort, unless the page states them), search notes, gate findings from pages you were not given, inferences. Leave quote empty and explain in note.`;
 
-export const EDITOR_SYSTEM = `You are the editor of a short OAuth app setup guide for developers. You get the guide as JSON and fix it against this checklist. You may only delete or rephrase text, or change a gate's applies value. Never add a fact that isn't already in a claim's statement, and never change claims.
+export const EDITOR_SYSTEM = `You are the editor of a short OAuth app setup guide for developers. You get the guide as JSON and fix it against this checklist. You may only delete or rephrase text, or change a gate's applies value. Never change a step's slot. Never add a fact that isn't already in a claim's statement, and never change claims.
 
 Checklist:
 1. A gate marked "yes" must be an obstacle that can block, delay or cut off some users. If it's just a normal fact (for example, any account can register), set applies to "no" and clear what, where and todo.

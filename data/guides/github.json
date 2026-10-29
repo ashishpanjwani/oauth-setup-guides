@@ -110,7 +110,8 @@
       "claimIds": [
         "c1"
       ],
-      "phase": "setup"
+      "phase": "setup",
+      "slot": "create_app"
     },
     {
       "text": "New OAuth App form: fill in Application name, Homepage URL and Application description.",
@@ -120,7 +121,8 @@
       "claimIds": [
         "c23"
       ],
-      "phase": "setup"
+      "phase": "setup",
+      "slot": "app_details"
     },
     {
       "text": "Redirect URIs: enter the URL GitHub should send users back to after they authorize.",
@@ -132,7 +134,8 @@
         "c21",
         "c10"
       ],
-      "phase": "setup"
+      "phase": "setup",
+      "slot": "redirect_uri"
     },
     {
       "text": "Enable Device Flow: leave it unchecked unless your app has no browser (a CLI, IoT device or headless tool).",
@@ -145,7 +148,8 @@
         "c22",
         "c24"
       ],
-      "phase": "setup"
+      "phase": "setup",
+      "slot": "other_settings"
     },
     {
       "text": "Expire user access tokens: keep it checked.",
@@ -159,7 +163,8 @@
         "c19",
         "c22"
       ],
-      "phase": "setup"
+      "phase": "setup",
+      "slot": "other_settings"
     },
     {
       "text": "Click Register application, then on the app page copy the client ID and click Generate a new client secret.",
@@ -169,7 +174,8 @@
       "claimIds": [
         "c13"
       ],
-      "phase": "setup"
+      "phase": "setup",
+      "slot": "credentials"
     },
     {
       "phase": "setup",
@@ -179,7 +185,8 @@
       "who": "you",
       "claimIds": [
         "c26"
-      ]
+      ],
+      "slot": "test_connection"
     }
   ],
   "blockers": [
