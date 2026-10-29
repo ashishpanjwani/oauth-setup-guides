@@ -259,7 +259,7 @@ export default async function GuidePage({ params }: Props) {
                     <div
                       className={`mt-3 rounded-lg px-3 py-2 text-sm leading-relaxed ${s.attempt.outcome === "done" ? "bg-violet-500/10 text-violet-200" : "bg-white/[0.03] text-zinc-300"}`}
                     >
-                      <span className="font-medium">{s.attempt.outcome === "done" ? "Agent did this: " : "Agent tried: "}</span>
+                      <span className="font-medium">{s.attempt.outcome === "done" ? "Agent did this: " : "You take over here: "}</span>
                       {s.attempt.text}
                       <Refs ids={s.attempt.claimIds} />
                       {s.attempt.output && (

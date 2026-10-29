@@ -142,9 +142,8 @@
       ],
       "attempt": {
         "outcome": "stopped",
-        "text": "Opened X's developer portal and was sent to X's login page. X's API has no way to create an app, so this needs your X account.",
+        "text": "This needs your X login, and X has no way to create an app outside its console.",
         "claimIds": [
-          "a1",
           "a2"
         ]
       }
@@ -159,15 +158,7 @@
       "claimIds": [
         "c17",
         "c18"
-      ],
-      "attempt": {
-        "outcome": "stopped",
-        "text": "Same console, behind your sign-in. Prepared the value to choose: Web App, a confidential client, because your agent's backend keeps the secret.",
-        "claimIds": [
-          "c18",
-          "a1"
-        ]
-      }
+      ]
     },
     {
       "slot": "redirect_uri",
@@ -178,15 +169,7 @@
       "who": "you",
       "claimIds": [
         "c13"
-      ],
-      "attempt": {
-        "outcome": "stopped",
-        "text": "Same console, behind your sign-in. Prepared the value: your server's callback URL, typed exactly as the authorize link sends it.",
-        "claimIds": [
-          "c13",
-          "a1"
-        ]
-      }
+      ]
     },
     {
       "slot": "credentials",
@@ -198,14 +181,7 @@
       "claimIds": [
         "c19",
         "c20"
-      ],
-      "attempt": {
-        "outcome": "stopped",
-        "text": "Behind your sign-in. Copy the Client ID and Client Secret into your own server's settings; the secret should never pass through an agent.",
-        "claimIds": [
-          "a1"
-        ]
-      }
+      ]
     },
     {
       "slot": "test_connection",
@@ -221,7 +197,7 @@
       ],
       "attempt": {
         "outcome": "done",
-        "text": "Built the link with a fresh PKCE pair (S256). It opens X's Authorize app page; swap in your Client ID and callback URL.",
+        "text": "Built the link with a fresh PKCE pair. It opens X's Authorize app page. Swap in your Client ID and callback URL.",
         "output": "https://x.com/i/oauth2/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=https%3A%2F%2Fyour-app.example.com%2Fcallback&scope=tweet.read%20users.read%20tweet.write%20offline.access&state=0a0542b7be34ada0dc21c616942dc223&code_challenge=BOv729H3bzTzNm8kt2p89Rzs_rmmtsAHxK9-605697Y&code_challenge_method=S256",
         "claimIds": [
           "t1",
@@ -240,14 +216,7 @@
       "claimIds": [
         "t1",
         "c21"
-      ],
-      "attempt": {
-        "outcome": "stopped",
-        "text": "The link reaches X's Authorize app page, which asks for your X login. Approving needs your account.",
-        "claimIds": [
-          "t1"
-        ]
-      }
+      ]
     },
     {
       "slot": "test_connection",
@@ -259,15 +228,7 @@
       "claimIds": [
         "t2",
         "c22"
-      ],
-      "attempt": {
-        "outcome": "stopped",
-        "text": "X's token URL answered our request and checks the code_verifier and client ID, so the call works from a server. It needs the real code from your approval and your Client Secret.",
-        "claimIds": [
-          "t2",
-          "a3"
-        ]
-      }
+      ]
     }
   ],
   "blockers": [
@@ -532,48 +493,30 @@
     },
     {
       "id": "t1",
-      "statement": "An authorize link built from the guide's values opens X's “Authorize app” page, which asks a signed-out visitor to log in.",
+      "statement": "The agent-built authorize link opens X's Authorize app page.",
       "status": "tested",
       "sourceUrl": "https://x.com/i/oauth2/authorize",
-      "sourceTitle": "Live request to X",
+      "sourceTitle": "Tested against X",
       "quote": "",
-      "note": "Tried on 2026-10-29 with no X account. Opened the agent-built link (fake client ID, S256 code_challenge): HTTP 200, page titled “Authorize app / X”, with “Log in” on the page."
+      "note": "Tested 2026-10-29."
     },
     {
       "id": "t2",
-      "statement": "X's token URL checks for the code_verifier before anything else, so the code exchange needs PKCE.",
+      "statement": "The code exchange fails without the PKCE code_verifier: X replies “Missing required parameter [code_verifier]”.",
       "status": "tested",
       "sourceUrl": "https://api.x.com/2/oauth2/token",
-      "sourceTitle": "Live request to X",
+      "sourceTitle": "Tested against X",
       "quote": "",
-      "note": "Tried on 2026-10-29 with no X account. POST to the token URL without code_verifier: HTTP 400 {\"error\":\"invalid_request\",\"error_description\":\"Missing required parameter [code_verifier].\"}"
-    },
-    {
-      "id": "a1",
-      "statement": "X's developer portal sends a signed-out visitor to X's login page; the new console at console.x.com loads a sign-in-gated app.",
-      "status": "tested",
-      "sourceUrl": "https://developer.x.com/en/portal/dashboard",
-      "sourceTitle": "Live request to X",
-      "quote": "",
-      "note": "Tried on 2026-10-29 with no X account. developer.x.com/en/portal/dashboard: HTTP 307 to twitter.com/login. console.x.com: HTTP 200, a JavaScript app titled “Developer Console”."
+      "note": "Tested 2026-10-29."
     },
     {
       "id": "a2",
-      "statement": "X's API has no endpoint that creates an app or its client ID and secret, so the app can only be created in the console.",
+      "statement": "X has no API for creating apps: none of the 200 endpoints it publishes creates an app or its Client ID and secret.",
       "status": "tested",
       "sourceUrl": "https://docs.x.com/openapi.json",
-      "sourceTitle": "X API OpenAPI specification",
+      "sourceTitle": "Tested against X's API list",
       "quote": "",
-      "note": "Tried on 2026-10-29 with no X account. Checked all 200 endpoints in X's published OpenAPI spec. The closest, POST /2/bots, creates a bot account inside an app that already exists and needs that app's Bearer Token."
-    },
-    {
-      "id": "a3",
-      "statement": "X's token URL answers a server-side code exchange and checks the client ID, so the call works from the developer's server once it has a real code.",
-      "status": "tested",
-      "sourceUrl": "https://api.x.com/2/oauth2/token",
-      "sourceTitle": "Live request to X",
-      "quote": "",
-      "note": "Tried on 2026-10-29 with no X account. POST with a real-format code_verifier and placeholder client ID: HTTP 400 {\"error\":\"invalid_client\",\"error_description\":\"Value passed for the client id was invalid.\"}"
+      "note": "Tested 2026-10-29."
     }
   ],
   "slug": "x",
@@ -600,22 +543,10 @@
       "result": "POST grant_type=authorization_code with a fake code and no code_verifier → HTTP 400 {\"error\":\"invalid_request\",\"error_description\":\"Missing required parameter [code_verifier].\"}"
     },
     {
-      "name": "portal",
-      "target": "https://developer.x.com/en/portal/dashboard",
-      "ok": true,
-      "result": "HTTP 307 → https://www.twitter.com/login?redirect_after_login=…"
-    },
-    {
       "name": "openapi",
       "target": "https://docs.x.com/openapi.json",
       "ok": true,
       "result": "200 endpoints; none creates an app or credentials (POST /2/bots needs an existing app's Bearer Token)"
-    },
-    {
-      "name": "token_exchange",
-      "target": "https://api.x.com/2/oauth2/token",
-      "ok": true,
-      "result": "HTTP 400 {\"error\":\"invalid_client\",\"error_description\":\"Value passed for the client id was invalid.\"}"
     }
   ],
   "agentRun": {
