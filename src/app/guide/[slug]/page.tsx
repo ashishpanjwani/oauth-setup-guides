@@ -238,7 +238,7 @@ export default async function GuidePage({ params }: Props) {
 
       {parts.map((part) => (
         <section key={part.title}>
-          <SectionTitle eyebrow={`Steps ${part.steps[0].n}–${part.steps[part.steps.length - 1].n}${part.time ? ` · ${part.time}` : ""}`}>{part.title}</SectionTitle>
+          <SectionTitle eyebrow={`${part.steps.length === 1 ? `Step ${part.steps[0].n}` : `Steps ${part.steps[0].n}–${part.steps[part.steps.length - 1].n}`}${part.time ? ` · ${part.time}` : ""}`}>{part.title}</SectionTitle>
           <ol className="relative space-y-3">
             <span aria-hidden className="absolute bottom-6 left-[19px] top-6 w-px bg-gradient-to-b from-[var(--brand)]/60 via-[var(--border)] to-transparent" />
             {part.steps.map((s) => (

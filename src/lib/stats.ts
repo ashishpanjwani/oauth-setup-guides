@@ -57,6 +57,8 @@ export function timeToProduction(g: G): { value: string; basis: string; claimIds
     return { value: "Review not confirmed", basis: `${g.appName}'s docs don't say whether users can connect before a review`, claimIds: [] };
   if (!launch.length) return { value: "Right after setup", basis: "no review or publish step", claimIds: [] };
   const w = waitStep(g);
+  // A review that applies but states no wait is still a review, not "no wait".
+  if (!w && applies(g, "review")) return { value: "Review time not published", basis: `${g.appName} doesn't state how long its review takes`, claimIds: [] };
   if (!w) return { value: "No review wait", basis: `${launch.length} go-live ${launch.length === 1 ? "step" : "steps"}, none waiting on the provider`, claimIds: [] };
   if (statesDuration(w.detail) && backed(g, w.claimIds)) return { value: w.detail, basis: "the provider's stated review time", claimIds: w.claimIds };
   return { value: "Review time not published", basis: `${g.appName} doesn't state how long its review takes`, claimIds: [] };
