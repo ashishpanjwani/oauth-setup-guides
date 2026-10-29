@@ -18,14 +18,20 @@ const backed = (g: G, ids: string[]) =>
     return !!c && c.status !== "uncertain";
   });
 
-/** Longest wait the provider states, in weeks, from the wait step's detail and its sourced claims. */
-function statedWaitWeeks(g: G): number | null {
+/**
+ * Longest wait the provider states, from the wait step's detail and its sourced claims: in weeks
+ * for comparing, plus the provider's own words ("21 business days") for showing.
+ */
+function statedWait(g: G): { weeks: number; words: string } | null {
   const s = waitStep(g);
   if (!s) return null;
   const text = [s.detail, ...s.claimIds.map((id) => g.claims.find((c) => c.id === id && c.status !== "uncertain")?.statement ?? "")].join(" ");
-  const weeks = [...text.matchAll(/(\d+)\s*(business\s+)?(day|week)s?/gi)].map((m) => (m[3].toLowerCase() === "week" ? Number(m[1]) : Number(m[1]) / 5));
-  if (/within a week/i.test(text)) weeks.push(1);
-  return weeks.length ? Math.max(...weeks) : null;
+  const waits = [...text.matchAll(/(\d+)\s*(business\s+)?(day|week)s?/gi)].map((m) => ({
+    weeks: m[3].toLowerCase() === "week" ? Number(m[1]) : Number(m[1]) / 5,
+    words: m[0],
+  }));
+  if (/within a week/i.test(text)) waits.push({ weeks: 1, words: "a week" });
+  return waits.length ? waits.reduce((a, b) => (b.weeks > a.weeks ? b : a)) : null;
 }
 
 /** Hours, days or weeks in the wait step's own words, if it states any. */
@@ -36,9 +42,10 @@ function statesDuration(text: string): boolean {
 export function difficulty(g: G): { level: Difficulty; reason: string } {
   const why: string[] = [];
   const assessment = g.steps.some((s) => s.slot === "security_assessment");
-  const weeks = statedWaitWeeks(g);
+  const wait = statedWait(g);
+  const weeks = wait?.weeks ?? null;
   if (assessment) why.push("security assessment");
-  if (applies(g, "review")) why.push(weeks && weeks >= 2 ? `review of up to ${weeks} weeks` : "provider review");
+  if (applies(g, "review")) why.push(wait && wait.weeks >= 2 ? `review of up to ${wait.words}` : "provider review");
   if (applies(g, "register")) why.push("registration or verification");
   if (applies(g, "paid_access")) why.push("paid API");
   const level: Difficulty = assessment || (weeks !== null && weeks >= 2) ? "hard" : why.length ? "moderate" : "easy";
