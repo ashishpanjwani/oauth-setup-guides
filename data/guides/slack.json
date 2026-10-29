@@ -7,7 +7,7 @@
   "timeToProduction": "~1–2 hours",
   "effort": "~half a day",
   "cost": "Free",
-  "handoff": "An agent can choose the scopes; you create the app, click through the console, copy the client secret and connect your own workspace.",
+  "handoff": "An agent can choose the scopes and build the authorize link; you create the app, click through the console, copy the client secret and connect your own workspace.",
   "summaryClaimIds": [
     "c1",
     "c2",
@@ -152,13 +152,23 @@
     },
     {
       "phase": "setup",
-      "text": "Browser: open https://slack.com/oauth/v2/authorize?client_id=YOUR_CLIENT_ID&scope=YOUR_BOT_SCOPES&redirect_uri=YOUR_REDIRECT_URI and approve the app in your workspace",
+      "text": "Build the authorize link from your client ID, bot scopes and redirect URL",
       "why": "",
-      "detail": "Use user_scope for user scopes; an SIWS scope cannot be mixed with other scopes in one flow.",
-      "who": "you",
+      "detail": "Bot scopes go in scope=…; user scopes, if any, go in user_scope=….",
+      "who": "agent",
       "claimIds": [
         "c13",
-        "c14"
+        "c8"
+      ]
+    },
+    {
+      "phase": "setup",
+      "text": "Browser: open your app’s Slack authorize link and click Allow to connect your own workspace",
+      "why": "",
+      "detail": "The link is https://slack.com/oauth/v2/authorize?client_id=…&scope=…&redirect_uri=… with your client ID, bot scopes and redirect URL filled in.",
+      "who": "you",
+      "claimIds": [
+        "c13"
       ]
     },
     {

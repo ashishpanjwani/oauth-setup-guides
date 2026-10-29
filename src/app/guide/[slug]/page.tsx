@@ -15,6 +15,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return g ? { title: `${g.appName} OAuth app guide`, description: g.summary } : {};
 }
 
+/** URLs in step text render as wrapping monospace, so a long link can't stretch the card. */
+function WithCode({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(https?:\/\/[^\s]+[^\s.,;])/).map((part, i) =>
+        i % 2 ? (
+          <code key={i} className="break-all rounded bg-white/5 px-1 py-0.5 font-mono text-[0.85em] text-zinc-200">
+            {part}
+          </code>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 function SectionTitle({ eyebrow, children }: { eyebrow: string; children: React.ReactNode }) {
   return (
     <div className="mb-4">
@@ -202,13 +219,17 @@ export default async function GuidePage({ params }: Props) {
                 <div className="card min-w-0 flex-1 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
                     <div className="min-w-0 flex-1 font-medium leading-snug">
-                      {s.text}
+                      <WithCode text={s.text} />
                       <Refs ids={s.claimIds} />
                     </div>
                     <span className={`chip ${WHO[s.who].cls}`}>{WHO[s.who].label}</span>
                   </div>
                   {s.why && <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.why}</p>}
-                  {s.detail && <p className="mt-2 border-l-2 border-[var(--border-strong)] pl-3 text-sm leading-relaxed muted">{s.detail}</p>}
+                  {s.detail && (
+                    <p className="mt-2 border-l-2 border-[var(--border-strong)] pl-3 text-sm leading-relaxed muted">
+                      <WithCode text={s.detail} />
+                    </p>
+                  )}
                 </div>
               </li>
             ))}
