@@ -48,7 +48,11 @@ async function main() {
     await fs.writeFile(file, JSON.stringify(guide, null, 2));
     spent += guide.agentRun?.costUsd ?? 0;
     const counts = guide.claims.reduce<Record<string, number>>((m, c) => ((m[c.status] = (m[c.status] ?? 0) + 1), m), {});
-    console.log(`\nSaved data/guides/${guide.slug}.json: ${guide.difficulty}, claims ${JSON.stringify(counts)}, ${guide.agentRun?.durationSec}s, $${guide.agentRun?.costUsd}`);
+    // Same rule as the page: a line is Unverified when none of its claims is tested or sourced.
+    const backed = new Set(guide.claims.filter((c) => c.status !== "uncertain").map((c) => c.id));
+    const lines = [guide.summaryClaimIds, ...guide.gates.filter((x) => x.applies === "yes").map((x) => x.claimIds), ...guide.requirements.map((r) => r.claimIds), ...guide.steps.map((s) => s.claimIds), ...guide.blockers.map((b) => b.claimIds)];
+    const unverified = lines.filter((ids) => !ids.some((id) => backed.has(id))).length;
+    console.log(`\nSaved data/guides/${guide.slug}.json: ${guide.difficulty}, claims ${JSON.stringify(counts)}, unverified lines ${unverified} of ${lines.length}, ${guide.agentRun?.durationSec}s, $${guide.agentRun?.costUsd}`);
     const missing = await checkKnownFacts(guide);
     if (missing === null) console.log("  known facts: none recorded for this app");
     else if (missing.length) {
