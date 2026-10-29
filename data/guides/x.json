@@ -1,0 +1,436 @@
+{
+  "appName": "X",
+  "developerPortal": "https://console.x.com",
+  "summary": "Setup is moderate: the developer signs up, creates an app and can connect any X user right away, but API use is paid by prepaid credits. The main thing that can hold up launch is that X reviews every proposed use case and requires prior approval for AI-generated replies, and API calls stop when the credit balance runs out.",
+  "difficulty": "moderate",
+  "timeToTest": "~1 hour",
+  "timeToProduction": "~1 hour to a few days, plus any X use-case review",
+  "effort": "2–4 hours",
+  "cost": "Pay-per-usage credits, for example $0.005 per Post read and $0.015 per Post created; no subscription",
+  "handoff": "An agent can pick the scopes; the developer signs in, accepts the agreement, creates the app, sets the callback URL, chooses the app type, copies the secrets and connects a test account.",
+  "summaryClaimIds": [
+    "c1",
+    "c2",
+    "c3"
+  ],
+  "gates": [
+    {
+      "gate": "register",
+      "applies": "yes",
+      "title": "Developer account must be applied for and approved",
+      "what": "New developers apply for a developer account with a written use case, which X reviews. The use case binds the developer, and substantive changes need X's approval first.",
+      "where": "console.x.com, signed in with an X account; the developer acts",
+      "todo": "Sign in, accept the Developer Agreement and describe the intended use accurately.",
+      "claimIds": [
+        "c4",
+        "c5"
+      ]
+    },
+    {
+      "gate": "test_limits",
+      "applies": "no",
+      "title": "No test or unpublished mode is mentioned",
+      "what": "",
+      "where": "",
+      "todo": "",
+      "claimIds": [
+        "c6"
+      ]
+    },
+    {
+      "gate": "review",
+      "applies": "yes",
+      "title": "X reviews proposed uses; AI-generated replies need prior approval",
+      "what": "X reviews every proposed use of the platform. AI-generated replies need X's approval before deployment.",
+      "where": "Developer account application in console.x.com; for AI replies, the Policy Support form (developer acts)",
+      "todo": "Describe the use case accurately. If the app posts AI-generated replies, request approval before launch.",
+      "claimIds": [
+        "c5",
+        "c7"
+      ]
+    },
+    {
+      "gate": "admin_approval",
+      "applies": "no",
+      "title": "No organization admin approval mentioned",
+      "what": "",
+      "where": "",
+      "todo": "",
+      "claimIds": [
+        "c8"
+      ]
+    },
+    {
+      "gate": "paid_access",
+      "applies": "yes",
+      "title": "API use requires prepaid credits",
+      "what": "The API is pay-per-usage. Requests are blocked if the credit balance goes negative, and Post reads are capped at 3 million per monthly billing cycle.",
+      "where": "Developer Console → billing and credits; the developer acts",
+      "todo": "Buy credits before testing.",
+      "claimIds": [
+        "c1",
+        "c9",
+        "c10"
+      ]
+    },
+    {
+      "gate": "ongoing",
+      "applies": "yes",
+      "title": "Use case must stay compliant and up to date",
+      "what": "The developer must update the disclosed use case, and X may suspend or revoke access for policy violations. X may also audit compliance once a year.",
+      "where": "Developer Policy and Developer Guidelines; the developer acts",
+      "todo": "Notify X and get approval before changing the use case.",
+      "claimIds": [
+        "c5",
+        "c11",
+        "c12"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "text": "An X account to sign in to the Developer Console",
+      "claimIds": [
+        "c4"
+      ]
+    },
+    {
+      "text": "A written description of the intended use of the API",
+      "claimIds": [
+        "c5"
+      ]
+    },
+    {
+      "text": "A payment card for prepaid API credits",
+      "claimIds": [
+        "c1"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "slot": "choose_scopes",
+      "phase": "setup",
+      "text": "Your agent decides scopes: read-only apps need tweet.read and users.read; posting adds tweet.write; add offline.access for a refresh token.",
+      "why": "Without offline.access, the access token lasts two hours.",
+      "detail": "",
+      "who": "agent",
+      "claimIds": [
+        "c14",
+        "c15"
+      ]
+    },
+    {
+      "slot": "create_app",
+      "phase": "setup",
+      "text": "console.x.com: sign in with your X account, accept the Developer Agreement, click New App and enter a name and description.",
+      "why": "",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c4",
+        "c16"
+      ]
+    },
+    {
+      "slot": "redirect_uri",
+      "phase": "setup",
+      "text": "App settings → Authentication settings: add your callback URL.",
+      "why": "",
+      "detail": "The redirect_uri in the authorize URL must match exactly.",
+      "who": "you",
+      "claimIds": [
+        "c13"
+      ]
+    },
+    {
+      "slot": "other_settings",
+      "phase": "setup",
+      "text": "App settings → Authentication settings: enable OAuth 2.0 and choose the app type: Web App or Automated App (bot) is a confidential client; Native App or Single page App is a public client.",
+      "why": "",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c17",
+        "c18"
+      ]
+    },
+    {
+      "slot": "credentials",
+      "phase": "setup",
+      "text": "App → Keys and Tokens: copy the Client ID, and the Client Secret if shown, into your secret store.",
+      "why": "The Client ID goes into the authorize URL.",
+      "detail": "Credentials are shown only once; save them immediately.",
+      "who": "you",
+      "claimIds": [
+        "c19",
+        "c20"
+      ]
+    },
+    {
+      "slot": "test_connection",
+      "phase": "setup",
+      "text": "Browser: open the authorize URL, approve with your own X account, then exchange the code for a token.",
+      "why": "",
+      "detail": "Exchange the code within 30 seconds.",
+      "who": "you",
+      "claimIds": [
+        "c21",
+        "c22"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "problem": "Requests are blocked with a negative credit balance.",
+      "fix": "Add credits to cover the negative balance.",
+      "claimIds": [
+        "c9"
+      ]
+    },
+    {
+      "problem": "The authorization code expires 30 seconds after it is issued.",
+      "fix": "Exchange the code for an access token immediately.",
+      "claimIds": [
+        "c22"
+      ]
+    },
+    {
+      "problem": "The callback URL must match exactly.",
+      "fix": "Copy the callback URL from the app settings into redirect_uri without changes.",
+      "claimIds": [
+        "c13"
+      ]
+    },
+    {
+      "problem": "Access tokens expire after two hours without offline.access.",
+      "fix": "Request offline.access and use the refresh token flow.",
+      "claimIds": [
+        "c14"
+      ]
+    }
+  ],
+  "couldNotVerify": [
+    "Couldn't read https://developer.twitter.com/en/support/x-api/developer-account1 (HTTP 404), so nothing from it is confirmed."
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "statement": "The X API uses pay-per-usage pricing with prepaid credits.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/x-api/getting-started/pricing",
+      "sourceTitle": "X API pay-per-usage pricing and credits - X",
+      "quote": "Purchase credits upfront in the Developer Console. Credits are deducted as you make API requests.",
+      "note": ""
+    },
+    {
+      "id": "c2",
+      "statement": "X reviews all proposed uses of the developer platform.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/developer-terms/policy",
+      "sourceTitle": "X Developer Policy - X",
+      "quote": "We review all proposed uses of the X developer platform to verify policy compliance — so you’re required to disclose (and update, as applicable) your planned use of the X API and X Content in order to be granted and to maintain access.",
+      "note": ""
+    },
+    {
+      "id": "c3",
+      "statement": "AI-generated replies require prior approval from X.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/developer-guidelines",
+      "sourceTitle": "Developer Guidelines - X",
+      "quote": "Requires prior approval from X before deployment",
+      "note": ""
+    },
+    {
+      "id": "c4",
+      "statement": "Sign up at console.x.com with an X account and accept the Developer Agreement.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/developer-portal",
+      "sourceTitle": "Developer Console - X",
+      "quote": "Go to console.x.com and sign in with your X account. Accept the Developer Agreement.",
+      "note": ""
+    },
+    {
+      "id": "c5",
+      "statement": "New developers must apply and provide a written description of intended use, which is binding.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/developer-terms/policy",
+      "sourceTitle": "X Developer Policy - X",
+      "quote": "All new developers must apply for a developer account to access the X API. Current developers without an approved developer account must apply for one as directed to do so by X. As part of this process, you’ll need to provide us with a written description of your intended uses of the X API and X Content. … Your use case description is binding on you, and any substantive deviation from it may constitute a violation of our rules and result in enforcement action.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c6",
+      "statement": "No test mode is mentioned on the getting access page.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.x.com/x-api/getting-started/getting-access",
+      "sourceTitle": "Getting Access - X",
+      "quote": "",
+      "note": "No test, development or unpublished mode is mentioned in Getting Access - X."
+    },
+    {
+      "id": "c7",
+      "statement": "AI-generated replies need X approval via the Policy Support form before launch.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.x.com/developer-guidelines",
+      "sourceTitle": "Developer Guidelines - X",
+      "quote": "Contact X via the Policy Support form before launching",
+      "note": "[Check: the quote only partly supports this. The quote says to contact X via the Policy Support form before launching. It does not say the approval is needed or that it is specifically for AI-generated replies, so the approval element is only partly stated; the quote does not explicitly mention approval.]"
+    },
+    {
+      "id": "c8",
+      "statement": "No admin approval is mentioned on the OAuth page.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "quote": "",
+      "note": "No organization or admin approval is mentioned in OAuth 2.0 Authorization Code Flow with PKCE - X."
+    },
+    {
+      "id": "c9",
+      "statement": "API requests are blocked while the credit balance is negative.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/x-api/getting-started/pricing",
+      "sourceTitle": "X API pay-per-usage pricing and credits - X",
+      "quote": "Note: It is possible for an account credit balance to go slightly negative. In this case, API requests will be blocked until you add credits to cover the negative balance.",
+      "note": ""
+    },
+    {
+      "id": "c10",
+      "statement": "Pay-per-usage plans are capped at 3 million Post reads per month.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/x-api/getting-started/pricing",
+      "sourceTitle": "X API pay-per-usage pricing and credits - X",
+      "quote": "Pay-per-usage plans are capped at 3 million Post reads per monthly billing cycle .",
+      "note": ""
+    },
+    {
+      "id": "c11",
+      "statement": "X may suspend or revoke access for policy violations.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/developer-terms/policy",
+      "sourceTitle": "X Developer Policy - X",
+      "quote": "If we believe you are in violation of this Policy (or any other X policy), we may suspend or permanently revoke your access to the X API and X Content.",
+      "note": ""
+    },
+    {
+      "id": "c12",
+      "statement": "X may audit compliance once a year.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/developer-guidelines",
+      "sourceTitle": "Developer Guidelines - X",
+      "quote": "X may audit your compliance up to once per year",
+      "note": ""
+    },
+    {
+      "id": "c13",
+      "statement": "The callback URL must match exactly and correspond to one set in app settings.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "quote": "This value must correspond to one of the Callback URLs defined in your App’s settings. For OAuth 2.0, you will need to have  exact match validation  for your callback URL.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c14",
+      "statement": "Access tokens last two hours unless offline.access is used.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "quote": "By default, the access token you create through the Authorization Code Flow with PKCE will only stay valid for two hours unless you’ve used the offline.access scope.",
+      "note": ""
+    },
+    {
+      "id": "c15",
+      "statement": "tweet.write lets the app Tweet and Retweet for the user.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "quote": "tweet.write Tweet and Retweet for you.",
+      "note": ""
+    },
+    {
+      "id": "c16",
+      "statement": "Creating an app means clicking New App and giving a name and description.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/developer-portal",
+      "sourceTitle": "Developer Console - X",
+      "quote": "Click New App and provide a name and description.",
+      "note": ""
+    },
+    {
+      "id": "c17",
+      "statement": "OAuth 2.0 must be enabled in the app's authentication settings.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "quote": "To enable OAuth 2.0 in your App, you must enable it in your App’s authentication settings found in the App settings section of the Developer Console.",
+      "note": ""
+    },
+    {
+      "id": "c18",
+      "statement": "Web App and Automated App are confidential clients; Native and Single page are public.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "quote": "Native App and Single page Apps are public clients and Web App and Automated App or bots are confidential clients.",
+      "note": ""
+    },
+    {
+      "id": "c19",
+      "statement": "The Client ID is in Keys and Tokens and is needed for the authorize URL.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "quote": "Client ID Can be found in the keys and tokens section of the Developer Console under the header “Client ID.” If you don’t see this, please get in touch with our team directly. The Client ID will be needed to generate the authorize URL.",
+      "note": ""
+    },
+    {
+      "id": "c20",
+      "statement": "Credentials are displayed only once.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/x-api/getting-started/getting-access",
+      "sourceTitle": "Getting Access - X",
+      "quote": "Save immediately. Credentials are only displayed once.",
+      "note": ""
+    },
+    {
+      "id": "c21",
+      "statement": "The authorize URL is https://x.com/i/oauth2/authorize with response_type, client_id, redirect_uri, scope, state and code_challenge parameters.",
+      "status": "uncertain",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "quote": "To construct an OAuth 2.0 authorize URL, you will need to ensure you have the following parameters in the authorization URL.",
+      "note": "[Check: the quote only partly supports this. The quote only says the authorize URL requires certain parameters. It does not give the URL https://x.com/i/oauth2/authorize or list response_type, client_id, redirect_uri, scope, state and code_challenge.]"
+    },
+    {
+      "id": "c22",
+      "statement": "The authorization code expires after 30 seconds.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "quote": "You will have to exchange it with an access token within 30 seconds, or the auth_code will expire.",
+      "note": ""
+    }
+  ],
+  "slug": "x",
+  "reviewed": false,
+  "createdAt": "2026-10-29T06:37:25.378Z",
+  "checkedAt": "2026-10-29T06:37:25.378Z",
+  "probes": [
+    {
+      "name": "console",
+      "target": "https://developer.x.com",
+      "ok": true,
+      "result": "HTTP 200, redirected to https://developer.x.com/"
+    }
+  ],
+  "agentRun": {
+    "model": "claude-haiku-5-5 + claude-sonnet-5-5",
+    "searches": 5,
+    "fetches": 8,
+    "probes": 1,
+    "durationSec": 111,
+    "costUsd": 0.388
+  }
+}
