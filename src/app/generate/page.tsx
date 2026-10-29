@@ -3,40 +3,135 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { streamEvents } from "@/lib/client/ndjson";
+import { RequestError, streamEvents } from "@/lib/client/ndjson";
+import { useSnackbar } from "@/components/snackbar";
 import type { AgentEvent } from "@/lib/agent/pipeline";
 
 type Phase = "research" | "fetch" | "compose" | "check" | "edit" | "done";
 const PHASES: { id: Phase; label: string; hint: string }[] = [
-  { id: "research", label: "Find docs", hint: "Searches for the provider's official pages" },
-  { id: "fetch", label: "Read & probe", hint: "Reads those pages and checks the developer console" },
-  { id: "compose", label: "Write", hint: "Turns them into steps, blockers and time estimates" },
-  { id: "check", label: "Check quotes", hint: "Confirms every quoted sentence is on its page" },
-  { id: "edit", label: "Edit", hint: "Fixes the guide against a fixed checklist" },
+  {
+    id: "research",
+    label: "Find docs",
+    hint: "Searches for the provider's official pages",
+  },
+  {
+    id: "fetch",
+    label: "Read & probe",
+    hint: "Reads those pages and checks the developer console",
+  },
+  {
+    id: "compose",
+    label: "Write",
+    hint: "Turns them into steps, requirements and blockers",
+  },
+  {
+    id: "check",
+    label: "Check quotes",
+    hint: "Confirms every quoted sentence is on its page",
+  },
+  {
+    id: "edit",
+    label: "Edit",
+    hint: "Fixes the guide against a fixed checklist",
+  },
 ];
 
-type Row = { icon: string; text: string; sub?: string; tone?: "ok" | "bad" | "note" };
+type Row = {
+  icon: string;
+  text: string;
+  sub?: string;
+  tone?: "ok" | "bad" | "note";
+};
 
 function toRow(e: AgentEvent): Row | null {
   switch (e.type) {
+    case "phase":
+      // The writer works for about a minute with nothing to report, so say so up front.
+      return e.phase === "compose"
+        ? {
+            icon: "✎",
+            text: "Writing the guide from the pages it read. This step usually takes about a minute.",
+          }
+        : null;
+    case "edit":
+      return e.before
+        ? {
+            icon: "✓",
+            text: `Editing pass: fixed ${e.before - e.after} of ${e.before} rule problems`,
+            sub: e.after ? `${e.after} left for the reader to see` : undefined,
+            tone: e.after ? "note" : "ok",
+          }
+        : {
+            icon: "✓",
+            text: "Editing pass: checked the guide against the checklist",
+            tone: "ok",
+          };
+    case "skipped":
+      return {
+        icon: "!",
+        text: `Skipped: ${e.step}`,
+        sub: `Because ${e.reason}`,
+        tone: "note",
+      };
     case "search":
       return { icon: "⌕", text: `Searching “${e.query}”` };
     case "fetch":
-      return e.ok ? { icon: "✓", text: `Read ${e.url}`, tone: "ok" } : { icon: "✗", text: `Couldn't read ${e.url}`, sub: e.error, tone: "bad" };
+      return e.ok
+        ? { icon: "✓", text: `Read ${e.url}`, tone: "ok" }
+        : {
+            icon: "✗",
+            text: `Couldn't read ${e.url}`,
+            sub: e.error,
+            tone: "bad",
+          };
     case "probe":
-      return { icon: e.probe.ok ? "✓" : "✗", text: `Developer console: ${e.probe.target}`, sub: e.probe.result, tone: e.probe.ok ? "ok" : "bad" };
+      return {
+        icon: e.probe.ok ? "✓" : "✗",
+        text: `Developer console: ${e.probe.target}`,
+        sub: e.probe.result,
+        tone: e.probe.ok ? "ok" : "bad",
+      };
     case "coverage":
       return e.found.length || !e.missing.length
-        ? { icon: e.missing.length ? "!" : "✓", text: `Found the missing docs: ${e.found.join(", ") || "none"}`, sub: e.missing.length ? `Still missing: ${e.missing.join(", ")}` : undefined, tone: e.missing.length ? "bad" : "ok" }
-        : { icon: "⌕", text: `Missing docs for: ${e.missing.join(", ")}. Searching once more` };
+        ? {
+            icon: e.missing.length ? "!" : "✓",
+            text: `Found the missing docs: ${e.found.join(", ") || "none"}`,
+            sub: e.missing.length
+              ? `Still missing: ${e.missing.join(", ")}`
+              : undefined,
+            tone: e.missing.length ? "bad" : "ok",
+          }
+        : {
+            icon: "⌕",
+            text: `Missing docs for: ${e.missing.join(", ")}. Searching once more`,
+          };
     case "requote":
-      return { icon: e.fixed ? "✓" : "!", text: `Found the right sentence for ${e.fixed} of ${e.tried} claims whose first quote didn't hold up`, tone: e.fixed === e.tried ? "ok" : "note" };
+      return {
+        icon: e.fixed ? "✓" : "!",
+        text: `Found the right sentence for ${e.fixed} of ${e.tried} claims whose first quote didn't hold up`,
+        tone: e.fixed === e.tried ? "ok" : "note",
+      };
     case "support":
-      return { icon: e.downgraded ? "!" : "✓", text: `Checked each quote supports its statement: ${e.downgraded} marked uncertain`, tone: e.downgraded ? "note" : "ok" };
+      return {
+        icon: e.downgraded ? "!" : "✓",
+        text: `Checked each quote supports its statement: ${e.downgraded} marked uncertain`,
+        tone: e.downgraded ? "note" : "ok",
+      };
     case "setup":
-      return { icon: "!", text: e.retrying ? "Setup steps were incomplete. Asking the writer to add them" : "Setup steps are still incomplete", sub: e.missing.join("; "), tone: e.retrying ? "note" : "bad" };
+      return {
+        icon: "!",
+        text: e.retrying
+          ? "Setup steps were incomplete. Asking the writer to add them"
+          : "Setup steps are still incomplete",
+        sub: e.missing.join("; "),
+        tone: e.retrying ? "note" : "bad",
+      };
     case "check":
-      return { icon: e.downgraded ? "!" : "✓", text: `${e.kept} claims confirmed on their pages, ${e.downgraded} marked uncertain`, tone: e.downgraded ? "note" : "ok" };
+      return {
+        icon: e.downgraded ? "!" : "✓",
+        text: `${e.kept} claims confirmed on their pages, ${e.downgraded} marked uncertain`,
+        tone: e.downgraded ? "note" : "ok",
+      };
     case "error":
       return { icon: "✗", text: e.message, tone: "bad" };
     default:
@@ -53,6 +148,13 @@ function Generator() {
   const [rows, setRows] = useState<Row[]>([]);
   const [slug, setSlug] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // An input the agent can't write a guide for: not an error, just a message and maybe a suggestion.
+  const [rejected, setRejected] = useState<{
+    message: string;
+    suggestion?: string;
+  } | null>(null);
+  const snackbar = useSnackbar(7000);
+  const { show } = snackbar;
   const [elapsed, setElapsed] = useState(0);
   const started = useRef(false);
 
@@ -60,7 +162,10 @@ function Generator() {
     if (started.current || !q) return;
     started.current = true;
     const t0 = Date.now();
-    const timer = setInterval(() => setElapsed(Math.round((Date.now() - t0) / 1000)), 1000);
+    const timer = setInterval(
+      () => setElapsed(Math.round((Date.now() - t0) / 1000)),
+      1000,
+    );
     const push = (e: AgentEvent) => {
       const r = toRow(e);
       if (r) setRows((rs) => [...rs, r]);
@@ -69,73 +174,184 @@ function Generator() {
     (async () => {
       let newSlug: string | null = null;
       try {
-        for await (const e of streamEvents("/api/generate", { query: q, replay })) {
+        for await (const e of streamEvents("/api/generate", {
+          query: q,
+          replay,
+        })) {
           if (e.type === "phase") setPhase(e.phase);
           if (e.type === "guide") newSlug = e.slug;
           if (e.type === "error") throw new Error(e.message);
+          if (e.type === "rejected") {
+            setRejected({ message: e.message, suggestion: e.suggestion });
+            show(
+              e.message,
+              e.suggestion
+                ? {
+                    label: `Search ${e.suggestion}`,
+                    href: `/generate?q=${encodeURIComponent(e.suggestion)}`,
+                  }
+                : undefined,
+            );
+            return;
+          }
           push(e);
         }
-        if (!newSlug) throw new Error("The agent finished without producing a guide.");
+        if (!newSlug)
+          throw new Error("The agent finished without producing a guide.");
         setSlug(newSlug);
         setPhase("done");
         router.push(`/guide/${newSlug}`);
       } catch (err) {
+        // The server checks the input after looking in the library; a 400 is a bad input, not a failure.
+        if (err instanceof RequestError && err.status === 400) {
+          setRejected({ message: err.message });
+          show(err.message);
+          return;
+        }
         setError((err as Error).message);
+        show((err as Error).message);
       } finally {
         clearInterval(timer);
       }
     })();
-  }, [q, replay, router]);
+  }, [q, replay, router, show]);
 
-  if (!q) return <p className="muted">Nothing to investigate. <Link href="/" className="underline">Search for an app</Link>.</p>;
+  if (!q)
+    return (
+      <p className="muted">
+        Nothing to investigate.{" "}
+        <Link href="/" className="underline">
+          Search for an app
+        </Link>
+        .
+      </p>
+    );
 
   const idx = PHASES.findIndex((p) => p.id === phase);
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <p className="eyebrow">{replay ? "Replay of a recorded investigation (no API cost)" : "Live investigation"}</p>
-        <h1 className="mt-1 font-display text-4xl">{q}</h1>
-        <p className="mt-1 text-sm muted">
-          Usually 2–3 minutes. {elapsed > 0 && <span className="font-mono">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>}
+        <p className="eyebrow">
+          {rejected
+            ? "Nothing to investigate"
+            : replay
+              ? "Replay of a recorded investigation (no API cost)"
+              : "Live investigation"}
         </p>
+        <h1 className="mt-1 font-display text-4xl">{q}</h1>
+        {!rejected && (
+          <p className="mt-1 text-sm muted">
+            Usually 2–5 minutes.{" "}
+            {elapsed > 0 && (
+              <span className="font-mono">
+                {Math.floor(elapsed / 60)}:
+                {String(elapsed % 60).padStart(2, "0")}
+              </span>
+            )}
+          </p>
+        )}
       </div>
 
-      <ol className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {PHASES.map((p, i) => {
-          const state = phase === "done" || i < idx ? "done" : i === idx ? "active" : "todo";
-          return (
-            <li key={p.id} className={`card p-3 ${state === "active" ? "gradient-border border-transparent" : ""} ${state === "todo" ? "opacity-50" : ""}`}>
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <span className={`h-2 w-2 rounded-full ${state === "done" ? "bg-emerald-500" : state === "active" ? (error ? "bg-rose-500" : "animate-pulse bg-[var(--cyan)] shadow-[0_0_8px_var(--cyan)]") : "bg-zinc-300"}`} />
-                {p.label}
-              </div>
-              <p className="mt-1 text-xs muted">{p.hint}</p>
-            </li>
-          );
-        })}
-      </ol>
+      {!rejected && (
+        <ol className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {PHASES.map((p, i) => {
+            const state =
+              phase === "done" || i < idx
+                ? "done"
+                : i === idx
+                  ? "active"
+                  : "todo";
+            return (
+              <li
+                key={p.id}
+                className={`card p-3 ${state === "active" ? "gradient-border border-transparent" : ""} ${state === "todo" ? "opacity-50" : ""}`}
+              >
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <span
+                    className={`h-2 w-2 rounded-full ${state === "done" ? "bg-emerald-500" : state === "active" ? (error ? "bg-rose-500" : "animate-pulse bg-[var(--cyan)] shadow-[0_0_8px_var(--cyan)]") : "bg-zinc-300"}`}
+                  />
+                  {p.label}
+                </div>
+                <p className="mt-1 text-xs muted">{p.hint}</p>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+
+      {rejected && (
+        <div className="card p-4 text-sm">
+          <p>{rejected.message}</p>
+          <p className="mt-2 flex flex-wrap gap-4">
+            {rejected.suggestion && (
+              <Link
+                className="text-[#8fc2ff] hover:text-[var(--cyan)]"
+                href={`/generate?q=${encodeURIComponent(rejected.suggestion)}`}
+              >
+                Search {rejected.suggestion} →
+              </Link>
+            )}
+            <Link className="muted hover:text-white" href="/">
+              Search for another app
+            </Link>
+          </p>
+        </div>
+      )}
 
       {error && (
         <div className="card border-rose-300 p-4 text-sm dark:border-rose-900">
           <strong>Something went wrong:</strong> {error}
-          {slug ? <> The guide was saved: <Link className="underline" href={`/guide/${slug}`}>open it</Link>.</> : <> <button className="underline" onClick={() => location.reload()}>Try again</button>.</>}
+          {slug ? (
+            <>
+              {" "}
+              The guide was saved:{" "}
+              <Link className="underline" href={`/guide/${slug}`}>
+                open it
+              </Link>
+              .
+            </>
+          ) : (
+            <>
+              {" "}
+              <button className="underline" onClick={() => location.reload()}>
+                Try again
+              </button>
+              .
+            </>
+          )}
         </div>
       )}
 
-      <div className="card max-h-[60vh] overflow-auto p-4">
-        <ul className="space-y-1.5 font-mono text-xs">
-          {rows.map((r, i) => (
-            <li key={i} className="grid grid-cols-[1rem_1fr] gap-2">
-              <span className={r.tone === "ok" ? "text-emerald-600" : r.tone === "bad" ? "text-rose-600" : "muted"}>{r.icon}</span>
-              <span className={r.tone === "note" ? "muted" : ""}>
-                {r.text}
-                {r.sub && <span className="block muted">{r.sub}</span>}
-              </span>
-            </li>
-          ))}
-          {!error && phase !== "done" && <li className="muted animate-pulse">working…</li>}
-        </ul>
-      </div>
+      {snackbar.node}
+
+      {!(rejected && rows.length === 0) && (
+        <div className="card max-h-[60vh] overflow-auto p-4">
+          <ul className="space-y-1.5 font-mono text-xs">
+            {rows.map((r, i) => (
+              <li key={i} className="grid grid-cols-[1rem_1fr] gap-2">
+                <span
+                  className={
+                    r.tone === "ok"
+                      ? "text-emerald-600"
+                      : r.tone === "bad"
+                        ? "text-rose-600"
+                        : "muted"
+                  }
+                >
+                  {r.icon}
+                </span>
+                <span className={r.tone === "note" ? "muted" : ""}>
+                  {r.text}
+                  {r.sub && <span className="block muted">{r.sub}</span>}
+                </span>
+              </li>
+            ))}
+            {!error && !rejected && phase !== "done" && (
+              <li className="muted animate-pulse">working…</li>
+            )}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

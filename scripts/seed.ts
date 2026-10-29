@@ -5,7 +5,7 @@
  */
 import { promises as fs } from "fs";
 import path from "path";
-import { generateGuide, type AgentEvent } from "@/lib/agent/pipeline";
+import { generateGuide, RejectedError, type AgentEvent } from "@/lib/agent/pipeline";
 import type { Guide } from "@/lib/schema";
 
 /** Regression check: every fact we know must be in this guide. Returns the missing ones, or null if none recorded. */
@@ -30,6 +30,8 @@ function log(e: AgentEvent) {
   if (e.type === "requote") console.log(`  re-quote: ${e.fixed} of ${e.tried} failed claims fixed with the right sentence`);
   if (e.type === "setup") console.log(`  setup ${e.retrying ? "missing, asking again" : "STILL missing"}: ${e.missing.join("; ")}`);
   if (e.type === "check") console.log(`  quotes confirmed: ${e.kept}, downgraded to uncertain: ${e.downgraded}`);
+  if (e.type === "rejected") console.log(`  REJECTED: ${e.message}`);
+  if (e.type === "skipped") console.log(`  skipped: ${e.step} (${e.reason})`);
   if (e.type === "edit") console.log(`  rule violations before edit: ${e.before}, after: ${e.after}`);
 }
 
@@ -44,9 +46,19 @@ async function main() {
       console.log(`\nStopping before ${app}: spent $${spent.toFixed(3)} of $${maxUsd}.`);
       break;
     }
-    const guide = await generateGuide(app, log, true);
+    const recording: AgentEvent[] = [];
+    let guide;
+    try {
+      guide = await generateGuide(app, (e) => (log(e), e.type !== "cost" && recording.push(e)), true);
+    } catch (e) {
+      if (e instanceof RejectedError) continue; // already logged as "rejected"
+      throw e;
+    }
     const file = path.join(process.cwd(), "data/guides", `${guide.slug}.json`);
     await fs.writeFile(file, JSON.stringify(guide, null, 2));
+    // The run's events, so the progress page can replay it at no cost.
+    await fs.mkdir(path.join(process.cwd(), "data/replays"), { recursive: true });
+    await fs.writeFile(path.join(process.cwd(), "data/replays", `${guide.slug}.json`), JSON.stringify([...recording, { type: "guide", slug: guide.slug }]));
     spent += guide.agentRun?.costUsd ?? 0;
     const counts = guide.claims.reduce<Record<string, number>>((m, c) => ((m[c.status] = (m[c.status] ?? 0) + 1), m), {});
     // Same rule as the page: a line is Unverified when none of its claims is tested or sourced.

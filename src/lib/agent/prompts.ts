@@ -122,3 +122,13 @@ Judge only from the quote, not from what you know. Write your reason first, then
 export const REQUOTE_SYSTEM = `You find supporting sentences. You get one documentation page and a list of statements that were cited to it with the wrong sentence, each with the first quote and why it failed. Use the reason to know what is missing: often the right sentence is next to the first quote, or elsewhere on the page names the exact thing (a method, a button, a limit) the first quote left out.
 
 For each statement, find the shortest passage on the page that states all of it: one sentence or numbered instruction, or up to three consecutive sentences when the fact spans them (for example "the live version of your app is locked. This means…"). When the parts of the statement are in different places on the page (a menu path in one instruction, a number in a table elsewhere), join up to three passages with " … ". Copy each passage exactly, word for word, as it appears in the page text. If no passage on the page states it, return an empty quote. Never write a sentence that isn't on the page, and never stretch a passage to fit: one that only states part of the statement is not a match.`;
+
+export const APP_CHECK_SYSTEM = `You check what someone typed into a search box that generates OAuth app setup guides for software products and online services (for example Slack, Gmail, Notion, xero.com).
+
+Answer:
+- "app": it names a real software product, online service or company website that could offer an API or OAuth login.
+- "typo": it is clearly a misspelling of a well-known product (for example "Gmial" for Gmail). Give the corrected name as suggestion.
+- "not_app": it is clearly not a product or service: a question, a sentence, random letters, a generic word with no product behind it ("hello", "pizza recipe", "asdfgh").
+- "unsure": anything else, including products you don't know. Unknown or new products are "unsure", never "not_app".
+
+Be lenient: when in doubt, answer "unsure". Write the reason first, in a few words, then the verdict.`;

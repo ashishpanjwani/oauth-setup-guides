@@ -4,7 +4,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { difficulty } from "@/lib/stats";
 import { GateId, GuideDraft, SLOTS, STATS, slotPhase, type Claim, type Gate, type Guide } from "@/lib/schema";
 import { slugify } from "@/lib/text";
-import { COMPOSE_SYSTEM, EDITOR_SYSTEM, REQUOTE_SYSTEM, RESEARCH_SYSTEM, SUPPORT_SYSTEM } from "./prompts";
+import { APP_CHECK_SYSTEM, COMPOSE_SYSTEM, EDITOR_SYSTEM, REQUOTE_SYSTEM, RESEARCH_SYSTEM, SUPPORT_SYSTEM } from "./prompts";
 import { lintGuide, type Violation } from "./lint";
 import { RESEARCH_MODEL, WRITER_MODEL, RUN_CAP_USD, BudgetError, addTurn, emptyUsage, type Usage } from "./cost";
 import { fetchPage, probeConsole, quoteOnPage, type Page, type Probe } from "./web";
@@ -21,6 +21,8 @@ export type AgentEvent =
   | { type: "support"; checked: number; downgraded: number }
   | { type: "requote"; tried: number; fixed: number }
   | { type: "edit"; before: number; after: number }
+  | { type: "rejected"; message: string; suggestion?: string }
+  | { type: "skipped"; step: string; reason: string }
   | { type: "guide"; slug: string }
   | { type: "cost"; usd: number }
   | { type: "error"; message: string };
@@ -404,12 +406,45 @@ function checkGates(gates: Gate[], claims: Claim[], pages: Page[]): { gates: Gat
 }
 
 /** The whole pipeline. library=true gives a stable slug for seed guides; live guides get a unique one. */
+/** Thrown when the input isn't something we can write a guide for; the reason was already emitted. */
+export class RejectedError extends Error {}
+
+const AppCheck = z.object({ reason: z.string(), verdict: z.enum(["app", "typo", "not_app", "unsure"]), suggestion: z.string() });
+
+/** A cheap first look at the input, before any search is paid for. Lenient: only clear non-apps and typos stop. */
+async function checkApp(query: string, usage: Usage, emit: Emit): Promise<void> {
+  const text = await call(
+    RESEARCH_MODEL,
+    { system: APP_CHECK_SYSTEM, messages: [{ role: "user", content: query }], output_config: { effort: "low", format: zodOutputFormat(AppCheck) } },
+    usage,
+    emit,
+  );
+  const r = AppCheck.parse(JSON.parse(text));
+  if (r.verdict === "not_app") reject(emit, `“${query}” doesn't look like an app or online service. Type the name of the product you want to connect, for example Notion.`);
+  if (r.verdict === "typo" && r.suggestion && r.suggestion.toLowerCase() !== query.toLowerCase()) reject(emit, `Did you mean ${r.suggestion}?`, r.suggestion);
+}
+
+function reject(emit: Emit, message: string, suggestion?: string): never {
+  emit({ type: "rejected", message, suggestion });
+  throw new RejectedError(message);
+}
+
+// Deployed runs end at 300 seconds. The re-quote and the editor are improvements, not
+// requirements, so a slow run skips them rather than failing with no guide.
+const REQUOTE_BY_SEC = 210;
+const EDIT_BY_SEC = 230;
+
 export async function generateGuide(query: string, emit: Emit, library = false): Promise<Guide> {
   const started = Date.now();
+  const elapsed = () => (Date.now() - started) / 1000;
   const usage = emptyUsage();
 
   emit({ type: "phase", phase: "research", message: "Finding the official docs" });
+  await checkApp(query, usage, emit);
   const sources = await findSources(query, usage, emit);
+  if (!sources.pages.length) {
+    reject(emit, `Couldn't find official developer docs for “${query}”. Check the spelling, or try the company's website, for example xero.com.`);
+  }
 
   // Coverage check in code: a missing page kind gets one targeted search before anything is written.
   const required = requiredKinds(sources.gates);
@@ -438,13 +473,19 @@ export async function generateGuide(query: string, emit: Emit, library = false):
   const checked = checkClaims(draft.claims, pages, probes);
   emit({ type: "check", kept: checked.kept, downgraded: checked.downgraded });
   checked.claims = await checkSupport(checked.claims, usage, emit);
-  checked.claims = await requoteClaims(draft.claims, checked.claims, pages, usage, emit);
+  if (elapsed() < REQUOTE_BY_SEC) checked.claims = await requoteClaims(draft.claims, checked.claims, pages, usage, emit);
+  else emit({ type: "skipped", step: "Re-quoting failed claims", reason: "the run is close to its time limit" });
 
   emit({ type: "phase", phase: "edit", message: "Editing against the checklist" });
   const before = lintGuide(draft);
-  const edited = orderSteps(await editGuide({ ...draft, claims: checked.claims }, before, usage, emit));
-  const after = lintGuide(edited);
-  emit({ type: "edit", before: before.length, after: after.length });
+  let edited: GuideDraft;
+  if (elapsed() < EDIT_BY_SEC) {
+    edited = orderSteps(await editGuide({ ...draft, claims: checked.claims }, before, usage, emit));
+    emit({ type: "edit", before: before.length, after: lintGuide(edited).length });
+  } else {
+    edited = { ...draft, claims: checked.claims };
+    emit({ type: "skipped", step: "The editing pass", reason: "the run is close to its time limit" });
+  }
   // Gates are checked after editing, since the editor may change what applies.
   const gates = checkGates(edited.gates, checked.claims, pages);
 

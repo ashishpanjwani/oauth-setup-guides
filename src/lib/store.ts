@@ -65,6 +65,18 @@ export async function saveGuide(guide: Guide): Promise<void> {
   await writeJson(`guides/${guide.slug}.json`, guide);
 }
 
+/** The events of the run that produced a guide, so the progress page can replay it at no cost. */
+export async function saveRecording(slug: string, events: unknown[]): Promise<void> {
+  await writeJson(`replays/${slug}.json`, events);
+}
+
+export async function getRecording(slug: string): Promise<unknown[] | null> {
+  if (!/^[a-z0-9-]+$/.test(slug)) return null;
+  const seed = await fs.readFile(path.join(process.cwd(), "data", "replays", `${slug}.json`), "utf8").catch(() => null);
+  if (seed) return JSON.parse(seed);
+  return readJson<unknown[]>(`replays/${slug}.json`);
+}
+
 /** Running API spend for the public demo, per UTC day. Best-effort: concurrent runs can race. */
 type Ledger = { usd: number; runs: number };
 const ledgerKey = () => `budget/${new Date().toISOString().slice(0, 10)}.json`;
