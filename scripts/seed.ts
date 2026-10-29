@@ -28,6 +28,7 @@ function log(e: AgentEvent) {
   if (e.type === "coverage") console.log(e.found.length || !e.missing.length ? `  coverage: found ${e.found.join(", ") || "-"}, still missing ${e.missing.join(", ") || "none"}` : `  coverage: missing ${e.missing.join(", ")}, searching`);
   if (e.type === "support") console.log(`  support check: ${e.checked} claims, ${e.downgraded} downgraded to uncertain`);
   if (e.type === "requote") console.log(`  re-quote: ${e.fixed} of ${e.tried} failed claims fixed with the right sentence`);
+  if (e.type === "setup") console.log(`  setup ${e.retrying ? "missing, asking again" : "STILL missing"}: ${e.missing.join("; ")}`);
   if (e.type === "check") console.log(`  quotes confirmed: ${e.kept}, downgraded to uncertain: ${e.downgraded}`);
   if (e.type === "edit") console.log(`  rule violations before edit: ${e.before}, after: ${e.after}`);
 }

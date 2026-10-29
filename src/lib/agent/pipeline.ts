@@ -15,6 +15,7 @@ export type AgentEvent =
   | { type: "fetch"; url: string; ok: boolean; error?: string }
   | { type: "probe"; probe: Probe }
   | { type: "check"; kept: number; downgraded: number }
+  | { type: "setup"; missing: string[]; retrying: boolean }
   | { type: "coverage"; missing: string[]; found: string[] }
   | { type: "support"; checked: number; downgraded: number }
   | { type: "requote"; tried: number; fixed: number }
@@ -89,7 +90,7 @@ async function findMissing(query: string, missing: PageKind[], usage: Usage, emi
       messages: [
         {
           role: "user",
-          content: `App: ${query}\nOnly find the official documentation page for each of these, about ${query} itself: ${missing.join(", ")}. "setup" means the provider's own step-by-step guide or quickstart that walks through creating the app in the console. "scopes" means the scopes or permissions reference for this specific product's API. Return them as pages, each labelled with its kind; return empty gates and notes.`,
+          content: `App: ${query}\nOnly find the official documentation page for each of these, about ${query} itself: ${missing.join(", ")}. "setup" means the provider's own guide to setting up OAuth for an app (creating it, the redirect URI, the client ID and secret, the authorize step), not a bot or feature quickstart. "scopes" means the scopes or permissions reference for this specific product's API. Return them as pages, each labelled with its kind; return empty gates and notes.`,
         },
       ],
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 }],
@@ -136,6 +137,21 @@ function extractJson(text: string): unknown {
 // the output is validated here, with one repair round on failure.
 const GUIDE_JSON_SCHEMA = JSON.stringify(z.toJSONSchema(GuideDraft));
 
+/**
+ * What every OAuth setup needs, checked in code: where the redirect URI goes, where the
+ * client ID and secret are, and a test connection through OAuth at the end.
+ */
+function setupGaps(g: GuideDraft): string[] {
+  const setup = g.steps.filter((s) => s.phase === "setup");
+  const text = (s: GuideDraft["steps"][number]) => `${s.text} ${s.detail}`;
+  const gaps: string[] = [];
+  if (!setup.some((s) => /redirect|callback/i.test(text(s)))) gaps.push("a step that adds the redirect URI");
+  if (!setup.some((s) => /client (id|secret)/i.test(text(s)))) gaps.push("a step that copies the client ID and client secret, saying where the console shows them");
+  const last = setup.at(-1);
+  if (!last || !/authori[sz]|oauth|connect|sign in/i.test(text(last))) gaps.push("a last setup step that connects the developer's own account through the OAuth authorize URL");
+  return gaps;
+}
+
 // (d) Write the guide from the fetched pages and probe results.
 async function writeGuide(query: string, pages: Page[], probes: Probe[], research: z.infer<typeof Sources>, usage: Usage, emit: Emit): Promise<GuideDraft> {
   const docs = pages
@@ -155,17 +171,34 @@ async function writeGuide(query: string, pages: Page[], probes: Probe[], researc
         `Respond with only a JSON object (no prose, no code fence) matching this JSON Schema:\n${GUIDE_JSON_SCHEMA}`,
     },
   ];
-  for (let attempt = 0; attempt < 2; attempt++) {
+  // One repair for invalid JSON and one for missing setup steps; after that, keep what we have.
+  let fixedJson = false;
+  let fixedSetup = false;
+  for (;;) {
     const text = await call(WRITER_MODEL, { system: COMPOSE_SYSTEM, messages, output_config: { effort: "medium" } }, usage, emit);
+    let draft: GuideDraft;
     try {
-      return GuideDraft.parse(extractJson(text));
+      draft = GuideDraft.parse(extractJson(text));
     } catch (e) {
-      if (attempt === 1) throw new Error(`Guide output failed validation: ${(e as Error).message.slice(0, 300)}`);
+      if (fixedJson) throw new Error(`Guide output failed validation: ${(e as Error).message.slice(0, 300)}`);
+      fixedJson = true;
       messages.push({ role: "assistant", content: text });
       messages.push({ role: "user", content: `That JSON failed validation:\n${(e as Error).message.slice(0, 2000)}\nReturn the corrected full JSON object only.` });
+      continue;
     }
+    const gaps = setupGaps(draft);
+    if (!gaps.length || fixedSetup) {
+      if (gaps.length) emit({ type: "setup", missing: gaps, retrying: false });
+      return draft;
+    }
+    fixedSetup = true;
+    emit({ type: "setup", missing: gaps, retrying: true });
+    messages.push({ role: "assistant", content: text });
+    messages.push({
+      role: "user",
+      content: `The setup steps are missing:\n${gaps.map((x) => `- ${x}`).join("\n")}\nAdd them in the right place, citing claims from the pages (uncertain if no page states it), and drop any step that builds app features instead of setting up OAuth. Return the corrected full JSON object only.`,
+    });
   }
-  throw new Error("No guide produced");
 }
 
 /**
@@ -272,10 +305,10 @@ async function requoteClaims(draft: Claim[], checked: Claim[], pages: Page[], us
         messages: [
           {
             role: "user",
-            content: `<page url="${page.url}">\n${page.text}\n</page>\n\n<statements>\n${claims.map((c) => `${c.id}: ${c.statement}`).join("\n")}\n</statements>`,
+            content: `<page url="${page.url}">\n${page.text}\n</page>\n\n<statements>\n${claims.map((c) => `${c.id}: ${c.statement}\n   first quote: "${c.quote}"\n   why it failed: ${c.note.match(/\[Check: ([^\]]*)\]/)?.[1] ?? "not found"}`).join("\n")}\n</statements>`,
           },
         ],
-        output_config: { effort: "low", format: zodOutputFormat(RequoteResult) },
+        output_config: { effort: "medium", format: zodOutputFormat(RequoteResult) },
       },
       usage,
       emit,

@@ -33,6 +33,8 @@ function toRow(e: AgentEvent): Row | null {
       return { icon: e.fixed ? "✓" : "!", text: `Found the right sentence for ${e.fixed} of ${e.tried} claims whose first quote didn't hold up`, tone: e.fixed === e.tried ? "ok" : "note" };
     case "support":
       return { icon: e.downgraded ? "!" : "✓", text: `Checked each quote supports its statement: ${e.downgraded} marked uncertain`, tone: e.downgraded ? "note" : "ok" };
+    case "setup":
+      return { icon: "!", text: e.retrying ? "Setup steps were incomplete. Asking the writer to add them" : "Setup steps are still incomplete", sub: e.missing.join("; "), tone: e.retrying ? "note" : "bad" };
     case "check":
       return { icon: e.downgraded ? "!" : "✓", text: `${e.kept} claims confirmed on their pages, ${e.downgraded} marked uncertain`, tone: e.downgraded ? "note" : "ok" };
     case "error":
