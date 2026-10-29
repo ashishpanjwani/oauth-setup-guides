@@ -140,11 +140,6 @@ export default async function GuidePage({ params }: Props) {
           <CopyMarkdown guide={g} />
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-          {g.reviewed ? (
-            <span className="chip bg-emerald-500/10 text-emerald-300 ring-emerald-400/30">✓ Reviewed by a person</span>
-          ) : (
-            <span className="chip bg-white/5 text-zinc-300 ring-white/15">Generated, not reviewed</span>
-          )}
           <span className="muted">Checked {g.checkedAt.slice(0, 10)}</span>
           <a href={g.developerPortal} target="_blank" rel="noreferrer" className="text-[#8fc2ff] transition hover:text-[var(--cyan)]">
             Developer portal ↗

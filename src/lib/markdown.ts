@@ -21,7 +21,7 @@ export function guideToMarkdown(g: Guide, url?: string): string {
   const out: string[] = [];
 
   out.push(`# ${g.appName}: OAuth app setup guide`, "");
-  out.push(`_${g.reviewed ? "Reviewed by a person" : "Generated, not reviewed"} · checked ${g.checkedAt.slice(0, 10)}${url ? ` · ${url}` : ""}_`, "");
+  out.push(`_Checked ${g.checkedAt.slice(0, 10)}${url ? ` · ${url}` : ""}_`, "");
   out.push(`${g.summary}${refs(g.summaryClaimIds)}`, "");
   if (g.appType) out.push(`_This guide covers: ${g.appType}_`, "");
   out.push(

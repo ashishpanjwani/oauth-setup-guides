@@ -44,8 +44,6 @@ export default async function Home() {
                   <div className="mt-0.5 flex items-center gap-1.5 text-xs">
                     <span className={`h-1.5 w-1.5 rounded-full ${DIFFICULTY[difficulty(g).level].dot}`} />
                     <span className={DIFFICULTY[difficulty(g).level].cls}>{DIFFICULTY[difficulty(g).level].label}</span>
-                    <span className="muted">·</span>
-                    <span className={g.reviewed ? "text-emerald-300" : "muted"}>{g.reviewed ? "Reviewed" : "Not reviewed"}</span>
                   </div>
                 </div>
                 <span className="muted transition group-hover:translate-x-0.5 group-hover:text-white">→</span>
