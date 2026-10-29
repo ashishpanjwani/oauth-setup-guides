@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { normalizeQuery, queryProblem, slugify } from "@/lib/text";
 
-const HINT = "An app name or website, e.g. Notion, xero.com or https://xero.com";
+const HINT = "Opens a ready guide if there is one; otherwise an agent researches and writes it in 2–5 minutes.";
 
 /** Opens an existing guide when the name matches one, otherwise starts a live generation. */
 export function Search({ existing }: { existing: { slug: string; appName: string }[] }) {
@@ -47,7 +47,7 @@ export function Search({ existing }: { existing: { slug: string; appName: string
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="App name or website, e.g. Slack or xero.com"
+          placeholder="App name or website, e.g. Notion or xero.com"
           aria-label="App name or website"
           aria-invalid={Boolean(shownProblem)}
           aria-describedby="search-help"
