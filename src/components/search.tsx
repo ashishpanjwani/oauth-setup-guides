@@ -4,8 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { normalizeQuery, queryProblem, slugify } from "@/lib/text";
 
-const HINT = "Opens a ready guide if there is one; otherwise an agent researches and writes it in 2–5 minutes.";
-
 /** Opens an existing guide when the name matches one, otherwise starts a live generation. */
 export function Search({ existing }: { existing: { slug: string; appName: string }[] }) {
   const [q, setQ] = useState("");
@@ -50,7 +48,7 @@ export function Search({ existing }: { existing: { slug: string; appName: string
           placeholder="App name or website, e.g. Notion or xero.com"
           aria-label="App name or website"
           aria-invalid={Boolean(shownProblem)}
-          aria-describedby="search-help"
+          aria-describedby={shownProblem ? "search-help" : undefined}
           maxLength={120}
           className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-[var(--muted)]"
           autoFocus
@@ -59,8 +57,9 @@ export function Search({ existing }: { existing: { slug: string; appName: string
           Generate guide
         </button>
       </form>
-      <p id="search-help" role={shownProblem ? "alert" : undefined} className={`mt-2.5 px-5 text-left text-[13px] ${shownProblem ? "text-rose-300" : "muted"}`}>
-        {shownProblem ?? HINT}
+      {/* Only an input problem shows here; the space stays reserved so the page doesn't jump. */}
+      <p id="search-help" role="alert" className="mt-2.5 min-h-5 px-5 text-left text-[13px] text-rose-300">
+        {shownProblem}
       </p>
     </div>
   );
