@@ -209,6 +209,18 @@
       ]
     },
     {
+      "slot": "publish",
+      "phase": "launch",
+      "who": "you",
+      "text": "Google Auth platform → Audience: click Publish app to move from Testing to In production.",
+      "why": "",
+      "detail": "Until Google verifies the app, users see an unverified-app warning and the project is capped at 100 new users.",
+      "claimIds": [
+        "c33",
+        "c8"
+      ]
+    },
+    {
       "slot": "prepare_review",
       "phase": "launch",
       "text": "Your site: write the public homepage, a privacy policy on the same domain (with the Limited Use disclosure), and the demo video script showing the consent flow and each scope in use.",
@@ -232,18 +244,6 @@
       ]
     },
     {
-      "slot": "publish",
-      "phase": "launch",
-      "who": "you",
-      "text": "Google Auth platform → Audience: click Publish app to move from Testing to In production.",
-      "why": "",
-      "detail": "Until Google verifies the app, users see an unverified-app warning and the project is capped at 100 new users.",
-      "claimIds": [
-        "c33",
-        "c8"
-      ]
-    },
-    {
       "slot": "submit_review",
       "phase": "launch",
       "who": "you",
@@ -261,7 +261,7 @@
       "who": "you",
       "text": "Verification Center: submit the data access request with your scope justification and demo video link.",
       "why": "",
-      "detail": "Paste the YouTube link from step 11 in the YouTube link field.",
+      "detail": "Paste the YouTube link from step 12 in the YouTube link field.",
       "claimIds": [
         "c1",
         "c25",
