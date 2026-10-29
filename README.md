@@ -10,13 +10,32 @@ Look up an app and get a guide for creating its OAuth app and getting it approve
 - **Live generation:** type any app name or website on the home page, e.g. Notion, Pipedrive, Strava or xero.com. Inputs that aren't an app (an email, a sentence, gibberish) are rejected before any real work starts.
 - **Share:** every guide has Copy link, Copy as Markdown (a checklist with numbered sources) and Save as PDF.
 
-## What we learned about the problem
+## The problem, as we came to understand it
 
 - **The registration form is rarely the hard part.** Creating the app takes minutes almost everywhere. What developers can't predict is the gap between "works for me in dev" and "any user can connect". Examples: Google's verification and security assessment, Meta's App Review plus Business Verification, Shopify's protected-data approval, X's paid tiers, a GitHub organization owner approving each app.
-- **The answer depends on the app type.** Shopify has three ways to get a token, Notion has three kinds of connection, and Meta has two login products. A guide that doesn't say which path it covers sends developers down the wrong one. Every guide here covers **an outside, server-side app that many users connect to**, which is the AI-agent case, and says so at the top.
-- **Plain AI answers read well but aren't sourced.** We compared our guides with ChatGPT and Google AI Mode answers. Theirs were followable but used outdated names, invented options (a "Delete content" capability that Notion doesn't have) and missed nuances like Notion's permanent installation scope. That shaped two choices: our steps follow the real console flow, and every line is checked against the provider's docs.
+- **The path depends on the app type.** Shopify has three ways to get a token, Notion has three kinds of connection, and Meta has two login products. A guide that doesn't say which path it covers sends developers down the wrong one.
+- **Plain AI answers read well but can't be trusted line by line.** We compared our guides with ChatGPT and Google AI Mode throughout. Theirs were followable, but they used outdated names, invented options (a "Delete content" capability Notion doesn't have) and missed nuances like Notion's permanent installation scope.
 
-## What a guide contains, and why
+## How we got here: problems, decisions and why
+
+The product changed a lot while we built it. Each change below started with a problem in a real guide.
+
+1. **We started too big.** The first version had a 382-app directory, four-tier evidence, a second fact-checking agent and branding from a platform the brief never asked for. **Decision:** cut back to two pages, a search box with guide cards and a guide page, with no third-party branding. **Why:** the point is to make a developer's life simpler, and the first version was built to prove rigor, not to be read.
+2. **Six parallel runs on the top model used up a $6 credit** in minutes. **Decision:** a smaller model for research, a cap per run and per day, and every change tested on one app before running more. **Why:** a live demo anyone can trigger needs a hard ceiling, and a wrong change repeated across six apps is wasted six times.
+3. **A model judging another model was slow, costly and hard to trust.** **Decision:** a pipeline designed by Ashish. The model researches and writes. Code fetches the pages and checks that every quote appears on its page, word for word. **Why:** a code check can't be argued with, it cost about $0.04 per guide instead of about $0.70, and it's easy to explain.
+4. **Summaries were vague** ("no review step found"), and the real catch was missing. For GitHub that catch is that organizations block new apps until an owner approves them. **Decision:** every app is checked against the same **six launch gates**: who can register, test-mode limits, provider review, end users' admin approval, paid access, ongoing obligations. The guide shows only the gates that apply. **Why:** the same questions work for any provider, so the agent can't skip the one that matters.
+5. **Fixing one rule broke another.** On the small model, each prompt change shifted attention, and fixes from earlier runs kept coming back. **Decision:** mechanical rules moved into code (a phrase checker, a check that the required page types were found, a known-facts check for library guides), and the writer moved to a stronger model. **Why:** prompts alone didn't converge. Code catches slips every time.
+6. **Right fact, wrong citation.** A check found that 10 of Gmail's 19 claims quoted a sentence that didn't support them. Most of the facts were true. **Decision:** any line without a confirming quote shows an **Unverified** tag. A downgrade-only check tests whether each quote supports its claim, failed claims are re-quoted automatically, and each claim holds one fact. **But** 15 orange tags made the guide worse to read ("What is the developer gonna do looking at these guides? Look more confused"). So we **fix the guide, not the label**: a library guide isn't published with more than 2–3 Unverified lines.
+7. **The docs lag the live UI.** GitHub's form says "Redirect URIs", while its docs still say "Authorization callback URL". **Decision:** **Tested** means a person observed it on the live form. **Why:** an agent that only reads docs can't see what the docs haven't caught up with.
+8. **Steps read like a list of facts, not a walkthrough.** Gmail's guide once started with "create a brand", before the project even existed. Prompt fixes didn't stick. **Decision:** Ashish's **Architect/Builder** idea, with code as the Architect. A fixed skeleton of step slots sets the order (decide scopes → create app → enable API → … → redirect URI → credentials → test users → test connection → publish → review → go live). Code checks that the required slots are filled, and the model only builds each slot for the provider. Steps start with where they happen, and a step that produces something says which later step uses it. **Why:** order is structure, and structure belongs in code. Content is what the model is good at.
+9. **Guides drifted into building app features** (Slack bots, events) and into optional app-store listings. **Decision:** steps cover OAuth setup only, and a store listing is a step only when users can't connect without it.
+10. **Shopify's guide followed the wrong path.** It covered embedded apps, while an AI agent is an outside app. **Decision:** every guide covers **an outside, server-side app that many users connect to**, and names that path and the alternatives in a "This guide covers" line.
+11. **The stats were guesses.** "Free" was labelled an estimate, and effort was made up. **Decision:** the summary stats are computed in code from the checked gates and steps, and each shows what it's based on. Effort became a count of steps.
+12. **The assignment asks agents to "attempt the setup".** We tried it on X, testing endpoints with fake values and keeping a per-step attempt record. It produced HTTP errors that meant nothing to a reader, so we reverted it (details below).
+13. **Live search had to work for anyone.** **Decision:** a library match opens instantly and for free. Bad input (an email, a sentence) is caught in the browser, and a ~1¢ check rejects names that aren't apps. Progress shows each stage, a time guard keeps runs inside Vercel's 300-second limit, and every run is recorded for free replay.
+14. **Notion's live runs exposed contradictions in our own code.** The stats said "no review" while Notion's docs mention one, and later "No review wait" sat next to "provider review". **Decision:** stats never claim more than the evidence ("review not confirmed", "Review time not published"), and the summary no longer names a difficulty level. Step links were added too. A link must be a URL the agent actually opened, and the create-app step uses the address the console redirected to. That was Ashish's correction to a looser "same site" rule.
+
+## What a guide contains
 
 | Section | Why it's there |
 |---|---|
@@ -28,10 +47,6 @@ Look up an app and get a guide for creating its OAuth app and getting it approve
 | Blockers | Common problems, each with its fix |
 | Could not verify | Open questions, stated plainly |
 | Evidence | Every line links to the exact quote behind it |
-
-**Steps follow a fixed skeleton in code** (decide scopes → create app → … → test connection → publish → review → go live). The model only fills in each slot for the provider. Before this, step order changed from run to run; Gmail once started with "create a brand".
-
-**The summary stats are computed in code, not written by the model.** Each one shows what it's based on. For example, Time to production is the provider's stated review time in its own words ("up to 21 business days"). When the docs give no time, it says "Review time not published", and when the docs don't settle whether a review exists, it says "review not confirmed".
 
 ## Evidence
 
@@ -104,5 +119,3 @@ npm run dev                                      # http://localhost:3000
 - `src/lib/schema.ts`: the guide format and step skeleton.
 - `src/app/`: the home, generate and guide pages.
 - `data/guides/`: the library.
-
-Built with Claude Code as a pair: Claude wrote most of the code and Ashish set scope and direction and reviewed the guides.
