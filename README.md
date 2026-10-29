@@ -137,6 +137,19 @@ Steps read like a list of facts. Gmail's once started with "create a brand" befo
 
 Total API spend for the build was about $13, estimated from the app's own cost tracking.
 
+## Potential enhancements
+
+| Enhancement | What it adds |
+|---|---|
+| Regenerate button on each guide | A reader can refresh a guide that looks old. Showing what changed since the last version makes the update trustworthy |
+| Reader feedback | A reader flags a wrong or outdated line, and the next run uses that feedback to fix the guide |
+| "Reviewed by {name}" | A person who checked the guide signs it, so readers know which guides a human verified |
+| Automatic freshness check | Re-check every quote against its live page on a schedule. It's code only and costs nothing. A guide whose quotes have disappeared gets flagged for regeneration |
+| A browser agent for setup | With the developer signed in, an agent fills the console forms and stops for the developer at sign-in, payment and submit. This is a real "attempt the setup" without ever handling the secret |
+| Progress tracking | Step checkboxes remembered per developer, so a multi-week approval can be picked up where it was left |
+| Reading hard pages | A rendering fallback for pages built with JavaScript, so fewer facts end up Uncertain |
+| Growing the library to 100 | Batch runs in order of developer demand, each going through a review queue before it's published |
+
 ## Limitations
 
 - **6 guides, not 100.** Every guide uses the same pipeline. Growing the library takes more runs plus a human check of each.
