@@ -146,7 +146,9 @@ function orderSteps(g: GuideDraft): GuideDraft {
 
 /** Required slots the writer left empty, checked in code. */
 function setupGaps(g: GuideDraft): string[] {
-  return SLOTS.filter((x) => x.required && !g.steps.some((s) => s.slot === x.id)).map((x) => `${x.id}: ${x.what}`);
+  // A provider with a test mode always has a step that leaves it.
+  const testMode = g.gates.some((x) => x.gate === "test_limits" && x.applies === "yes");
+  return SLOTS.filter((x) => (x.required || (x.id === "publish" && testMode)) && !g.steps.some((s) => s.slot === x.id)).map((x) => `${x.id}: ${x.what}`);
 }
 
 // (d) Write the guide from the fetched pages and probe results.
