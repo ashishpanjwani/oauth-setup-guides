@@ -1,5 +1,5 @@
 import { slotPhase, type Guide } from "./schema";
-import { cost, difficulty, stepCounts, timeToProduction, timeToTest } from "./stats";
+import { attemptSummary, cost, difficulty, stepCounts, timeToProduction, timeToTest } from "./stats";
 import { DIFFICULTY, WHO } from "./labels";
 
 /**
@@ -44,7 +44,7 @@ export function guideToMarkdown(g: Guide, url?: string): string {
     `- **Time to production:** ${prod.value}${prod.claimIds.length ? sourced(prod.claimIds) : ` (${prod.basis})`}`,
     `- **Cost:** ${price.value}${sourced(price.claimIds)}`,
     `- **Steps:** ${stepCounts(g)}`,
-    ...(g.handoff ? [`- **Agent and you:** ${g.handoff}`] : []),
+    ...(g.handoff ? [`- **Agent and you:** ${attemptSummary(g) ? `${attemptSummary(g)} ` : ""}${g.handoff}`] : []),
     "",
   );
 
@@ -73,7 +73,8 @@ export function guideToMarkdown(g: Guide, url?: string): string {
     out.push(`## ${title}${time ? ` · ${time.toLowerCase()}` : ""}`, "");
     steps.forEach((s) => {
       // Two trailing spaces are a line break, so why and detail sit under the step, not after it.
-      const lines = [`- [ ] **${s.n}.** ${s.text} _(${WHO[s.who].label})_${refs(s.claimIds)}`, s.why, s.detail && `_${s.detail}_`].filter(Boolean);
+      const tried = s.attempt && `${s.attempt.outcome === "done" ? "**Agent did this:**" : "**Agent tried:**"} ${s.attempt.text}${sourced(s.attempt.claimIds)}${s.attempt.output ? ` \`${s.attempt.output}\`` : ""}`;
+      const lines = [`- [ ] **${s.n}.** ${s.text} _(${WHO[s.who].label})_${refs(s.claimIds)}`, s.why, s.detail && `_${s.detail}_`, tried].filter(Boolean);
       out.push(lines.join("  \n  "));
     });
     out.push("");

@@ -138,11 +138,14 @@ function extractJson(text: string): unknown {
 // the output is validated here, with one repair round on failure.
 const GUIDE_JSON_SCHEMA = JSON.stringify(z.toJSONSchema(GuideDraft));
 
-/** The skeleton decides the order: steps are sorted by slot (stable within a slot) and get their phase from it. */
+/**
+ * The skeleton decides the order: steps are sorted by slot (stable within a slot) and get their phase from it.
+ * Attempts only come from a real try, never from the writer, so any it wrote are dropped.
+ */
 function orderSteps(g: GuideDraft): GuideDraft {
   const rank = (slot: string) => SLOTS.findIndex((x) => x.id === slot);
   const steps = g.steps.map((s, i) => ({ s, i })).sort((a, b) => rank(a.s.slot) - rank(b.s.slot) || a.i - b.i);
-  return { ...g, steps: steps.map(({ s }) => ({ ...s, phase: slotPhase(s.slot) })) };
+  return { ...g, steps: steps.map(({ s }) => ({ ...s, attempt: undefined, phase: slotPhase(s.slot) })) };
 }
 
 /** Required slots the writer left empty, checked in code. */

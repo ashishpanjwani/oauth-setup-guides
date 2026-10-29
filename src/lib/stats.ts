@@ -72,3 +72,11 @@ export function cost(g: G): { value: string; claimIds: string[] } {
   return { value: g.cost, claimIds: backed(g, ids) ? ids : [] };
 }
 
+/** What happened when an agent actually tried the steps, if it did. */
+export function attemptSummary(g: G): string | null {
+  const tried = g.steps.filter((s) => s.attempt);
+  if (!tried.length) return null;
+  const done = tried.filter((s) => s.attempt!.outcome === "done").length;
+  const stopped = tried.length - done;
+  return `When an agent tried the setup, it completed ${done} of ${g.steps.length} steps itself${stopped ? ` and stopped at ${stopped} that need you` : ""}.`;
+}

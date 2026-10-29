@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getGuide } from "@/lib/store";
 import { slotPhase } from "@/lib/schema";
-import { cost, difficulty, stepCounts, timeToProduction, timeToTest } from "@/lib/stats";
+import { attemptSummary, cost, difficulty, stepCounts, timeToProduction, timeToTest } from "@/lib/stats";
 import { DIFFICULTY, EVIDENCE, WHO } from "@/lib/labels";
 import { ShareBar } from "@/components/share-bar";
 import { AppMark } from "@/components/app-mark";
@@ -123,7 +123,13 @@ export default async function GuidePage({ params }: Props) {
       </span>,
     ],
     ["Steps", stepCounts(g)],
-    ["Agent and you", g.handoff],
+    [
+      "Agent and you",
+      <span key="h">
+        {attemptSummary(g) && <span className="text-violet-300">{attemptSummary(g)} </span>}
+        {g.handoff}
+      </span>,
+    ],
   ];
 
   return (
@@ -248,6 +254,18 @@ export default async function GuidePage({ params }: Props) {
                     <p className="mt-2 border-l-2 border-[var(--border-strong)] pl-3 text-sm leading-relaxed muted">
                       <WithCode text={s.detail} />
                     </p>
+                  )}
+                  {s.attempt && (
+                    <div
+                      className={`mt-3 rounded-lg px-3 py-2 text-sm leading-relaxed ${s.attempt.outcome === "done" ? "bg-violet-500/10 text-violet-200" : "bg-white/[0.03] text-zinc-300"}`}
+                    >
+                      <span className="font-medium">{s.attempt.outcome === "done" ? "Agent did this: " : "Agent tried: "}</span>
+                      {s.attempt.text}
+                      <Refs ids={s.attempt.claimIds} />
+                      {s.attempt.output && (
+                        <code className="mt-1.5 block break-all rounded bg-black/30 px-2 py-1.5 font-mono text-[0.8em] text-zinc-200">{s.attempt.output}</code>
+                      )}
+                    </div>
                   )}
                 </div>
               </li>
