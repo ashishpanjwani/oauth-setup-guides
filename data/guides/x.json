@@ -176,7 +176,8 @@
       "detail": "Base URL: https://x.com/i/oauth2/authorize. The code_challenge is a fresh random secret for each login; code_challenge_method is S256 or plain.",
       "claimIds": [
         "c21",
-        "c23"
+        "c23",
+        "t1"
       ]
     },
     {
@@ -184,11 +185,12 @@
       "phase": "setup",
       "text": "Browser: open the authorize link, approve with your own X account, then exchange the code for an access token.",
       "why": "",
-      "detail": "Exchange the code within 30 seconds.",
+      "detail": "Exchange the code at https://api.x.com/2/oauth2/token within 30 seconds, sending the code_verifier that matches your code_challenge.",
       "who": "you",
       "claimIds": [
         "c21",
-        "c22"
+        "c22",
+        "t2"
       ]
     }
   ],
@@ -219,6 +221,28 @@
       "fix": "Request offline.access and use the refresh token flow.",
       "claimIds": [
         "c14"
+      ]
+    },
+    {
+      "problem": "Token exchange fails with invalid_request: “Missing required parameter [code_verifier]”.",
+      "fix": "Send the code_verifier that matches the code_challenge from the authorize link. X requires PKCE.",
+      "claimIds": [
+        "t2"
+      ]
+    },
+    {
+      "problem": "Token exchange fails with invalid_client: “Value passed for the client id was invalid”.",
+      "fix": "Check the Client ID from Keys and Tokens. Confidential apps send Client ID and Client Secret as Basic auth.",
+      "claimIds": [
+        "t3",
+        "c18"
+      ]
+    },
+    {
+      "problem": "Calls such as /2/users/me fail with 403 “Unsupported Authentication”.",
+      "fix": "Use the user's access token from the OAuth flow, not the app's Bearer Token from Keys and Tokens.",
+      "claimIds": [
+        "t4"
       ]
     }
   ],
@@ -451,6 +475,42 @@
       "sourceTitle": "X API pay-per-usage pricing and credits - X",
       "note": "Quoted from the pricing tables. Checked by hand on 2026-10-29.",
       "quote": "Resource Unit cost Posts: Read $0.005 per resource … Action Unit cost Post: Create $0.015 per request"
+    },
+    {
+      "id": "t1",
+      "statement": "The authorize URL https://x.com/i/oauth2/authorize is live and serves X's “Authorize app” page.",
+      "status": "tested",
+      "sourceUrl": "https://x.com/i/oauth2/authorize",
+      "sourceTitle": "Live request to X",
+      "quote": "",
+      "note": "Tested by hand on 2026-10-29 with fake values (no account). HTTP 200, page titled “Authorize app / X”. The page is a JavaScript app, so this doesn't show whether X rejects a fake app."
+    },
+    {
+      "id": "t2",
+      "statement": "X's token URL refuses a code exchange without code_verifier, so PKCE is required.",
+      "status": "tested",
+      "sourceUrl": "https://api.x.com/2/oauth2/token",
+      "sourceTitle": "Live request to X",
+      "quote": "",
+      "note": "Tested by hand on 2026-10-29 with fake values (no account). Response: HTTP 400 {\"error\":\"invalid_request\",\"error_description\":\"Missing required parameter [code_verifier].\"}. X checks this before the client ID."
+    },
+    {
+      "id": "t3",
+      "statement": "An unknown client ID is refused at the token URL with invalid_client, whether sent in the body or as Basic auth.",
+      "status": "tested",
+      "sourceUrl": "https://api.x.com/2/oauth2/token",
+      "sourceTitle": "Live request to X",
+      "quote": "",
+      "note": "Tested by hand on 2026-10-29 with fake values (no account). Response: HTTP 400 {\"error\":\"invalid_client\",\"error_description\":\"Value passed for the client id was invalid.\"}"
+    },
+    {
+      "id": "t4",
+      "statement": "/2/users/me refuses a token that isn't a user's token: it needs an OAuth 2.0 (or 1.0a) user-context token.",
+      "status": "tested",
+      "sourceUrl": "https://api.x.com/2/users/me",
+      "sourceTitle": "Live request to X",
+      "quote": "",
+      "note": "Tested by hand on 2026-10-29 with fake values (no account). Response: HTTP 403 \"Unsupported Authentication … Supported authentication types are [OAuth 1.0a User Context, OAuth 2.0 User Context].\""
     }
   ],
   "slug": "x",
@@ -463,6 +523,30 @@
       "target": "https://developer.x.com",
       "ok": true,
       "result": "HTTP 200, redirected to https://developer.x.com/"
+    },
+    {
+      "name": "authorize",
+      "target": "https://x.com/i/oauth2/authorize",
+      "ok": true,
+      "result": "GET with a fake client_id, redirect_uri, scope, state and code_challenge → HTTP 200, page titled “Authorize app / X”"
+    },
+    {
+      "name": "token_no_verifier",
+      "target": "https://api.x.com/2/oauth2/token",
+      "ok": true,
+      "result": "POST grant_type=authorization_code with a fake code and no code_verifier → HTTP 400 {\"error\":\"invalid_request\",\"error_description\":\"Missing required parameter [code_verifier].\"}"
+    },
+    {
+      "name": "token_fake_client",
+      "target": "https://api.x.com/2/oauth2/token",
+      "ok": true,
+      "result": "POST with a fake code, code_verifier and client_id (also with Basic auth) → HTTP 400 {\"error\":\"invalid_client\",\"error_description\":\"Value passed for the client id was invalid.\"}"
+    },
+    {
+      "name": "users_me_fake_token",
+      "target": "https://api.x.com/2/users/me",
+      "ok": true,
+      "result": "GET with Authorization: Bearer <fake> → HTTP 403 \"Unsupported Authentication\": \"Authenticating with OAuth 2.0 Application-Only is forbidden for this endpoint. Supported authentication types are [OAuth 1.0a User Context, OAuth 2.0 User Context].\""
     }
   ],
   "agentRun": {
