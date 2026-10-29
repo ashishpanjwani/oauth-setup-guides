@@ -248,12 +248,12 @@
     },
     {
       "id": "c3",
-      "statement": "New non-Marketplace commercially distributed apps are limited to 1 request per minute and 15 objects per request on conversations.history and conversations.replies.",
-      "status": "uncertain",
+      "statement": "For commercially distributed apps created after May 29, 2025 and not approved for the Slack Marketplace, conversations.history and conversations.replies are limited to 1 request per minute, with at most 15 objects per request.",
+      "status": "sourced",
       "sourceUrl": "https://docs.slack.dev/changelog/2025/05/29/rate-limit-changes-for-non-marketplace-apps/",
       "sourceTitle": "Rate limit changes for non-Marketplace apps | Slack Developer Docs",
-      "quote": "The new rate limits will be updated to allow 1 request per minute and will return a maximum of 15 objects per request.",
-      "note": "[Check: the quote only partly supports this. Quote gives the new limit of 1 request per minute and 15 objects per request, but does not specify that it applies to non-Marketplace commercially distributed apps or name conversations.history and conversations.replies.]"
+      "quote": "conversations.history - The conversations.history API method rate limit for commercially distributed apps created after May 29, 2025 , and for net new installations of existing apps, will be limited to 1 request per minute, unless they are approved for the Slack Marketplace. The maximum and default for the limit parameter has been reduced to 15 objects. conversations.replies - The conversations.replies API method rate limit for commercially distributed apps created after May 29, 2025 , and for net new installations of existing apps, will be limited to 1 request per minute, unless they are approved for the Slack Marketplace.",
+      "note": "Checked by hand on 2026-10-29."
     },
     {
       "id": "c4",
@@ -284,12 +284,12 @@
     },
     {
       "id": "c7",
-      "statement": "The temporary code is exchanged for a token by calling oauth.v2.access with the client secret; the code expires after ten minutes.",
-      "status": "uncertain",
+      "statement": "The code is exchanged for an access token by calling oauth.v2.access with the code, client ID and client secret.",
+      "status": "sourced",
       "sourceUrl": "https://docs.slack.dev/authentication/installing-with-oauth/",
       "sourceTitle": "Installing via OAuth authorization code flow | Slack Developer Docs",
-      "quote": "That's your temporary authorization code, which expires after ten minutes.",
-      "note": "[Check: the quote only partly supports this. Quote says the temporary code expires after ten minutes, but does not mention exchanging it via oauth.v2.access or using the client secret.]"
+      "quote": "Now, you just need to exchange the code for an access token. You'll do this by calling the oauth.v2.access method as follows: curl -F code=1234 -F client_id=3336676.569200954261 -F client_secret=ABCDEFGH https://slack.com/api/oauth.v2.access",
+      "note": "Checked by hand on 2026-10-29."
     },
     {
       "id": "c8",
