@@ -147,15 +147,9 @@ echo "ANTHROPIC_API_KEY=your-key" > .env.local   # needed only for live generati
 npm run dev                                      # http://localhost:3000
 ```
 
-| Variable | Purpose |
-|---|---|
-| `ANTHROPIC_API_KEY` | Live generation. Library guides work without it |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob for generated guides, recordings and the daily budget. Without it, they go to `.data/` |
-| `RUN_CAP_USD`, `DAILY_CAP_USD` | Optional overrides of the $0.80 and $10 caps |
+Generated guides and run recordings are saved to `.data/` locally. Optional: `RUN_CAP_USD` and `DAILY_CAP_USD` in `.env.local` override the $0.80 per-run and $10 per-day caps.
 
-- **Replay a recorded run at no cost:** `/generate?q=<app>&replay=<slug>`
-- **Add a library guide:** `npx tsx --env-file=.env.local scripts/seed.ts "HubSpot"`, then check it by hand before committing `data/guides/<slug>.json`.
-- **Deploy:** import the repo in Vercel, add `ANTHROPIC_API_KEY`, connect a Blob store, keep Fluid Compute on (runs need up to 300 seconds), and set a spend limit on the API key.
+To replay a recorded run at no cost, open `/generate?q=<app>&replay=<slug>`.
 
 **Code map:**
 - `src/lib/agent/`: the pipeline, prompts and costs.
