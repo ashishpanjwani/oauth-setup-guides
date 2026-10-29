@@ -224,9 +224,10 @@
       "phase": "launch",
       "who": "you",
       "text": "YouTube: record the demo video and upload it as Unlisted.",
-      "why": "",
-      "detail": "The video must show your OAuth client ID in the consent screen address bar.",
+      "why": "Google's reviewers watch it to check how your app uses each scope you request.",
+      "detail": "Show the consent flow, your OAuth client ID in the address bar, and the feature each scope enables. You'll paste the link in step 14.",
       "claimIds": [
+        "c34",
         "c25"
       ]
     },
@@ -260,10 +261,11 @@
       "who": "you",
       "text": "Verification Center: submit the data access request with your scope justification and demo video link.",
       "why": "",
-      "detail": "",
+      "detail": "Paste the YouTube link from step 11 in the YouTube link field.",
       "claimIds": [
         "c1",
-        "c25"
+        "c25",
+        "c34"
       ]
     },
     {
@@ -620,6 +622,15 @@
       "sourceTitle": "Manage App Audience - Google Cloud Platform Console Help",
       "note": "Checked by hand on 2026-10-29.",
       "quote": "Projects configured with a publishing status of In production are available to any user with a Google Account. A project's publishing status is considered In production after selecting the Publish app button."
+    },
+    {
+      "id": "c34",
+      "statement": "The demo video shows how a user grants access to the requested scopes and how the app uses each granted sensitive or restricted scope; its link goes in the YouTube link field.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
+      "sourceTitle": "Restricted scope verification",
+      "quote": "Prepare a video that fully demonstrates how a user initiates and grants access to the requested scopes and shows, in detail, the usage of the granted sensitive and restricted scopes in the app. Upload the video to YouTube Studio and set Visibility as Unlisted . You need to provide a link to the demonstration video in the YouTube link field.",
+      "note": "Checked by hand on 2026-10-29."
     }
   ],
   "slug": "gmail",

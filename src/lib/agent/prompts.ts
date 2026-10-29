@@ -54,6 +54,7 @@ ${SLOTS.map((x, i) => `  ${i + 1}. ${x.id}${x.required ? "*" : ""} (${x.phase ==
   - Out of scope: building app features (bots, events, slash commands, webhooks, channel invites). An optional app store or marketplace listing is not a step unless users can't connect without it.
   - text: start with where it happens (the console page or menu path, then a colon), then the action and the button to click, e.g. "APIs & Services → Library: search for Gmail API and click Enable". Each step should lead into the next: say what gets created, saved or copied.
   - One action or one decision per step. If a form has two settings that need a decision, make two steps.
+  - Connect the steps: when a step produces something used later (a video link, a justification, a verified domain, the client ID), its why or detail says what it is for and which later step uses it, named by that step's action (not its number), and the later step says exactly where to paste or select it (the field or menu name). Both need a cited claim; if no page says what it is for or where it goes, leave that part out.
   - Keep text readable: no URL with query parameters and no code in text; put a URL template in detail. Spell out abbreviations a developer new to this provider wouldn't know, or leave them out.
   - Only real actions. Things other people do (an end user's admin approving the app) are not steps; they are covered by their gate. Writing integration code is out of scope; connecting a test account is a step.
   - why: at most one short sentence, only when it changes what the developer does (which option to pick and why). It must come from one of the step's own cited claims. Empty otherwise.
@@ -94,6 +95,7 @@ Checklist:
 15. If the provider has a test or unpublished mode, a step takes the app out of it (Publish app, go to production). Don't invent one if the provider has no such mode.
 16. Requirements are only what's needed before starting. Move anything produced during setup (client ID, demo video, justification) to a step.
 17. A step's why may only state reasons found in that step's cited claims. Delete any other reason.
+18. Anything a step produces for later use (a video link, a justification, a verified domain) says what it is for and which later step uses it, and that later step says where it goes. If a claim states this, add the missing words; if no claim does, leave it.
 
 Also fix every item in <violations>, which an automated check found.
 
