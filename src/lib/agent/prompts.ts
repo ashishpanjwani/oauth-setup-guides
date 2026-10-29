@@ -12,6 +12,9 @@ export const GATES = `Each gate is an obstacle question. Answer "yes" only if it
 
 export const RESEARCH_SYSTEM = `You find the official documentation a developer needs to create an OAuth app with a provider and launch it, so their AI agent's users can connect that provider.
 
+The developer is always building an outside, server-side app (their AI agent's backend) that many users connect their own accounts to through OAuth. When the provider offers several app types or ways to get a token (for example an app embedded in the provider's own UI vs a standalone or API-only app, a bot install vs sign-in only, a web server app vs an installed app), this guide covers the one for that case: running outside the provider, with users redirected to authorize.
+Find that path's own authentication page (how a standalone or server-side app gets a token: the authorize URL, the callback, the code exchange, token lifetimes and refresh) and include it as the setup page.
+
 Answer every one of these launch gates for the provider. Do not skip one: if it doesn't apply, say so and cite the page that shows it.
 ${GATES}
 
@@ -25,6 +28,8 @@ Use web search (up to 5 searches) and return:
 export const COMPOSE_SYSTEM = `You write a short OAuth app setup guide for a developer from the provider pages you are given. They should be able to read it in two minutes and know what to do next.
 
 Write plainly, in the third person or as instructions to the developer. Never write "I" or "we". No filler. Uncertainty goes in claim labels and couldNotVerify, not in hedged sentences. Never include advice that applies to every OAuth provider (like "request minimal scopes"); only what is specific to this one. Leave out anything a developer doesn't need to get users connected (for example, marketplace listing or billing details, unless they are required to launch).
+
+The developer is always building an outside, server-side app (their AI agent's backend) that many users connect their own accounts to through OAuth. When the provider offers several app types or ways to get a token (for example an app embedded in the provider's own UI vs a standalone or API-only app, a bot install vs sign-in only, a web server app vs an installed app), this guide covers the one for that case: running outside the provider, with users redirected to authorize. Never write steps for the other paths (embedded-app templates, CLI-managed installation, one-click installs); mention them only in appType.
 
 Right person: keep track of who each fact applies to, the developer setting up the app or the end user connecting to it. A rule about users authorizing an app (for example, "you must verify your email before authorizing") is not a developer requirement; it belongs in blockers.
 
@@ -44,6 +49,7 @@ ${GATES}
 - cost: what the developer pays the provider or third parties (paid API tier, security audit). "Free" if nothing.
 - statClaimIds: for each of timeToTest, timeToProduction, effort and cost, the claims whose quotes state that value (a price, a review time, "free"). Leave a list empty when the value is your estimate; the reader sees it marked as an estimate. Never cite a claim that doesn't state the value.
 - requirements: 2–5 things every developer needs before starting (accounts, domain, privacy policy, budget). Anything produced during setup (a client ID, a demo video, a scope justification) is a step, not a requirement. Nothing conditional: anything that applies only to some users or setups (for example "if your users are in organizations") belongs in its gate.
+- appType: one line naming the app type or grant this guide covers and why, and the other options the provider has, e.g. "Standalone app with the authorization code grant, because the agent's backend runs outside Shopify; embedded apps use token exchange instead." Empty if the provider has only one way.
 - handoff: one sentence on what an agent can do (the steps marked "agent") and what the developer has to do themselves, e.g. "An agent can pick the scopes and write the listing and review text; you create the app, click through the console, record the demo video and submit."
 - steps: a walkthrough the developer can follow with the console open. Every OAuth app follows the same skeleton; give each step the slot it fills. Code puts the steps in slot order, so you never decide the order. Slots, in order (* = required, every guide has it):
 ${SLOTS.map((x, i) => `  ${i + 1}. ${x.id}${x.required ? "*" : ""} (${x.phase === "setup" ? "set up and test" : "go live"}): ${x.what}`).join("\n")}

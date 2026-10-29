@@ -90,7 +90,7 @@ async function findMissing(query: string, missing: PageKind[], usage: Usage, emi
       messages: [
         {
           role: "user",
-          content: `App: ${query}\nOnly find the official documentation page for each of these, about ${query} itself: ${missing.join(", ")}. "setup" means the provider's own guide to setting up OAuth for an app (creating it, the redirect URI, the client ID and secret, the authorize step), not a bot or feature quickstart. "scopes" means the scopes or permissions reference for this specific product's API. Return them as pages, each labelled with its kind; return empty gates and notes.`,
+          content: `App: ${query}\nOnly find the official documentation page for each of these, about ${query} itself: ${missing.join(", ")}. "setup" means the provider's own guide to OAuth for a standalone or server-side app that runs outside the provider (the authorize URL, the callback, the code exchange), not an embedded-app template or a bot or feature quickstart. "scopes" means the scopes or permissions reference for this specific product's API. Return them as pages, each labelled with its kind; return empty gates and notes.`,
         },
       ],
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 }],

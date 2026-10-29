@@ -153,6 +153,11 @@ export default async function GuidePage({ params }: Props) {
           {g.summary}
           <Refs ids={g.summaryClaimIds} />
         </p>
+        {g.appType && (
+          <p className="-mt-3 px-6 pb-6 text-sm leading-relaxed muted sm:-mt-4 sm:px-7">
+            <span className="text-zinc-300">This guide covers:</span> {g.appType}
+          </p>
+        )}
         {/* Short values side by side; the two that are usually sentences get full-width rows. */}
         <dl className="grid grid-cols-3 border-t border-[var(--border)] bg-[var(--surface)]/60">
           {stats

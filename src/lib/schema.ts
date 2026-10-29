@@ -87,6 +87,7 @@ export const GuideDraft = z.object({
   timeToProduction: z.string().describe("Until any user can connect, including approval waits, e.g. '6–10 weeks'"),
   effort: z.string().describe("Total hands-on work, excluding waiting, e.g. '1–2 days'"),
   cost: z.string().describe("What the developer pays the provider or third parties, e.g. 'Free' or '$500–4,500 security audit'"),
+  appType: z.string().describe("Which app type or grant this guide covers and why, and the provider's other options. Empty if there is only one way."),
   handoff: z.string().describe("One sentence: what an agent can do here and what the developer has to do themselves"),
   summaryClaimIds: z.array(z.string()),
   statClaimIds: z
