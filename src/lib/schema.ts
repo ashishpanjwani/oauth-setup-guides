@@ -33,10 +33,11 @@ export const SLOTS = [
   { id: "credentials", phase: "setup", required: true, what: "Create or copy the client ID and client secret, saying where the console shows them." },
   { id: "test_users", phase: "setup", required: false, what: "Add test users, if test mode only lets listed accounts connect." },
   { id: "test_connection", phase: "setup", required: true, what: "Connect the developer's own account through the OAuth authorize URL, the same flow users will see." },
-  { id: "publish", phase: "launch", required: false, what: "Leave test mode or open the app to other accounts (a Publish, Go to production, Activate distribution or Select distribution method button)." },
+  { id: "publish", phase: "launch", required: false, what: "Before review: leave test mode or open the app to other accounts (a Publish, Go to production, Activate distribution or Select distribution method button)." },
   { id: "prepare_review", phase: "launch", required: false, what: "Prepare what the review asks for (domain, privacy policy, scope justification, demo video)." },
   { id: "submit_review", phase: "launch", required: false, what: "Submit the app for the provider's review." },
   { id: "wait_review", phase: "launch", required: false, what: "Wait for the provider's review." },
+  { id: "go_live", phase: "launch", required: false, what: "After approval: switch the app to live or production mode, if the provider has that step after its review." },
   { id: "security_assessment", phase: "launch", required: false, what: "A required security assessment or audit, and how often it repeats." },
 ] as const;
 export const Slot = z.enum(SLOTS.map((x) => x.id) as [(typeof SLOTS)[number]["id"], ...(typeof SLOTS)[number]["id"][]]);

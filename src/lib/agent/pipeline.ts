@@ -148,7 +148,10 @@ function orderSteps(g: GuideDraft): GuideDraft {
 function setupGaps(g: GuideDraft): string[] {
   // A provider with a test mode always has a step that leaves it.
   const testMode = g.gates.some((x) => x.gate === "test_limits" && x.applies === "yes");
-  return SLOTS.filter((x) => (x.required || (x.id === "publish" && testMode)) && !g.steps.some((s) => s.slot === x.id)).map((x) => `${x.id}: ${x.what}`);
+  const leavesTest = g.steps.some((s) => s.slot === "publish" || s.slot === "go_live");
+  const gaps = SLOTS.filter((x) => x.required && !g.steps.some((s) => s.slot === x.id)).map((x) => `${x.id}: ${x.what}`);
+  if (testMode && !leavesTest) gaps.push("publish or go_live: the step that takes the app out of its test or development mode, before or after review, wherever the provider puts it.");
+  return gaps;
 }
 
 // (d) Write the guide from the fetched pages and probe results.

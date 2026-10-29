@@ -1,0 +1,666 @@
+{
+  "appName": "Instagram",
+  "developerPortal": "https://developers.facebook.com/apps",
+  "summary": "Moderate difficulty: you can connect your own account within about an hour, but other users can connect only after Meta App Review and Business Verification grant Advanced Access. Business Verification plus per-permission App Review with screen recordings is the main thing that can hold up launch.",
+  "difficulty": "moderate",
+  "timeToTest": "~1 hour",
+  "timeToProduction": "2–4 weeks",
+  "effort": "2–4 days of work",
+  "cost": "Free",
+  "appType": "Instagram API with Instagram Login (Business Login for Instagram, authorization code flow) in a Business-type Meta app, because the backend runs outside Meta and users log in with Instagram credentials. Meta also offers Unified Login (recommended for new integrations) and Facebook Login for Business, which need a Facebook Page or business portfolio and use different tokens and scopes.",
+  "handoff": "An agent can choose the scopes, build the authorize link and write the review usage descriptions; you create the app, copy the secret, connect a test account, record the screencasts, submit for review and switch to Live.",
+  "summaryClaimIds": [
+    "c1",
+    "c2",
+    "c3",
+    "c4"
+  ],
+  "statClaimIds": {
+    "timeToTest": [],
+    "timeToProduction": [],
+    "effort": [],
+    "cost": []
+  },
+  "gates": [
+    {
+      "gate": "register",
+      "applies": "yes",
+      "title": "Serving other users needs Business Verification",
+      "what": "Apps needing Advanced Access must be connected to a Business that completed Business Verification. Until then, users from other Businesses cannot grant permissions.",
+      "where": "App Dashboard → Settings → Basic → Verification",
+      "todo": "Connect the app to a Business and complete Business Verification before submitting for App Review.",
+      "claimIds": [
+        "c1",
+        "c5"
+      ]
+    },
+    {
+      "gate": "test_limits",
+      "applies": "yes",
+      "title": "Standard Access works only for people with a role on the app",
+      "what": "Until Advanced Access is granted, only users with a role on the app can connect.",
+      "where": "App Dashboard → App Roles → Roles, or Instagram → API setup with Instagram login",
+      "todo": "Add your own and testers' Instagram accounts (must be public) and test with them until App Review is approved.",
+      "claimIds": [
+        "c6",
+        "c7"
+      ]
+    },
+    {
+      "gate": "review",
+      "applies": "yes",
+      "title": "Meta App Review required for Advanced Access",
+      "what": "Each requested permission needs a screen recording and a usage description, plus at least one successful API call per permission within 30 days of submitting.",
+      "where": "App Dashboard → App Review → Permissions and Features",
+      "todo": "Make a test API call for each permission, record screencasts, write separate usage descriptions and submit.",
+      "claimIds": [
+        "c1",
+        "c8",
+        "c4"
+      ]
+    },
+    {
+      "gate": "admin_approval",
+      "applies": "no",
+      "title": "No admin approval step for Instagram Login",
+      "what": "",
+      "where": "",
+      "todo": "",
+      "claimIds": [
+        "c9"
+      ]
+    },
+    {
+      "gate": "paid_access",
+      "applies": "no",
+      "title": "No paid tier mentioned",
+      "what": "",
+      "where": "",
+      "todo": "",
+      "claimIds": [
+        "c10"
+      ]
+    },
+    {
+      "gate": "ongoing",
+      "applies": "yes",
+      "title": "Annual Data Use Checkup may be required",
+      "what": "Meta may require an annual Data Use Checkup, and users must regrant a permission the app has not used for 90 days.",
+      "where": "Meta App Dashboard",
+      "todo": "Complete the annual Data Use Checkup if requested; keep users' permissions in use.",
+      "claimIds": [
+        "c11",
+        "c12"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "text": "A Meta developer account with access to the Meta App Dashboard.",
+      "claimIds": [
+        "c13"
+      ]
+    },
+    {
+      "text": "A Meta Business that can complete Business Verification.",
+      "claimIds": [
+        "c5"
+      ]
+    },
+    {
+      "text": "An Instagram professional account (Business or Creator) for you and each user.",
+      "claimIds": [
+        "c14"
+      ]
+    },
+    {
+      "text": "A publicly reachable app or website for reviewers.",
+      "claimIds": [
+        "c15"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "slot": "choose_scopes",
+      "phase": "setup",
+      "text": "Decide which scopes you need: instagram_business_basic for profile and media reads; add instagram_business_content_publish, instagram_business_manage_comments or instagram_business_manage_messages only for those features.",
+      "why": "Unneeded permissions are a common reason for review rejection.",
+      "detail": "The older business_* scope names stop working after January 27, 2025.",
+      "who": "agent",
+      "claimIds": [
+        "c17",
+        "c18",
+        "c1"
+      ]
+    },
+    {
+      "slot": "create_app",
+      "phase": "setup",
+      "text": "App Dashboard → Create App: choose the Other use case, then the Business app type, enter an app name and contact email, and create the app.",
+      "why": "Only a Business type app can add the Instagram product.",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c19"
+      ]
+    },
+    {
+      "slot": "enable_api",
+      "phase": "setup",
+      "text": "App Dashboard → Add product: find Instagram and click Set up.",
+      "why": "",
+      "detail": "Do not choose API setup with Facebook login for this path.",
+      "who": "you",
+      "claimIds": [
+        "c20"
+      ]
+    },
+    {
+      "slot": "redirect_uri",
+      "phase": "setup",
+      "text": "Instagram → API setup with Instagram login → 3. Set up Instagram business login: click Set up, add your Redirect URL and click Save.",
+      "why": "",
+      "detail": "The redirect_uri in your authorize request must exactly match a listed URI.",
+      "who": "you",
+      "claimIds": [
+        "c21"
+      ]
+    },
+    {
+      "slot": "other_settings",
+      "phase": "setup",
+      "text": "Instagram → API setup with Instagram login → Business login settings: add your Deauthorize callback URL and Data deletion request URL, then click Save.",
+      "why": "",
+      "detail": "",
+      "who": "you",
+      "claimIds": [
+        "c22"
+      ]
+    },
+    {
+      "slot": "credentials",
+      "phase": "setup",
+      "text": "Instagram → API setup with Instagram login → Business login settings: copy the Instagram App ID and Instagram app secret.",
+      "why": "The App ID goes into client_id of the authorize URL.",
+      "detail": "Keep the secret in server-side code only.",
+      "who": "you",
+      "claimIds": [
+        "c23",
+        "c24"
+      ]
+    },
+    {
+      "slot": "test_users",
+      "phase": "setup",
+      "text": "Instagram → API setup with Instagram login: add your Instagram account (and other testers) and log in to it when prompted.",
+      "why": "",
+      "detail": "The account must be public.",
+      "who": "you",
+      "claimIds": [
+        "c7"
+      ]
+    },
+    {
+      "slot": "test_connection",
+      "phase": "setup",
+      "who": "agent",
+      "text": "Build the authorize link from your Instagram App ID, redirect URI and scopes.",
+      "why": "",
+      "detail": "https://www.instagram.com/oauth/authorize?client_id=…&redirect_uri=…&response_type=code&scope=…",
+      "claimIds": [
+        "c36",
+        "c17"
+      ]
+    },
+    {
+      "slot": "test_connection",
+      "phase": "setup",
+      "text": "Browser: open the authorize link signed in with your test account and approve, then exchange the returned code for an access token.",
+      "why": "",
+      "detail": "The code is valid 1 hour and single use; strip the trailing #_.",
+      "who": "you",
+      "claimIds": [
+        "c25",
+        "c26",
+        "c27"
+      ]
+    },
+    {
+      "slot": "prepare_review",
+      "phase": "launch",
+      "text": "App Dashboard → App Review: make one successful API call per permission, record a screen recording for each permission and write a separate usage description for each.",
+      "why": "Any permission without a screen recording is not approved.",
+      "detail": "API calls must be within 30 days of submitting. Do not copy and paste descriptions.",
+      "who": "you",
+      "claimIds": [
+        "c8",
+        "c28",
+        "c29"
+      ]
+    },
+    {
+      "slot": "submit_review",
+      "phase": "launch",
+      "text": "App Dashboard → App Review → Permissions and Features: click Request advanced access for each permission, then click Submit for Review and accept the Platform Onboarding Terms.",
+      "why": "",
+      "detail": "The button stays gray until an API call has been logged.",
+      "who": "you",
+      "claimIds": [
+        "c30",
+        "c31"
+      ]
+    },
+    {
+      "slot": "wait_review",
+      "phase": "launch",
+      "text": "App Dashboard → App Review: wait for Meta's App Review decision.",
+      "why": "",
+      "detail": "Meta says a decision should arrive within a week.",
+      "who": "waiting",
+      "claimIds": [
+        "c4"
+      ]
+    },
+    {
+      "slot": "go_live",
+      "phase": "launch",
+      "text": "App Dashboard: switch the app to Live mode once App Review approves your permissions.",
+      "why": "",
+      "detail": "Switching earlier breaks the app even for people with a role on it, because Live mode only allows approved permissions.",
+      "who": "you",
+      "claimIds": [
+        "c32"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "problem": "Users outside the app's roles cannot connect or grant permissions.",
+      "fix": "Complete Business Verification and App Review to get Advanced Access.",
+      "claimIds": [
+        "c1",
+        "c5"
+      ]
+    },
+    {
+      "problem": "The Request advanced access button is grayed out.",
+      "fix": "Make a successful API call with that permission within 30 days.",
+      "claimIds": [
+        "c30"
+      ]
+    },
+    {
+      "problem": "Token exchange fails with 'Matching code was not found or was already used'.",
+      "fix": "Authorization codes are single use and valid for 1 hour; restart the authorize flow and use the same redirect_uri.",
+      "claimIds": [
+        "c25",
+        "c33"
+      ]
+    },
+    {
+      "problem": "Long-lived tokens stop working after 60 days.",
+      "fix": "Refresh each token at least 24 hours after issuing and before it expires; the user must have granted instagram_business_basic.",
+      "claimIds": [
+        "c34"
+      ]
+    },
+    {
+      "problem": "Cannot create a new app because of the app limit.",
+      "fix": "Connect a verified business portfolio to existing apps or remove unused apps.",
+      "claimIds": [
+        "c35"
+      ]
+    }
+  ],
+  "couldNotVerify": [
+    "Community sources report App Review taking 2–4 weeks, while Meta says within a week; actual time is unconfirmed.",
+    "Whether a Data Use Checkup applies to this app, and its exact timing, is not confirmed."
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "statement": "Advanced Access is needed if the app serves accounts you don't own or manage, and requires App Review and Business Verification.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/docs/instagram-platform/overview/",
+      "sourceTitle": "Instagram Platform Overview (login types, permissions, access levels)",
+      "quote": "Advanced Access is the access level required if your app serves Instagram professional accounts that you don't own or manage and can be used by app users who do not have a role on your app or a role on a business portfolio that has claimed your app. This access level requires App Review and Business Verification.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c2",
+      "statement": "Standard Access is the default and is for people with roles on the app.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/docs/instagram-platform/overview/",
+      "sourceTitle": "Instagram Platform Overview (login types, permissions, access levels)",
+      "quote": "Standard Access is the default access level for all apps and limits the data your app can get. It is intended for apps that will only be used by people who have roles on them, during app development, or for testing your app.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c3",
+      "statement": "Until the Business is verified, users from other Businesses cannot grant permissions.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/release/business-verification",
+      "sourceTitle": "Business Verification",
+      "quote": "must be connected to a Business that has completed Business Verification. Until then, app users from other Businesses will be unable to grant these apps [permissions](https://developers.facebook.com/docs/permissions/reference) and all [features](https://developers.facebook.com/docs/apps/features-reference) will be inactive.",
+      "note": "Checked by hand on 2026-10-29."
+    },
+    {
+      "id": "c4",
+      "statement": "Meta says it should give a decision within a week of submission.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide",
+      "sourceTitle": "App Review submission walkthrough",
+      "quote": "Once you accept the terms and submit, your submission will be queued and you should [receive a decision](https://developers.facebook.com/docs/app-review/introduction#submission-status) within a week.",
+      "note": "Community sources report 2–4 weeks; the production estimate includes Business Verification."
+    },
+    {
+      "id": "c5",
+      "statement": "Apps requesting advanced access must be connected to a Business that completed Business Verification.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/release/business-verification",
+      "sourceTitle": "Business Verification",
+      "quote": "Apps that request [advanced access](https://developers.facebook.com/docs/graph-api/overview/access-levels#advanced-access) for permissions and apps that allow other [Businesses](https://business.facebook.com/) to access their own data must be connected to a Business that has completed Business Verification.",
+      "note": ""
+    },
+    {
+      "id": "c6",
+      "statement": "Standard Access is for people with roles on the app, during development or testing.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/docs/instagram-platform/overview/",
+      "sourceTitle": "Instagram Platform Overview (login types, permissions, access levels)",
+      "quote": "It is intended for apps that will only be used by people who have roles on them, during app development, or for testing your app.",
+      "note": ""
+    },
+    {
+      "id": "c7",
+      "statement": "The Instagram account added for testing must be public; multiple can be added.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/create-an-app/other-app-types/instagram-apis",
+      "sourceTitle": "Create a Meta App for Instagram Platform",
+      "quote": "Add an Instagram account. This account must be public. Multiple accounts can be added for multiple testers.",
+      "note": ""
+    },
+    {
+      "id": "c8",
+      "statement": "At least one successful API call per requested permission is required, within 30 days of submitting.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide",
+      "sourceTitle": "App Review submission walkthrough",
+      "quote": "Make at least 1 successful API call using each permission for which you are requesting advanced access. Calls must be made within 30 days of submitting for App Review and can be made using your app or the [Graph API Explorer](https://developers.facebook.com/tools/explorer/) tool.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c9",
+      "statement": "No admin approval step is mentioned for Business Login for Instagram.",
+      "status": "uncertain",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "",
+      "note": "No admin approval is mentioned in Business Login for Instagram."
+    },
+    {
+      "id": "c10",
+      "statement": "No paid plan or paid API tier is mentioned for production use.",
+      "status": "uncertain",
+      "sourceUrl": "https://developers.facebook.com/docs/instagram-platform/overview/",
+      "sourceTitle": "Instagram Platform Overview (login types, permissions, access levels)",
+      "quote": "",
+      "note": "No paid plan is mentioned in Instagram Platform Overview."
+    },
+    {
+      "id": "c11",
+      "statement": "Apps may be required to complete an annual Data Use Checkup.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/permissions",
+      "sourceTitle": "Permissions Reference for Meta Technologies APIs",
+      "quote": "You may also be required to complete an annual [Data Use Checkup](https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/data-use-checkup).",
+      "note": ""
+    },
+    {
+      "id": "c12",
+      "statement": "If a permission is unused for 90 days, the user must regrant it.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/permissions",
+      "sourceTitle": "Permissions Reference for Meta Technologies APIs",
+      "quote": "If your app does not use a permission for 90 days, usually due to user inactivity, your app user must regrant your app that permission.",
+      "note": ""
+    },
+    {
+      "id": "c13",
+      "statement": "A developer must register as a Meta developer and create an app in the App Dashboard.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/docs/instagram-platform/overview/",
+      "sourceTitle": "Instagram Platform Overview (login types, permissions, access levels)",
+      "quote": "Before you can integrate a Meta Technologies API into your app, you must [register as a Meta developer](https://developers.facebook.com/documentation/development/register) and then create an app in the Meta App Dashboard that represents your app.",
+      "note": ""
+    },
+    {
+      "id": "c14",
+      "statement": "App users must have an Instagram professional account.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/docs/instagram-platform/overview/",
+      "sourceTitle": "Instagram Platform Overview (login types, permissions, access levels)",
+      "quote": "To use the APIs, your app users must have an [Instagram professional account](https://business.instagram.com/getting-started).",
+      "note": ""
+    },
+    {
+      "id": "c15",
+      "statement": "Reviewers must be able to access the app or website.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide",
+      "sourceTitle": "App Review submission walkthrough",
+      "quote": "Make sure we can access your app or website.",
+      "note": ""
+    },
+    {
+      "id": "c16",
+      "statement": "A 1024x1024 app icon is needed before submission, and a Privacy Policy URL is in app settings.",
+      "status": "uncertain",
+      "sourceUrl": "https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide",
+      "sourceTitle": "App Review submission walkthrough",
+      "quote": "Upload a 1024x1024 compliant [app icon](https://developers.facebook.com/documentation/development/create-an-app/app-dashboard/basic-settings#app-icon) image to **Settings** > **Basic** > **App Icon**.",
+      "note": "Privacy Policy URL is listed in the Complete App Settings step of the same page. [Check: the quote only partly supports this. The quote requires a 1024x1024 app icon uploaded under Settings > Basic. It does not mention a Privacy Policy URL in app settings, which the statement adds.]"
+    },
+    {
+      "id": "c17",
+      "statement": "The Instagram Login scopes are instagram_business_basic, instagram_business_content_publish, instagram_business_manage_messages and instagram_business_manage_comments, replacing the older business_* values.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "The new `scope` values are: * `instagram_business_basic` * `instagram_business_content_publish` * `instagram_business_manage_messages` * `instagram_business_manage_comments` These will replace the existing `business_basic`, `business_content_publish`, `business_manage_comments` and",
+      "note": "Checked by hand on 2026-10-29."
+    },
+    {
+      "id": "c18",
+      "statement": "Selecting unneeded permissions is a common reason for rejection.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/permissions",
+      "sourceTitle": "Permissions Reference for Meta Technologies APIs",
+      "quote": "**Only select permissions that your app needs to function as intended. Selecting unneeded permissions is a common reason for rejection during app review.**",
+      "note": ""
+    },
+    {
+      "id": "c19",
+      "statement": "Choose the Other use case and Business app type to add Instagram.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/create-an-app/other-app-types/instagram-apis",
+      "sourceTitle": "Create a Meta App for Instagram Platform",
+      "quote": "Select the **Other** use case. … Your app must be a business type app to be able to add the Instagram product.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c20",
+      "statement": "Clicking Set up on the Instagram product adds API setup with Instagram login to the app.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/create-an-app/other-app-types/instagram-apis",
+      "sourceTitle": "Create a Meta App for Instagram Platform",
+      "quote": "2. Click **Set up**. **API setup with Instagram login** is automatically added to your app.",
+      "note": "Checked by hand on 2026-10-29."
+    },
+    {
+      "id": "c21",
+      "statement": "The redirect_uri must exactly match a valid OAuth URI set in the App Dashboard.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "Make sure this exactly matches one of the base URIs in your list of valid OAuth URIs you set during API setup in the App Dashboard.",
+      "note": ""
+    },
+    {
+      "id": "c22",
+      "statement": "Business login settings include Deauthorize callback URL and Data deletion request URL.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/create-an-app/other-app-types/instagram-apis",
+      "sourceTitle": "Create a Meta App for Instagram Platform",
+      "quote": "1. Click **Business login settings** 2. Add additional **OAuth Redirect URIs**, if applicable 2. Add your **Deauthorize callback URL** 3. Add your **Data deletion request URL** 4. Click **Save**",
+      "note": "Checked by hand on 2026-10-29."
+    },
+    {
+      "id": "c23",
+      "statement": "client_id is the Instagram App ID shown in Business login settings.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "Your app's Instagram App ID displayed in **App Dashboard > Instagram > API setup with Instagram login > 3. Set up Instagram business login > Business login settings > Instagram App ID**.",
+      "note": ""
+    },
+    {
+      "id": "c24",
+      "statement": "The app secret must never be exposed in client-side code.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "Requests for long-lived tokens **must be made in server-side code**. These requesting include your app secret which you never want to expose in client-side code or in an app binary that could be decompiled.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c25",
+      "statement": "The authorization code is valid 1 hour and single use.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "This code is valid for **1 hour** and can only be used once.",
+      "note": ""
+    },
+    {
+      "id": "c26",
+      "statement": "The #_ appended to the redirect must be stripped from the code.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "**NOTE:** The `#_` appended to the end of the redirect URI is not part of the code itself, so strip it out.",
+      "note": ""
+    },
+    {
+      "id": "c27",
+      "statement": "Short-lived tokens can be exchanged for 60-day long-lived tokens.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "You can exchange your app user's short-lived access token for a long-lived access token that is valid for 60 days.",
+      "note": ""
+    },
+    {
+      "id": "c28",
+      "statement": "Any permission missing a screen recording will not be approved.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide",
+      "sourceTitle": "App Review submission walkthrough",
+      "quote": "Any requested permission or feature missing a screen recording will not be approved.",
+      "note": ""
+    },
+    {
+      "id": "c29",
+      "statement": "Each permission needs its own description; do not copy and paste.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide",
+      "sourceTitle": "App Review submission walkthrough",
+      "quote": "Each permission and feature must have its own description. **Do not copy and paste.**",
+      "note": ""
+    },
+    {
+      "id": "c30",
+      "statement": "The Request advanced access button stays grayed out until a successful API call is logged.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide",
+      "sourceTitle": "App Review submission walkthrough",
+      "quote": "Note that the **Request advanced access** button will remain grayed out until a successful API has been logged in our system.",
+      "note": ""
+    },
+    {
+      "id": "c31",
+      "statement": "Submit with the Submit for Review button and accept the Platform Onboarding Terms.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide",
+      "sourceTitle": "App Review submission walkthrough",
+      "quote": "Click **Submit for Review** and agree to our **Platform Onboarding Terms** in the window that appears.",
+      "note": ""
+    },
+    {
+      "id": "c32",
+      "statement": "Switch to Live mode only after App Review: in Live mode only approved permissions work, even for people with a role on the app.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide",
+      "sourceTitle": "App Review submission walkthrough",
+      "quote": "mode after you have completed App Review. Apps in Live mode can only request approved permissions from app users, and only approved features will be active for app users. … so switching to Live mode prematurely may make your app unusable for users who have a role on your app.",
+      "note": "Checked by hand on 2026-10-29."
+    },
+    {
+      "id": "c33",
+      "statement": "Reusing a code returns a rejected response error.",
+      "status": "uncertain",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "\"error_message\": \"Matching code was not found or was already used\"",
+      "note": "[Check: the quote only partly supports this. The quote shows an error message saying the code was not found or was already used. It does not show a rejected response error type, so that part is missing.]"
+    },
+    {
+      "id": "c34",
+      "statement": "Long-lived tokens refresh only if at least 24 hours old, unexpired and instagram_business_basic granted; unrefreshed tokens expire after 60 days.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "Your app user's long-lived access token can be refreshed for another 60 days as long as the existing conditions are true:\n* The existing long-lived access token is at least 24 hours old\n* The existing long-lived access token is valide (not expired)\n* The app user has granted your app the `instagram_business_basic` permission\nTokens that have not been refreshed in 60 days will expire and can no longer be refreshed.",
+      "note": "[Re-quoted automatically: the first quote didn't state this.]"
+    },
+    {
+      "id": "c35",
+      "statement": "A person can have a developer or admin role on at most 15 apps not connected to a Meta Verified Business Account.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/development/create-an-app/other-app-types/instagram-apis",
+      "sourceTitle": "Create a Meta App for Instagram Platform",
+      "quote": "You are permitted to have a **developer or administrator role on a maximum of 15 apps** that are not already connected to a Meta Verified Business Account.",
+      "note": ""
+    },
+    {
+      "id": "c36",
+      "statement": "The authorize link is https://www.instagram.com/oauth/authorize with client_id, redirect_uri, response_type=code and scope.",
+      "status": "sourced",
+      "sourceUrl": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "sourceTitle": "Business Login for Instagram",
+      "quote": "Example embed URL _Formatted for readability._ ```html https://www.instagram.com/oauth/authorize ?client_id=990602627938098 &redirect_uri=https://my.m.redirect.net/ &response_type=code &scope=",
+      "note": "Checked by hand on 2026-10-29."
+    }
+  ],
+  "slug": "instagram",
+  "reviewed": false,
+  "createdAt": "2026-10-29T07:42:08.230Z",
+  "checkedAt": "2026-10-29T07:42:08.230Z",
+  "probes": [
+    {
+      "name": "console",
+      "target": "https://developers.facebook.com/apps/",
+      "ok": true,
+      "result": "HTTP 200"
+    }
+  ],
+  "agentRun": {
+    "model": "claude-haiku-5-5 + claude-sonnet-5-5",
+    "searches": 7,
+    "fetches": 6,
+    "probes": 1,
+    "durationSec": 276,
+    "costUsd": 0.374
+  }
+}
