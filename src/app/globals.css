@@ -198,3 +198,55 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* Save as PDF: the browser's print dialog gets a light, plain document with no chrome or effects. */
+@media print {
+  @page {
+    margin: 16mm 14mm;
+  }
+  :root {
+    --bg: #fff;
+    --surface: #f6f7f9;
+    --card: #fff;
+    --card-hover: #fff;
+    --border: #d9dce1;
+    --border-strong: #c3c7ce;
+    --text: #111;
+    --muted: #555;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #111;
+  }
+  /* Light-on-dark text colours become dark; links stay blue. */
+  body * {
+    color: #111 !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    animation: none !important;
+  }
+  body .muted,
+  body .eyebrow {
+    color: #555 !important;
+  }
+  body a {
+    color: #0b57d0 !important;
+  }
+  .gradient-text {
+    -webkit-text-fill-color: #111;
+  }
+  .gradient-border::before {
+    display: none;
+  }
+  .card,
+  li,
+  blockquote {
+    break-inside: avoid;
+  }
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+}

@@ -5,7 +5,7 @@ import { getGuide } from "@/lib/store";
 import { slotPhase } from "@/lib/schema";
 import { cost, difficulty, stepCounts, timeToProduction, timeToTest } from "@/lib/stats";
 import { DIFFICULTY, EVIDENCE, WHO } from "@/lib/labels";
-import { CopyMarkdown } from "@/components/share-bar";
+import { ShareBar } from "@/components/share-bar";
 import { AppMark } from "@/components/app-mark";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ function WithCode({ text }: { text: string }) {
 
 function SectionTitle({ eyebrow, children }: { eyebrow: string; children: React.ReactNode }) {
   return (
-    <div className="mb-4">
+    <div className="mb-4 break-inside-avoid break-after-avoid">
       <p className="eyebrow">{eyebrow}</p>
       <h2 className="mt-1 font-display text-[28px] leading-tight">{children}</h2>
     </div>
@@ -129,7 +129,7 @@ export default async function GuidePage({ params }: Props) {
   return (
     <article className="mx-auto max-w-3xl space-y-14">
       <header className="fade-up">
-        <Link href="/" className="-mt-4 inline-block text-sm muted transition hover:text-white sm:-mt-6">
+        <Link href="/" className="-mt-4 inline-block text-sm muted transition hover:text-white sm:-mt-6 print:hidden">
           ← All guides
         </Link>
         <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
@@ -137,7 +137,7 @@ export default async function GuidePage({ params }: Props) {
             <AppMark name={g.appName} size="lg" />
             <h1 className="font-display text-5xl leading-none tracking-tight">{g.appName}</h1>
           </div>
-          <CopyMarkdown guide={g} />
+          <ShareBar guide={g} />
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
           <span className="muted">Checked {g.checkedAt.slice(0, 10)}</span>
