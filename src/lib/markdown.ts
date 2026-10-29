@@ -1,4 +1,4 @@
-import { slotPhase, type Guide } from "./schema";
+import { slotPhase, type Guide, type Stat } from "./schema";
 import { DIFFICULTY, EVIDENCE, WHO } from "./labels";
 
 /** Plain Markdown so a guide can be pasted into a ticket, PR, or doc. Claims become footnotes. */
@@ -11,6 +11,11 @@ export function guideToMarkdown(g: Guide, url?: string): string {
     const backed = n.some((id) => status.get(id) !== "uncertain");
     return n.map((id) => `[^${num.get(id)}]`).join("") + (backed ? "" : " _(unverified)_");
   };
+  // Same rule as the page: a time, effort or cost value without a confirmed claim is an estimate.
+  const stat = (k: Stat) => {
+    const ids = (g.statClaimIds?.[k] ?? []).filter((id) => num.has(id));
+    return ids.some((id) => status.get(id) !== "uncertain") ? `${g[k]}${ids.map((id) => `[^${num.get(id)}]`).join("")}` : `${g[k]} _(estimate)_`;
+  };
   const out: string[] = [];
 
   out.push(`# ${g.appName}: OAuth app setup guide`, "");
@@ -19,7 +24,7 @@ export function guideToMarkdown(g: Guide, url?: string): string {
   out.push(
     "| Difficulty | Time to test | Time to production | Effort | Cost |",
     "|---|---|---|---|---|",
-    `| ${DIFFICULTY[g.difficulty].label} | ${g.timeToTest} | ${g.timeToProduction} | ${g.effort} | ${g.cost} |`,
+    `| ${DIFFICULTY[g.difficulty].label} | ${stat("timeToTest")} | ${stat("timeToProduction")} | ${stat("effort")} | ${stat("cost")} |`,
     "",
   );
   if (g.handoff) {

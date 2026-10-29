@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as z from "zod/v4";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { GateId, GuideDraft, SLOTS, slotPhase, type Claim, type Gate, type Guide } from "@/lib/schema";
+import { GateId, GuideDraft, SLOTS, STATS, slotPhase, type Claim, type Gate, type Guide } from "@/lib/schema";
 import { slugify } from "@/lib/text";
 import { COMPOSE_SYSTEM, EDITOR_SYSTEM, REQUOTE_SYSTEM, RESEARCH_SYSTEM, SUPPORT_SYSTEM } from "./prompts";
 import { lintGuide, type Violation } from "./lint";
@@ -371,6 +371,7 @@ async function editGuide(draft: GuideDraft, violations: Violation[], usage: Usag
     ...edited,
     claims: draft.claims,
     summaryClaimIds: keep(edited.summaryClaimIds),
+    statClaimIds: Object.fromEntries(STATS.map((k) => [k, keep(edited.statClaimIds[k])])) as GuideDraft["statClaimIds"],
     gates: edited.gates.map((g) => ({ ...g, claimIds: keep(g.claimIds) })),
     requirements: edited.requirements.map((r) => ({ ...r, claimIds: keep(r.claimIds) })),
     steps: edited.steps.map((s) => ({ ...s, claimIds: keep(s.claimIds) })),

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getGuide } from "@/lib/store";
-import { slotPhase } from "@/lib/schema";
+import { slotPhase, type Stat as StatKey } from "@/lib/schema";
 import { DIFFICULTY, EVIDENCE, WHO } from "@/lib/labels";
 import { CopyMarkdown } from "@/components/share-bar";
 import { AppMark } from "@/components/app-mark";
@@ -73,6 +73,24 @@ export default async function GuidePage({ params }: Props) {
     );
   };
 
+  // A time, effort or cost value with no confirmed claim behind it is the writer's estimate, and says so.
+  const Stat = ({ k }: { k: StatKey }) => {
+    const ids = (g.statClaimIds?.[k] ?? []).filter((id) => num.has(id));
+    const backed = ids.some((id) => status.get(id) !== "uncertain");
+    return (
+      <>
+        {g[k]}
+        {backed ? (
+          <Refs ids={ids} />
+        ) : (
+          <span className="ml-1.5 align-middle text-[11px] font-normal italic muted" title="No cited page states this value; it is estimated from the steps and waits in this guide">
+            estimate
+          </span>
+        )}
+      </>
+    );
+  };
+
   const gates = (g.gates ?? []).filter((x) => x.applies === "yes");
   // Phase comes from the step's slot; older guides store it directly.
   const steps = g.steps.map((s, i) => ({ ...s, n: i + 1, phase: s.phase ?? slotPhase(s.slot) }));
@@ -89,10 +107,10 @@ export default async function GuidePage({ params }: Props) {
         {DIFFICULTY[g.difficulty].label}
       </span>,
     ],
-    ["Time to test", g.timeToTest],
-    ["Time to production", g.timeToProduction],
-    ["Effort", g.effort],
-    ["Cost", g.cost],
+    ["Time to test", <Stat key="t" k="timeToTest" />],
+    ["Time to production", <Stat key="p" k="timeToProduction" />],
+    ["Effort", <Stat key="e" k="effort" />],
+    ["Cost", <Stat key="c" k="cost" />],
     [
       "Agent and you",
       <span key="h">

@@ -27,6 +27,7 @@ export const SLOTS = [
   { id: "enable_api", phase: "setup", required: false, what: "Enable the API, if the provider has a separate switch for it." },
   { id: "app_details", phase: "setup", required: false, what: "App details or consent screen: name, support email, audience or user type, logo, links." },
   { id: "add_scopes", phase: "setup", required: false, what: "Add the chosen scopes in the console, if the console asks for them." },
+  { id: "oauth_settings", phase: "setup", required: false, what: "Turn on OAuth or choose the app or client type (web, native, single-page), when the console asks for it before or together with the redirect URI." },
   { id: "redirect_uri", phase: "setup", required: true, what: "Add the redirect URI (callback URL)." },
   { id: "other_settings", phase: "setup", required: false, what: "Other settings on the registration form that need a decision." },
   { id: "credentials", phase: "setup", required: true, what: "Create or copy the client ID and client secret, saying where the console shows them." },
@@ -40,6 +41,9 @@ export const SLOTS = [
 ] as const;
 export const Slot = z.enum(SLOTS.map((x) => x.id) as [(typeof SLOTS)[number]["id"], ...(typeof SLOTS)[number]["id"][]]);
 export type Slot = z.infer<typeof Slot>;
+export const STATS = ["timeToTest", "timeToProduction", "effort", "cost"] as const;
+export type Stat = (typeof STATS)[number];
+
 export const slotPhase = (slot: Slot | undefined): Phase => SLOTS.find((x) => x.id === slot)?.phase ?? "setup";
 
 export const Difficulty = z.enum(["easy", "moderate", "hard"]);
@@ -85,6 +89,9 @@ export const GuideDraft = z.object({
   cost: z.string().describe("What the developer pays the provider or third parties, e.g. 'Free' or '$500–4,500 security audit'"),
   handoff: z.string().describe("One sentence: what an agent can do here and what the developer has to do themselves"),
   summaryClaimIds: z.array(z.string()),
+  statClaimIds: z
+    .object({ timeToTest: z.array(z.string()), timeToProduction: z.array(z.string()), effort: z.array(z.string()), cost: z.array(z.string()) })
+    .describe("Claims that state each value (a price, a review time). Empty when the value is an estimate."),
   gates: z.array(Gate).describe("Exactly one entry for each of the six gates, in order"),
   requirements: z.array(z.object({ text: z.string(), claimIds: z.array(z.string()) })),
   steps: z.array(

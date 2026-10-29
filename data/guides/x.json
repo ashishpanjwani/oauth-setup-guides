@@ -7,7 +7,7 @@
   "timeToProduction": "~1 hour to a few days, plus any X use-case review",
   "effort": "2–4 hours",
   "cost": "Pay-per-usage credits, for example $0.005 per Post read and $0.015 per Post created; no subscription",
-  "handoff": "An agent can pick the scopes; the developer signs in, accepts the agreement, creates the app, sets the callback URL, chooses the app type, copies the secrets and connects a test account.",
+  "handoff": "An agent can pick the scopes and build the authorize link with PKCE; you sign in, accept the agreement, create the app, choose its settings, copy the secrets and connect a test account.",
   "summaryClaimIds": [
     "c1",
     "c2",
@@ -16,14 +16,13 @@
   "gates": [
     {
       "gate": "register",
-      "applies": "yes",
-      "title": "Developer account must be applied for and approved",
-      "what": "New developers apply for a developer account with a written use case, which X reviews. The use case binds the developer, and substantive changes need X's approval first.",
-      "where": "console.x.com, signed in with an X account; the developer acts",
-      "todo": "Sign in, accept the Developer Agreement and describe the intended use accurately.",
+      "applies": "no",
+      "title": "Sign-up is self-serve: sign in, accept the Developer Agreement and describe your use",
+      "what": "",
+      "where": "",
+      "todo": "",
       "claimIds": [
-        "c4",
-        "c5"
+        "c24"
       ]
     },
     {
@@ -97,6 +96,7 @@
     {
       "text": "A written description of the intended use of the API",
       "claimIds": [
+        "c24",
         "c5"
       ]
     },
@@ -133,18 +133,7 @@
       ]
     },
     {
-      "slot": "redirect_uri",
-      "phase": "setup",
-      "text": "App settings → Authentication settings: add your callback URL.",
-      "why": "",
-      "detail": "The redirect_uri in the authorize URL must match exactly.",
-      "who": "you",
-      "claimIds": [
-        "c13"
-      ]
-    },
-    {
-      "slot": "other_settings",
+      "slot": "oauth_settings",
       "phase": "setup",
       "text": "App settings → Authentication settings: enable OAuth 2.0 and choose the app type: Web App or Automated App (bot) is a confidential client; Native App or Single page App is a public client.",
       "why": "",
@@ -153,6 +142,17 @@
       "claimIds": [
         "c17",
         "c18"
+      ]
+    },
+    {
+      "slot": "redirect_uri",
+      "phase": "setup",
+      "text": "App settings → Authentication settings: add your callback URL.",
+      "why": "",
+      "detail": "The redirect_uri in the authorize URL must match exactly.",
+      "who": "you",
+      "claimIds": [
+        "c13"
       ]
     },
     {
@@ -170,7 +170,19 @@
     {
       "slot": "test_connection",
       "phase": "setup",
-      "text": "Browser: open the authorize URL, approve with your own X account, then exchange the code for a token.",
+      "who": "agent",
+      "text": "Build the authorize link from your client ID, callback URL and scopes, plus a random state and a PKCE code_challenge.",
+      "why": "",
+      "detail": "Base URL: https://x.com/i/oauth2/authorize. The code_challenge is a fresh random secret for each login; code_challenge_method is S256 or plain.",
+      "claimIds": [
+        "c21",
+        "c23"
+      ]
+    },
+    {
+      "slot": "test_connection",
+      "phase": "setup",
+      "text": "Browser: open the authorize link, approve with your own X account, then exchange the code for an access token.",
       "why": "",
       "detail": "Exchange the code within 30 seconds.",
       "who": "you",
@@ -211,6 +223,7 @@
     }
   ],
   "couldNotVerify": [
+    "Whether X's review of the use case you describe at sign-up can delay or block access. Getting Access describes sign-up as self-serve; the Developer Policy says new developers must apply.",
     "Couldn't read https://developer.twitter.com/en/support/x-api/developer-account1 (HTTP 404), so nothing from it is confirmed."
   ],
   "claims": [
@@ -396,12 +409,12 @@
     },
     {
       "id": "c21",
-      "statement": "The authorize URL is https://x.com/i/oauth2/authorize with response_type, client_id, redirect_uri, scope, state and code_challenge parameters.",
-      "status": "uncertain",
+      "statement": "The authorize URL is https://x.com/i/oauth2/authorize with response_type, client_id, redirect_uri, scope, state, code_challenge and code_challenge_method.",
+      "status": "sourced",
       "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
       "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
-      "quote": "To construct an OAuth 2.0 authorize URL, you will need to ensure you have the following parameters in the authorization URL.",
-      "note": "[Check: the quote only partly supports this. The quote only says the authorize URL requires certain parameters. It does not give the URL https://x.com/i/oauth2/authorize or list response_type, client_id, redirect_uri, scope, state and code_challenge.]"
+      "quote": "An example of the URL you are creating is as follows: https://x.com/i/oauth2/authorize?response_type=code&client_id=M1M5R3BMVy13QmpScXkzTUt5OE46MTpjaQ&redirect_uri=https://www.example.com&scope=tweet.read%20users.read%20account.follows.read%20account.follows.write&state=state&code_challenge=challenge&code_challenge_method=plain",
+      "note": "Checked by hand on 2026-10-29."
     },
     {
       "id": "c22",
@@ -411,6 +424,33 @@
       "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
       "quote": "You will have to exchange it with an access token within 30 seconds, or the auth_code will expire.",
       "note": ""
+    },
+    {
+      "id": "c23",
+      "statement": "code_challenge is a PKCE parameter, a random secret for each request; code_challenge_method is S256 or plain.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code",
+      "sourceTitle": "OAuth 2.0 Authorization Code Flow with PKCE - X",
+      "note": "Checked by hand on 2026-10-29.",
+      "quote": "code_challenge A PKCE parameter, a random secret for each request you make. code_challenge_method Specifies the method you are using to make a request (S256 OR plain)."
+    },
+    {
+      "id": "c24",
+      "statement": "Getting started is three self-serve steps: sign up (sign in, accept the Developer Agreement, describe how you'll use the API), create an app, save the credentials.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/x-api/getting-started/getting-access",
+      "sourceTitle": "Getting Access - X",
+      "note": "Checked by hand on 2026-10-29.",
+      "quote": "Get started with the X API in three steps: sign up, create an app, and save your credentials. … Complete your profile Provide basic information about how you’ll use the API."
+    },
+    {
+      "id": "c25",
+      "statement": "Reading a Post costs $0.005 per resource and creating a Post costs $0.015 per request.",
+      "status": "sourced",
+      "sourceUrl": "https://docs.x.com/x-api/getting-started/pricing",
+      "sourceTitle": "X API pay-per-usage pricing and credits - X",
+      "note": "Quoted from the pricing tables. Checked by hand on 2026-10-29.",
+      "quote": "Resource Unit cost Posts: Read $0.005 per resource … Action Unit cost Post: Create $0.015 per request"
     }
   ],
   "slug": "x",
@@ -432,5 +472,14 @@
     "probes": 1,
     "durationSec": 111,
     "costUsd": 0.388
+  },
+  "statClaimIds": {
+    "timeToTest": [],
+    "timeToProduction": [],
+    "effort": [],
+    "cost": [
+      "c1",
+      "c25"
+    ]
   }
 }

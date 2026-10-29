@@ -652,5 +652,13 @@
     "probes": 1,
     "durationSec": 175,
     "costUsd": 0.35
+  },
+  "statClaimIds": {
+    "timeToTest": [],
+    "timeToProduction": [],
+    "effort": [],
+    "cost": [
+      "c27"
+    ]
   }
 }
