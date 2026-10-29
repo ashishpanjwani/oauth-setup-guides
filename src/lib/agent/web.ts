@@ -1,7 +1,8 @@
 /** Plain HTTP done in code: fetching source pages and probing the developer console. */
 
 export type Page = { url: string; title: string; text: string; ok: boolean; error?: string };
-export type Probe = { name: string; target: string; ok: boolean; result: string };
+/** landed: where a redirect ended up, unless that was a login page. */
+export type Probe = { name: string; target: string; ok: boolean; result: string; landed?: string };
 
 const PAGE_CHARS = 30_000; // ~7.5K tokens per page
 
@@ -73,6 +74,7 @@ export async function probeConsole(url: string): Promise<Probe> {
       target: url,
       ok: res.ok,
       result: `HTTP ${res.status}${final !== url ? `, redirected to ${final}` : ""}${login ? " (login required)" : ""}`,
+      ...(final !== url && !login ? { landed: final } : {}),
     };
   } catch (e) {
     return { name: "console", target: url, ok: false, result: `Request failed: ${(e as Error).message}` };

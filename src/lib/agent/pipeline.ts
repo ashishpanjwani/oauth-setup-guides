@@ -147,11 +147,21 @@ function orderSteps(g: GuideDraft): GuideDraft {
   return { ...g, steps: steps.map(({ s }) => ({ ...s, phase: slotPhase(s.slot) })) };
 }
 
-/** A step link survives only if it points at the console we probed or a page we read, so no URL is invented. */
+/**
+ * A step link survives only if it is a URL we actually opened: the console we probed (or where its
+ * redirect landed) or a page we read, so no URL is invented. The create step always links to the console.
+ */
 function checkLinks(g: GuideDraft, pages: Page[], probes: Probe[]): GuideDraft {
   const norm = (u: string) => u.trim().replace(/#.*$/, "").replace(/\/$/, "");
-  const known = new Set([...probes.map((p) => p.target), ...pages.filter((p) => p.ok).map((p) => p.url)].map(norm));
-  return { ...g, steps: g.steps.map(({ link, ...s }) => (link && known.has(norm(link.url)) ? { ...s, link } : s)) };
+  const probed = probes.find((p) => p.name === "console" && !p.result.startsWith("Request failed"));
+  const consoleUrl = probed && (probed.landed ?? probed.target);
+  const known = new Set([...probes.flatMap((p) => [p.target, p.landed ?? ""]), ...pages.filter((p) => p.ok).map((p) => p.url)].filter(Boolean).map(norm));
+  const steps = g.steps.map(({ link, ...s }) => {
+    if (link && known.has(norm(link.url))) return { ...s, link };
+    if (s.slot === "create_app" && consoleUrl) return { ...s, link: { label: "Developer portal", url: consoleUrl } };
+    return s;
+  });
+  return { ...g, steps };
 }
 
 /** Required slots the writer left empty, checked in code. */
