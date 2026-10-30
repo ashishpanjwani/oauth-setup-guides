@@ -17,7 +17,7 @@ To let users connect an app like Gmail or Slack, a developer registers their own
 | **Some blockers aren't the developer's to clear** | An end user's admin must approve: GitHub organizations, Google Workspace, Notion Enterprise. A guide can't give a time for this, only who controls it and what to tell users |
 | **The right path depends on the app type** | Shopify has three ways to get a token, and Notion has three kinds of connection. The first Shopify guide followed the wrong one |
 | **The docs themselves can mislead** | GitHub's docs say "Authorization callback URL" while its form says "Redirect URIs". Notion's docs mention a review but not how to submit one. Review times are often unpublished |
-| **Plain AI answers read well but aren't reliable line by line** | ChatGPT's Notion answer used outdated names, listed a capability Notion doesn't have, and missed that the installation scope is permanent |
+| **Asking a chatbot gives a fluent answer that can be wrong in places** | Asked how to set up Notion OAuth, ChatGPT used Notion's old names for its settings, listed a permission Notion doesn't offer, and never mentioned that one key setting can't be changed after the app is created |
 
 So the developer's real problem is **piecing together scattered, sometimes stale information** to answer "how long, how hard, and what will block me", before committing to a provider.
 
