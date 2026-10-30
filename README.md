@@ -74,7 +74,7 @@ A guide line with no Tested or Sourced claim shows **Unverified**. Open question
 |---|---|
 | A second agent re-reading sources was slow and costly, and was a model judging a model | **Quotes are checked in code,** not by a model. A quote is either on the page or it isn't |
 | A quote existing doesn't mean it supports the claim: 10 of Gmail's 19 claims cited the wrong sentence | **One fact per claim, automatic re-quoting, and a support check that can only downgrade,** so its mistakes make a guide more cautious, never less |
-| Fifteen orange Unverified tags made a guide more confusing, not more honest | **Fix the guide, not the label.** A library guide isn't published with more than 2–3 Unverified lines |
+| Gmail's guide showed 15 Unverified warnings, mostly on true facts that cited the wrong sentence. It confused readers more than it helped | **Fix the source, don't just warn.** Each line gets the right sentence from the docs, and a library guide ships with at most 2–3 Unverified lines |
 | The docs lag the live UI (GitHub's "Redirect URIs") | **Tested is reserved for what was observed on the live product,** never inferred from docs |
 | The computed stats said "no review" when Notion's docs mentioned one | **Stats never claim more than the evidence:** "review not confirmed" or "Review time not published" |
 | Proposed: accept any link on the provider's site | **Rejected.** A step link must be a URL the agent actually opened, or it could point to a made-up page |
