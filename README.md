@@ -31,7 +31,6 @@ The focus is the **path to production**: everything between "I need an OAuth app
 | One path per guide: an outside, server-side app that many users connect to, named in a "This guide covers" line | It's the AI-agent case, and following the wrong path wastes the whole setup |
 | OAuth setup and approval only; no bots, webhooks or optional store listings | Early guides drifted into building app features, which hid the approval path |
 | Two pages, search and guide; no accounts, saved progress or editing | The first build tried to do too much: a 382-app directory, an extra explainer page, and guides built to look rigorous rather than to be followed. A developer needs to find an app and follow its guide |
-| Six varied library guides plus live generation, not 100 guides | The brief asks for a few varied apps. Live generation runs the same pipeline on any app |
 
 The six library guides each stress a different obstacle:
 
