@@ -55,7 +55,7 @@ Each decision came from a problem in a real guide.
 | A mixed label, "agent prepares, you click", blurred who actually does each step | **Three plain labels on every step:** Agent, You, and Waiting (only for the provider's own review) |
 | A step said "Go to Developer portal" without the link | **The create-app step links to the portal,** using the address the agent actually reached |
 | Fixing one prompt rule broke another on the small model | **Mechanical rules in code** (a phrase checker, a page-coverage check, a known-facts check), and **Sonnet for writing** |
-| Six parallel runs on the top model used up a $6 credit | **Haiku for research, Sonnet only for writing, hard caps** ($0.80 per run, $10 per day), and every change tested on one app first |
+| Six parallel runs on the top model used up a $6 credit | **Haiku for research, Sonnet only for writing and editing, hard caps** ($0.80 per run, $10 per day), and every change tested on one app first |
 | Every search for a new app starts a run costing about $0.30–0.45, so a typo or an email address would waste money | **Cheap checks before any paid run:** an app with a library guide opens for free, bad input like an email or a sentence is rejected in the browser, and a ~1¢ check rejects names that aren't apps. Only then does the full run start |
 
 ## 4. Judgment about evidence
@@ -100,6 +100,7 @@ A live run costs $0.21–0.46 and takes 1.3–4.6 minutes.
 - **Automated attempts are limited to a console probe:** does the console load, and where does it redirect.
 - **Tried and reverted on X:** an agent tested endpoints with fake values and kept a per-step attempt record. The result was HTTP errors that a reader couldn't act on.
 - **What replaced it:** the handoff is shown through the Agent / You labels, and hands-on checks come from a person.
+- **What the agent found shaped the product.** Once asked the six obstacle questions, it found GitHub's organization approval on its own, and that became the guide's headline. On Notion, it found the docs sentence saying the authorization URL appears only after review, which exposed a bug in the stats code that was fixed for every guide.
 - **The next step would be a browser agent,** working with the developer signed in and stopping at sign-in, payment and submit (see section 7).
 
 ## 6. Checking the guidance
