@@ -134,7 +134,6 @@ Each library guide was written by the agent, then checked against the provider's
   - A step can say "then create the connection" while the next step is still on the same form (Notion).
   - When the docs mention a review but not how to submit it, the go-live steps are vague (Notion).
   - A step is occasionally given to the wrong party: Pipedrive's "record a demo video" was marked Agent.
-  - A step can cite a real quote from the docs that's about something slightly different. Only the editing pass checks that match, and as a model it sometimes misses it (seen on Shopify and Instagram). There's no code check for it.
   - Bad input like an email address or a sentence is rejected and was tested. The model check that rejects names that aren't apps, or suggests a fix for a typo, hasn't been tried on real bad inputs yet.
 - **Demo-grade protection.** The rate limit is per server instance, and the daily budget is best-effort under concurrent runs. The real backstop is the API key's spend limit.
 
