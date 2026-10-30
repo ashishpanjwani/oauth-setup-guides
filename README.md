@@ -54,11 +54,10 @@ Each decision came from a problem in a real guide.
 | The model's time and effort figures were guesses, and "Free" was once labelled an estimate | **Stats computed in code** from the checked obstacles, each showing its basis. Time to production uses the provider's own words ("up to 21 business days"), or says "Review time not published". Effort became a step count |
 | Steps read like a list of facts. Gmail's started with "create a brand", and prompt fixes didn't stick | **Architect and Builder.** Code is the Architect: a fixed order of step slots (decide scopes → create app → … → test connection → publish → review → go live) and a check that the required ones are filled. The model is the Builder and writes each slot for the provider |
 | A mixed label, "agent prepares, you click", blurred who actually does each step | **Three plain labels on every step:** Agent, You, and Waiting (only for the provider's own review) |
-| The agent/developer split only showed up step by step | **An "Agent and you" line in the summary,** so the split is clear before the first step |
 | A step said "Go to Developer portal" without the link | **The create-app step links to the portal,** using the address the agent actually reached |
 | Fixing one prompt rule broke another on the small model | **Mechanical rules in code** (a phrase checker, a page-coverage check, a known-facts check), and **Sonnet for writing** |
 | Six parallel runs on the top model used up a $6 credit | **Haiku for research, Sonnet only for writing, hard caps** ($0.80 per run, $10 per day), and every change tested on one app first |
-| Any visitor can trigger a paid run | **Cheapest path first:** library match → input checks → a ~1¢ app check → full run |
+| Every search for a new app starts a run costing about $0.30–0.45, so a typo or an email address would waste money | **Cheap checks before any paid run:** an app with a library guide opens for free, bad input like an email or a sentence is rejected in the browser, and a ~1¢ check rejects names that aren't apps. Only then does the full run start |
 
 ## 4. Judgment about evidence
 
