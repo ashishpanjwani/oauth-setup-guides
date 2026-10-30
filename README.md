@@ -33,9 +33,9 @@ The focus is the **path to production**: everything between "I need an OAuth app
 | Two pages, search and guide; no accounts, saved progress or editing | The first build tried to do too much: a 382-app directory, an extra explainer page, and guides built to look rigorous rather than to be followed. A developer needs to find an app and follow its guide |
 | Six varied library guides plus live generation, not 100 guides | The brief asks for a few varied apps. Live generation runs the same pipeline on any app |
 
-The six library apps each stress a different obstacle:
+The six library guides each stress a different obstacle:
 
-| App | Difficulty | Time to production | Main challenge |
+| Guide | Difficulty | Time to production | Main challenge |
 |---|---|---|---|
 | GitHub | Easy | Right after setup | Organization owner approval |
 | Slack | Easy | No review wait | Distribution and workspace approval |
